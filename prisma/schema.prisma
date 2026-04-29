@@ -18,6 +18,33 @@ enum CodingLevel {
   advanced
 }
 
+enum UserRole {
+  ADMIN
+  USER
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      UserRole @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Event {
+  id          String   @id @default(uuid())
+  title       String
+  imageUrl    String
+  description String
+  capacity    Int?
+  date        DateTime
+  location    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 model Member {
   id             String      @id @default(uuid())
   name           String
@@ -28,4 +55,16 @@ model Member {
   codingLevel    CodingLevel
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
+}
+
+model Partner {
+  id               String   @id @default(uuid())
+  name             String
+  websiteUrl       String
+  logoUrl          String
+  description      String
+  email            String   @unique
+  partershipReason String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
