@@ -49,9 +49,9 @@ npx prisma studio            # optional: browse the DB in a GUI
 
 To stop the database: `docker compose down` (add `-v` to wipe the data).
 
-## Endpoints
+## API documentation
 
-- `GET /api/health` — health check
+Interactive Swagger UI is available at `http://localhost:3000/api/docs` once the server is running.
 
 ## License
 

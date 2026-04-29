@@ -1,0 +1,83 @@
+openapi: 3.0.0
+info:
+  title: oskbackend API
+  version: 1.0.0
+  description: Backend API for Open Source Kigali
+servers:
+  - url: http://localhost:3000/api
+
+tags:
+  - name: Health
+  - name: Members
+  - name: Events
+  - name: Partners
+  - name: Users
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check
+      responses:
+        "200":
+          description: Server is up
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+                  uptime: { type: number }
+
+components:
+  schemas:
+    Member:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        email: { type: string, format: email }
+        githubUsername: { type: string }
+        orgName: { type: string }
+        joinReason: { type: string }
+        codingLevel:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    Event:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        imageUrl: { type: string }
+        description: { type: string }
+        capacity: { type: integer, nullable: true }
+        date: { type: string, format: date-time }
+        location: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    Partner:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        websiteUrl: { type: string }
+        logoUrl: { type: string }
+        description: { type: string }
+        email: { type: string, format: email }
+        partershipReason: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    User:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        email: { type: string, format: email }
+        role: { type: string, enum: [ADMIN, USER] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
