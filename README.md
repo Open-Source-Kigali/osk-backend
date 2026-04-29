@@ -55,4 +55,4 @@ To stop the database: `docker compose down` (add `-v` to wipe the data).
 
 ## License
 
-ISC
+MIT
