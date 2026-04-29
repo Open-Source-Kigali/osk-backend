@@ -37,10 +37,6 @@ src/
 
 - `GET /api/health` — health check
 
-## Contributing
-
-Contributions are welcome. Open an issue or submit a pull request.
-
 ## License
 
 ISC
