@@ -22,15 +22,18 @@
   },
   "homepage": "https://github.com/Open-Source-Kigali/oskbackend#readme",
   "dependencies": {
+    "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "pg": "^8.20.0",
     "swagger-ui-express": "^5.0.1",
     "yaml": "^2.8.3"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/node": "^25.6.0",
+    "@types/pg": "^8.20.0",
     "@types/swagger-ui-express": "^4.1.8",
     "eslint": "^10.2.1",
     "nodemon": "^3.1.14",

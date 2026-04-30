@@ -6,7 +6,7 @@ import YAML from "yaml";
 import swaggerUi from "swagger-ui-express";
 
 import { errorHandler } from "./middlewares/error.middleware";
-import { notFound } from "./middlewares/notFound.middleware";
+import { notFound } from "./middlewares/not-found.middleware";
 
 const openapiSpec = YAML.parse(
   fs.readFileSync(path.join(__dirname, "../docs/openapi.yaml"), "utf8"),
