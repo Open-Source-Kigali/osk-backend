@@ -10,4 +10,7 @@ export const env = {
   corsOrigins: (process.env.CORS_ORIGINS || "http://localhost:5173")
     .split(",")
     .map((origin) => origin.trim()),
+  cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME || "",
+  cloudinaryApiKey: process.env.CLOUDINARY_API_KEY || "",
+  cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET || "",
 };

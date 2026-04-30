@@ -168,7 +168,7 @@ paths:
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema: { $ref: "#/components/schemas/EventInput" }
       responses:
         "201":
@@ -216,7 +216,7 @@ paths:
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema: { $ref: "#/components/schemas/EventUpdateInput" }
       responses:
         "200":
@@ -423,6 +423,7 @@ components:
         id: { type: string, format: uuid }
         title: { type: string }
         imageUrl: { type: string }
+        imagePublicId: { type: string }
         description: { type: string }
         capacity: { type: integer, nullable: true }
         date: { type: string, format: date-time }
@@ -432,10 +433,10 @@ components:
 
     EventInput:
       type: object
-      required: [title, imageUrl, description, date, location]
+      required: [title, file, description, date, location]
       properties:
         title: { type: string }
-        imageUrl: { type: string }
+        file: { type: string, format: binary, description: "Event image" }
         description: { type: string }
         capacity: { type: integer, nullable: true }
         date: { type: string, format: date-time }
@@ -445,7 +446,7 @@ components:
       type: object
       properties:
         title: { type: string }
-        imageUrl: { type: string }
+        file: { type: string, format: binary, description: "Replacement image (optional)" }
         description: { type: string }
         capacity: { type: integer, nullable: true }
         date: { type: string, format: date-time }
