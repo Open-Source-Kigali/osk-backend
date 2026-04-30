@@ -105,7 +105,7 @@ paths:
       tags: [Members]
       summary: Update a member (admin only)
       security:
-        - bearerAuth: []
+        - adminApiKey: []
       requestBody:
         required: true
         content:
@@ -130,7 +130,7 @@ paths:
       tags: [Members]
       summary: Delete a member (admin only)
       security:
-        - bearerAuth: []
+        - adminApiKey: []
       responses:
         "204":
           description: Member deleted successfully
@@ -144,10 +144,10 @@ paths:
 
 components:
   securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
+    adminApiKey:
+      type: apiKey
+      in: header
+      name: x-api-key
 
   schemas:
     ApiSuccess:
