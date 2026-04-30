@@ -5,7 +5,9 @@ async function findAllMembers() {
   return prisma.member.findMany();
 }
 
-async function addMember(memberData: Omit<Member, "id">) {
+async function addMember(
+  memberData: Omit<Member, "id" | "createdAt" | "updatedAt">,
+) {
   return prisma.member.create({ data: memberData });
 }
 
@@ -15,7 +17,7 @@ async function findMemberById(id: string) {
 
 async function updateMember(
   id: string,
-  memberData: Partial<Omit<Member, "id">>,
+  memberData: Partial<Omit<Member, "id" | "createdAt" | "updatedAt">>,
 ) {
   return prisma.member.update({ where: { id }, data: memberData });
 }

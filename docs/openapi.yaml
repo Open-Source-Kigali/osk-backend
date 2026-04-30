@@ -142,6 +142,109 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "500": { $ref: "#/components/responses/InternalError" }
 
+  /partners:
+    get:
+      tags: [Partners]
+      summary: List all partners
+      responses:
+        "200":
+          description: Partners retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/Partner" }
+        "500": { $ref: "#/components/responses/InternalError" }
+    post:
+      tags: [Partners]
+      summary: Create a partner
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PartnerInput" }
+      responses:
+        "201":
+          description: Partner created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/Partner" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
+  /partners/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [Partners]
+      summary: Get a partner by id
+      responses:
+        "200":
+          description: Partner retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/Partner" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/InternalError" }
+    put:
+      tags: [Partners]
+      summary: Update a partner (admin only)
+      security:
+        - adminApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PartnerUpdateInput" }
+      responses:
+        "200":
+          description: Partner updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/Partner" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/InternalError" }
+    delete:
+      tags: [Partners]
+      summary: Delete a partner (admin only)
+      security:
+        - adminApiKey: []
+      responses:
+        "204":
+          description: Partner deleted successfully
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiSuccess" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
 components:
   securitySchemes:
     adminApiKey:
@@ -232,6 +335,28 @@ components:
         partershipReason: { type: string }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
+
+    PartnerInput:
+      type: object
+      required:
+        [name, websiteUrl, logoUrl, description, email, partershipReason]
+      properties:
+        name: { type: string }
+        websiteUrl: { type: string }
+        logoUrl: { type: string }
+        description: { type: string }
+        email: { type: string, format: email }
+        partershipReason: { type: string }
+
+    PartnerUpdateInput:
+      type: object
+      properties:
+        name: { type: string }
+        websiteUrl: { type: string }
+        logoUrl: { type: string }
+        description: { type: string }
+        email: { type: string, format: email }
+        partershipReason: { type: string }
 
     User:
       type: object

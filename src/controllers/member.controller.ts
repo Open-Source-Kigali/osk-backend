@@ -33,7 +33,7 @@ async function findMemberById(
 }
 
 async function addMember(
-  req: Request<any, {}, Omit<Member, "id">>,
+  req: Request<{}, {}, Omit<Member, "id">>,
   res: Response,
   next: NextFunction,
 ) {
@@ -73,6 +73,7 @@ async function deleteMember(
     next(err);
   }
 }
+
 export default {
   findAllMembers,
   findMemberById,
