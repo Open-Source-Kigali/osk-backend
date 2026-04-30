@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
+import response from "../utils/response";
 
 export function notFound(_req: Request, res: Response) {
-  res.status(404).json({ message: "Not Found" });
+  response.failure(res, "Not Found", 404);
 }

@@ -1,11 +1,12 @@
 import { Request, Response, NextFunction } from "express";
+import response from "../utils/response";
 
 export function errorHandler(
   err: Error,
   _req: Request,
   res: Response,
-  _next: NextFunction
+  _next: NextFunction,
 ) {
   console.error(err);
-  res.status(500).json({ message: err.message || "Internal Server Error" });
+  response.failure(res, err.message || "Internal Server Error", 500);
 }
