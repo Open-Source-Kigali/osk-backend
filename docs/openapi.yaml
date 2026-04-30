@@ -2,7 +2,12 @@ openapi: 3.0.0
 info:
   title: oskbackend API
   version: 1.0.0
-  description: Backend API for Open Source Kigali
+  description: |
+    Backend API for Open Source Kigali.
+
+    All responses follow a consistent envelope:
+      Success: `{ "success": true, "message": string, "data": T }`
+      Failure: `{ "success": false, "message": string, "data": null }`
 servers:
   - url: http://localhost:3000/api
 
@@ -24,13 +29,143 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  status: { type: string, example: ok }
-                  uptime: { type: number }
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          status: { type: string, example: ok }
+                          uptime: { type: number }
+
+  /members:
+    get:
+      tags: [Members]
+      summary: List all members
+      responses:
+        "200":
+          description: Members retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/Member" }
+        "500": { $ref: "#/components/responses/InternalError" }
+    post:
+      tags: [Members]
+      summary: Create a member
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MemberInput" }
+      responses:
+        "201":
+          description: Member created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/Member" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
+  /members/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [Members]
+      summary: Get a member by id
+      responses:
+        "200":
+          description: Member retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/Member" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/InternalError" }
+    put:
+      tags: [Members]
+      summary: Update a member (admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MemberUpdateInput" }
+      responses:
+        "200":
+          description: Member updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/Member" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/InternalError" }
+    delete:
+      tags: [Members]
+      summary: Delete a member (admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Member deleted successfully
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiSuccess" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/InternalError" }
 
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
+    ApiSuccess:
+      type: object
+      properties:
+        success: { type: boolean, example: true }
+        message: { type: string }
+        data: {}
+      required: [success, message, data]
+
+    ApiError:
+      type: object
+      properties:
+        success: { type: boolean, example: false }
+        message: { type: string }
+        data: { type: object, nullable: true, example: null }
+      required: [success, message, data]
+
     Member:
       type: object
       properties:
@@ -45,6 +180,32 @@ components:
           enum: [beginner, intermediate, advanced]
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
+
+    MemberInput:
+      type: object
+      required:
+        [name, email, githubUsername, orgName, joinReason, codingLevel]
+      properties:
+        name: { type: string }
+        email: { type: string, format: email }
+        githubUsername: { type: string }
+        orgName: { type: string }
+        joinReason: { type: string }
+        codingLevel:
+          type: string
+          enum: [beginner, intermediate, advanced]
+
+    MemberUpdateInput:
+      type: object
+      properties:
+        name: { type: string }
+        email: { type: string, format: email }
+        githubUsername: { type: string }
+        orgName: { type: string }
+        joinReason: { type: string }
+        codingLevel:
+          type: string
+          enum: [beginner, intermediate, advanced]
 
     Event:
       type: object
@@ -81,3 +242,30 @@ components:
         role: { type: string, enum: [ADMIN, USER] }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
+
+  responses:
+    BadRequest:
+      description: Invalid input
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
+    Forbidden:
+      description: Admin access required
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
