@@ -10,6 +10,7 @@ info:
       Failure: `{ "success": false, "message": string, "data": null }`
 servers:
   - url: http://localhost:3000/api
+  - url: https://osk-backend.onrender.com/api
 
 tags:
   - name: Health
@@ -393,8 +394,7 @@ components:
 
     MemberInput:
       type: object
-      required:
-        [name, email, githubUsername, orgName, joinReason, codingLevel]
+      required: [name, email, githubUsername, orgName, joinReason, codingLevel]
       properties:
         name: { type: string }
         email: { type: string, format: email }
@@ -446,7 +446,12 @@ components:
       type: object
       properties:
         title: { type: string }
-        file: { type: string, format: binary, description: "Replacement image (optional)" }
+        file:
+          {
+            type: string,
+            format: binary,
+            description: "Replacement image (optional)",
+          }
         description: { type: string }
         capacity: { type: integer, nullable: true }
         date: { type: string, format: date-time }
