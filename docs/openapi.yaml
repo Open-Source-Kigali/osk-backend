@@ -270,11 +270,13 @@ paths:
         "500": { $ref: "#/components/responses/InternalError" }
     post:
       tags: [Partners]
-      summary: Create a partner
+      summary: Create a partner (admin only)
+      security:
+        - adminApiKey: []
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema: { $ref: "#/components/schemas/PartnerInput" }
       responses:
         "201":
@@ -288,6 +290,8 @@ paths:
                     properties:
                       data: { $ref: "#/components/schemas/Partner" }
         "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
         "500": { $ref: "#/components/responses/InternalError" }
 
   /partners/{id}:
@@ -320,7 +324,7 @@ paths:
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema: { $ref: "#/components/schemas/PartnerUpdateInput" }
       responses:
         "200":
@@ -464,6 +468,7 @@ components:
         name: { type: string }
         websiteUrl: { type: string }
         logoUrl: { type: string }
+        logoPublicId: { type: string }
         description: { type: string }
         email: { type: string, format: email }
         partershipReason: { type: string }
@@ -472,12 +477,11 @@ components:
 
     PartnerInput:
       type: object
-      required:
-        [name, websiteUrl, logoUrl, description, email, partershipReason]
+      required: [name, websiteUrl, file, description, email, partershipReason]
       properties:
         name: { type: string }
         websiteUrl: { type: string }
-        logoUrl: { type: string }
+        file: { type: string, format: binary, description: "Partner logo" }
         description: { type: string }
         email: { type: string, format: email }
         partershipReason: { type: string }
@@ -487,7 +491,7 @@ components:
       properties:
         name: { type: string }
         websiteUrl: { type: string }
-        logoUrl: { type: string }
+        file: { type: string, format: binary, description: "Replacement logo (optional)" }
         description: { type: string }
         email: { type: string, format: email }
         partershipReason: { type: string }

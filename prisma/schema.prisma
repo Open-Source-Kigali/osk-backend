@@ -63,6 +63,7 @@ model Partner {
   name             String
   websiteUrl       String
   logoUrl          String
+  logoPublicId     String
   description      String
   email            String   @unique
   partershipReason String

@@ -42,7 +42,7 @@ async function addEvent(
 
   let publicId: string | undefined;
   try {
-    const uploaded = await uploadBuffer(req.file.buffer, "events");
+    const uploaded = await uploadBuffer(req.file.buffer, "open-source-kigali/events");
     publicId = uploaded.public_id;
 
     const { capacity, date, ...rest } = req.body;
@@ -78,7 +78,7 @@ async function updateEvent(
     if (date !== undefined) data.date = new Date(date);
 
     if (req.file) {
-      const uploaded = await uploadBuffer(req.file.buffer, "events");
+      const uploaded = await uploadBuffer(req.file.buffer, "open-source-kigali/events");
       newPublicId = uploaded.public_id;
       data.imageUrl = uploaded.secure_url;
       data.imagePublicId = uploaded.public_id;
