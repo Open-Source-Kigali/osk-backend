@@ -11,5 +11,5 @@ jobs:
     steps:
       - name: Ping health endpoint
         run: |
-          curl --fail --silent --show-error --max-time 30 \
+          curl --fail --silent --show-error --max-time 300 \
             https://osk-backend.onrender.com/api/health/
