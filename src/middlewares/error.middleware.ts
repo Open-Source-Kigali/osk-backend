@@ -8,8 +8,6 @@ export function errorHandler(
   res: Response,
   _next: NextFunction,
 ) {
-  if (err instanceof Prisma.PrismaClientKnownRequestError) {
-  }
   console.error(err);
 
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
@@ -25,5 +23,6 @@ export function errorHandler(
       return response.failure(res, "Record not found", 404);
     }
   }
-  response.failure(res, err.message || "Internal Server Error", 500);
+
+  response.failure(res, "Internal Server Error", 500);
 }
