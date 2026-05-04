@@ -17,6 +17,7 @@ tags:
   - name: Members
   - name: Events
   - name: Partners
+  - name: Projects
   - name: Users
 
 paths:
@@ -355,6 +356,144 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "500": { $ref: "#/components/responses/InternalError" }
 
+  /projects:
+    get:
+      tags: [Projects]
+      summary: List all projects
+      responses:
+        "200":
+          description: Projects retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/Project" }
+        "500": { $ref: "#/components/responses/InternalError" }
+    post:
+      tags: [Projects]
+      summary: Create a project (admin only)
+      security:
+        - adminApiKey: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema: { $ref: "#/components/schemas/ProjectInput" }
+      responses:
+        "201":
+          description: Project created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/Project" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
+  /projects/refresh:
+    post:
+      tags: [Projects]
+      summary: Refresh GitHub-cached fields for all projects (admin only)
+      security:
+        - adminApiKey: []
+      responses:
+        "200":
+          description: Refresh completed
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/ProjectRefreshResult"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
+  /projects/{slug}:
+    parameters:
+      - in: path
+        name: slug
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Projects]
+      summary: Get a project by slug
+      responses:
+        "200":
+          description: Project retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/Project" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
+  /projects/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string, format: uuid }
+    put:
+      tags: [Projects]
+      summary: Update a project (admin only)
+      security:
+        - adminApiKey: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema: { $ref: "#/components/schemas/ProjectUpdateInput" }
+      responses:
+        "200":
+          description: Project updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/Project" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/InternalError" }
+    delete:
+      tags: [Projects]
+      summary: Delete a project (admin only)
+      security:
+        - adminApiKey: []
+      responses:
+        "204":
+          description: Project deleted successfully
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiSuccess" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
 components:
   securitySchemes:
     adminApiKey:
@@ -501,6 +640,78 @@ components:
         description: { type: string }
         email: { type: string, format: email }
         partershipReason: { type: string }
+
+    Project:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        slug: { type: string }
+        repoOwner: { type: string }
+        repoName: { type: string }
+        imageUrl: { type: string }
+        imagePublicId: { type: string }
+        tagline: { type: string }
+        category: { type: string }
+        status: { type: string, enum: [active, archived, paused] }
+        featured: { type: boolean }
+        maintainer: { type: string, nullable: true }
+        langColor: { type: string, nullable: true }
+        ghDescription: { type: string, nullable: true }
+        ghLanguage: { type: string, nullable: true }
+        ghTopics:
+          type: array
+          items: { type: string }
+        ghStars: { type: integer }
+        ghForks: { type: integer }
+        ghOpenIssues: { type: integer }
+        ghContributors: { type: integer }
+        ghPullRequests: { type: integer }
+        ghPushedAt: { type: string, format: date-time, nullable: true }
+        lastFetchedAt: { type: string, format: date-time, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    ProjectInput:
+      type: object
+      required: [slug, repoOwner, repoName, file, tagline, category]
+      properties:
+        slug: { type: string }
+        repoOwner: { type: string }
+        repoName: { type: string }
+        file: { type: string, format: binary, description: "Project image" }
+        tagline: { type: string }
+        category: { type: string }
+        status: { type: string, enum: [active, archived, paused] }
+        featured: { type: boolean }
+        maintainer: { type: string }
+        langColor: { type: string }
+
+    ProjectUpdateInput:
+      type: object
+      properties:
+        slug: { type: string }
+        repoOwner: { type: string }
+        repoName: { type: string }
+        file:
+          {
+            type: string,
+            format: binary,
+            description: "Replacement image (optional)",
+          }
+        tagline: { type: string }
+        category: { type: string }
+        status: { type: string, enum: [active, archived, paused] }
+        featured: { type: boolean }
+        maintainer: { type: string }
+        langColor: { type: string }
+
+    ProjectRefreshResult:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        slug: { type: string }
+        ok: { type: boolean }
+        error: { type: string, nullable: true }
 
     User:
       type: object
