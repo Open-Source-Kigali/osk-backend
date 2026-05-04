@@ -270,9 +270,7 @@ paths:
         "500": { $ref: "#/components/responses/InternalError" }
     post:
       tags: [Partners]
-      summary: Create a partner (admin only)
-      security:
-        - adminApiKey: []
+      summary: Create a partner
       requestBody:
         required: true
         content:
@@ -494,7 +492,12 @@ components:
       properties:
         name: { type: string }
         websiteUrl: { type: string }
-        file: { type: string, format: binary, description: "Replacement logo (optional)" }
+        file:
+          {
+            type: string,
+            format: binary,
+            description: "Replacement logo (optional)",
+          }
         description: { type: string }
         email: { type: string, format: email }
         partershipReason: { type: string }

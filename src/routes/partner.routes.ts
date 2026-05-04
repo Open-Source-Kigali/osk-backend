@@ -7,9 +7,9 @@ const route = Router();
 
 route.get("/", partnerControllers.findAllPartners);
 route.get("/:id", partnerControllers.findPartnerById);
+route.post("/", upload.single("file"), partnerControllers.addPartner);
 
 route.use(authMiddleware.requireAdmin);
-route.post("/", upload.single("file"), partnerControllers.addPartner);
 route.put("/:id", upload.single("file"), partnerControllers.updatePartner);
 route.delete("/:id", partnerControllers.deletePartner);
 
