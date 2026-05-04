@@ -1,5 +1,5 @@
 import { prisma } from "../config/prisma";
-import { Event } from "../generated/prisma/client";
+import { Event, Prisma } from "../generated/prisma/client";
 
 async function findAllEvents() {
   return prisma.event.findMany();
@@ -15,10 +15,7 @@ async function findEventById(id: string) {
   return prisma.event.findUnique({ where: { id } });
 }
 
-async function updateEvent(
-  id: string,
-  eventData: Partial<Omit<Event, "id" | "createdAt" | "updatedAt">>,
-) {
+async function updateEvent(id: string, eventData: Prisma.EventUpdateInput) {
   return prisma.event.update({ where: { id }, data: eventData });
 }
 

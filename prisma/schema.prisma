@@ -42,13 +42,21 @@ model User {
 model Event {
   id            String   @id @default(uuid())
   title         String
+  tagline       String?
   imageUrl      String
   imagePublicId String
   description   String
   category      String
+  mode          String   @default("in-person")
+  featured      Boolean  @default(false)
   capacity      Int?
+  registered    Int?
   date          DateTime
+  endDate       DateTime?
+  timeLabel     String?
   location      String
+  speakers      String[]
+  registerUrl   String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
