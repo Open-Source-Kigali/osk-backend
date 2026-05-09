@@ -1,7 +1,7 @@
 name: Bug report
 description: Report something that isn't working
 title: "fix: <short description>"
-labels: ["type: bug"]
+labels: ["bug", "needs-triage"]
 body:
   - type: textarea
     id: what-happened
