@@ -34,17 +34,17 @@ The server runs on `http://localhost:3000` by default.
 
 See `.env.example` for the full list.
 
-| Variable | Required | Description |
-| --- | --- | --- |
-| `PORT` | no | Server port (default `3000`) |
-| `NODE_ENV` | no | `development` or `production` |
-| `DATABASE_URL` | yes | PostgreSQL connection string |
-| `ADMIN_API_KEY` | yes | Shared key for admin-only endpoints; sent as `x-api-key` header |
-| `CORS_ORIGINS` | yes | Comma-separated list of allowed origins |
-| `CLOUDINARY_CLOUD_NAME` | for uploads | Cloudinary cloud name |
-| `CLOUDINARY_API_KEY` | for uploads | Cloudinary API key |
-| `CLOUDINARY_API_SECRET` | for uploads | Cloudinary API secret |
-| `GITHUB_TOKEN` | for projects refresh | Fine-grained PAT with public repo read |
+| Variable                | Required             | Description                                                     |
+| ----------------------- | -------------------- | --------------------------------------------------------------- |
+| `PORT`                  | no                   | Server port (default `3000`)                                    |
+| `NODE_ENV`              | no                   | `development` or `production`                                   |
+| `DATABASE_URL`          | yes                  | PostgreSQL connection string                                    |
+| `ADMIN_API_KEY`         | yes                  | Shared key for admin-only endpoints; sent as `x-api-key` header |
+| `CORS_ORIGINS`          | yes                  | Comma-separated list of allowed origins                         |
+| `CLOUDINARY_CLOUD_NAME` | for uploads          | Cloudinary cloud name                                           |
+| `CLOUDINARY_API_KEY`    | for uploads          | Cloudinary API key                                              |
+| `CLOUDINARY_API_SECRET` | for uploads          | Cloudinary API secret                                           |
+| `GITHUB_TOKEN`          | for projects refresh | Fine-grained PAT with public repo read                          |
 
 ## Project structure
 
