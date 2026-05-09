@@ -2,7 +2,15 @@
 
 Backend for the official website of [Open Source Kigali](https://github.com/Open-Source-Kigali).
 
-Built with Express 5, TypeScript, Prisma and PostgreSQL.
+Built with Express, TypeScript, Prisma, and PostgreSQL.
+
+## Tech stack
+
+- **Runtime:** Node.js + Express
+- **Language:** TypeScript (strict mode)
+- **Database:** PostgreSQL via Prisma
+- **Image storage:** Cloudinary
+- **API docs:** OpenAPI served through Swagger UI
 
 ## Getting started
 
@@ -22,19 +30,40 @@ The server runs on `http://localhost:3000` by default.
 - `npm run build` — compile TypeScript to `dist/`
 - `npm start` — run the compiled build
 
+## Environment variables
+
+See `.env.example` for the full list.
+
+| Variable | Required | Description |
+| --- | --- | --- |
+| `PORT` | no | Server port (default `3000`) |
+| `NODE_ENV` | no | `development` or `production` |
+| `DATABASE_URL` | yes | PostgreSQL connection string |
+| `ADMIN_API_KEY` | yes | Shared key for admin-only endpoints; sent as `x-api-key` header |
+| `CORS_ORIGINS` | yes | Comma-separated list of allowed origins |
+| `CLOUDINARY_CLOUD_NAME` | for uploads | Cloudinary cloud name |
+| `CLOUDINARY_API_KEY` | for uploads | Cloudinary API key |
+| `CLOUDINARY_API_SECRET` | for uploads | Cloudinary API secret |
+| `GITHUB_TOKEN` | for projects refresh | Fine-grained PAT with public repo read |
+
 ## Project structure
 
 ```
 src/
 ├── app.ts              Express app setup
 ├── server.ts           Entry point
-├── config/             Environment config
+├── config/             Environment, Prisma, and Cloudinary config
 ├── routes/             Route definitions
 ├── controllers/        Request handlers
-├── models/             Data models
-└── middlewares/        Express middlewares
+├── services/           Business logic and database access
+├── middlewares/        Auth, error handling, uploads
+├── utils/              Response envelope, Cloudinary helpers
+└── generated/          Prisma client output (gitignored)
 prisma/
-└── schema.prisma       Prisma schema
+├── schema.prisma       Prisma schema
+└── migrations/         Generated migration history
+docs/
+└── openapi.yaml        OpenAPI specification
 ```
 
 ## Database
@@ -51,8 +80,16 @@ To stop the database: `docker compose down` (add `-v` to wipe the data).
 
 ## API documentation
 
-Interactive Swagger UI is available at `http://localhost:3000/api/docs` once the server is running.
+Interactive Swagger UI is available at `http://localhost:3000/api/docs` once the server is running. The underlying spec lives at [`docs/openapi.yaml`](./docs/openapi.yaml).
+
+Admin-only endpoints require an `x-api-key` header matching `ADMIN_API_KEY`.
+
+## Contributing
+
+Contributions are welcome. Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for setup, branching, commit conventions, and the pull request flow. By participating, you agree to follow our [Code of Conduct](./CODE_OF_CONDUCT.md).
+
+To report a bug or request a feature, open an issue using one of the templates in [`.github/ISSUE_TEMPLATE`](./.github/ISSUE_TEMPLATE).
 
 ## License
 
-MIT
+[MIT](./LICENSE)
