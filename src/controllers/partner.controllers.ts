@@ -41,7 +41,7 @@ async function findPartnerById(
 }
 
 async function addPartner(
-  req: Request<{}, {}, Omit<PartnerBody, "logoUrl" | "logoPublicId">>,
+  req: Request<unknown, unknown, Omit<PartnerBody, "logoUrl" | "logoPublicId">>,
   res: Response,
   next: NextFunction,
 ) {
@@ -71,7 +71,11 @@ async function addPartner(
 }
 
 async function updatePartner(
-  req: Request<{ id: string }, {}, Partial<Omit<PartnerBody, "logoPublicId">>>,
+  req: Request<
+    { id: string },
+    unknown,
+    Partial<Omit<PartnerBody, "logoPublicId">>
+  >,
   res: Response,
   next: NextFunction,
 ) {

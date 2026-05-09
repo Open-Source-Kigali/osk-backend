@@ -27,10 +27,15 @@ function parseSpeakers(v: unknown): string[] | undefined {
       // fall through
     }
   }
-  return trimmed.split(",").map((s) => s.trim()).filter(Boolean);
+  return trimmed
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
 }
 
-function buildEventData(body: Record<string, unknown>): Prisma.EventUpdateInput {
+function buildEventData(
+  body: Record<string, unknown>,
+): Prisma.EventUpdateInput {
   const data: Record<string, unknown> = {};
   const passthrough = [
     "title",
@@ -84,7 +89,7 @@ async function findEventById(
 }
 
 async function addEvent(
-  req: Request<{}, {}, Record<string, unknown>>,
+  req: Request<unknown, unknown, Record<string, unknown>>,
   res: Response,
   next: NextFunction,
 ) {
@@ -112,7 +117,7 @@ async function addEvent(
 }
 
 async function updateEvent(
-  req: Request<{ id: string }, {}, Record<string, unknown>>,
+  req: Request<{ id: string }, unknown, Record<string, unknown>>,
   res: Response,
   next: NextFunction,
 ) {

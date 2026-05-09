@@ -55,7 +55,7 @@ async function findProjectBySlug(
 }
 
 async function addProject(
-  req: Request<{}, {}, CreateBody>,
+  req: Request<unknown, unknown, CreateBody>,
   res: Response,
   next: NextFunction,
 ) {
@@ -97,7 +97,7 @@ async function addProject(
 }
 
 async function updateProject(
-  req: Request<{ id: string }, {}, UpdateBody>,
+  req: Request<{ id: string }, unknown, UpdateBody>,
   res: Response,
   next: NextFunction,
 ) {

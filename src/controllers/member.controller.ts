@@ -33,7 +33,7 @@ async function findMemberById(
 }
 
 async function addMember(
-  req: Request<{}, {}, Omit<Member, "id">>,
+  req: Request<object, unknown, Omit<Member, "id">>,
   res: Response,
   next: NextFunction,
 ) {
@@ -46,7 +46,7 @@ async function addMember(
 }
 
 async function updateMember(
-  req: Request<{ id: string }, {}, Partial<Omit<Member, "id">>>,
+  req: Request<{ id: string }, unknown, Partial<Omit<Member, "id">>>,
   res: Response,
   next: NextFunction,
 ) {
