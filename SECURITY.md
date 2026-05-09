@@ -4,10 +4,10 @@
 
 This project is under active development on a single `main` branch and does not currently ship tagged releases. Only the latest commit on `main` receives security fixes.
 
-| Version | Supported |
-| ------- | --------- |
-| `main` (latest) | Yes |
-| Older commits | No |
+| Version         | Supported |
+| --------------- | --------- |
+| `main` (latest) | Yes       |
+| Older commits   | No        |
 
 ## Reporting a Vulnerability
 
