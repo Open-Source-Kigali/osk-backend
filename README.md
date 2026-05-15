@@ -84,6 +84,16 @@ Interractive Swagger UI is available at `http://localhost:3000/api/docs` once th
 
 Admin-only endpoints require an `x-api-key` header matching `ADMIN_API_KEY`.
 
+## Contributors
+
+Everyone who contributes to this repo gets listed on the OSK website. To add yourself, open a pull request that adds your GitHub username to [`CONTRIBUTORS.md`](./CONTRIBUTORS.md):
+
+```
+your-github-username
+```
+
+The `GET /api/contributors` endpoint reads that file, fetches each person's public GitHub profile, and returns the data the frontend uses to render the contributors section.
+
 ## Contributing
 
 Contributions are welcome. Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for setup, branching, commit conventions, and the pull request flow. By participating, you agree to follow our [Code of Conduct](./CODE_OF_CONDUCT.md).
