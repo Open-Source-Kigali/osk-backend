@@ -51,9 +51,12 @@ async function updateMember(
   next: NextFunction,
 ) {
   try {
+    const filtered = Object.fromEntries(
+      Object.entries(req.body).filter(([, v]) => v !== ""),
+    ) as Partial<Omit<Member, "id">>;
     const updatedMember = await memberService.updateMember(
       req.params.id,
-      req.body,
+      filtered,
     );
     response.success(res, updatedMember, 200, "Member updated successfully");
   } catch (err) {

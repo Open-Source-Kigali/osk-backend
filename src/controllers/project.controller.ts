@@ -108,11 +108,11 @@ async function updateProject(
 
     const data: Record<string, unknown> = {};
     const b = req.body;
-    if (b.slug !== undefined) data.slug = b.slug;
-    if (b.repoOwner !== undefined) data.repoOwner = b.repoOwner;
-    if (b.repoName !== undefined) data.repoName = b.repoName;
-    if (b.tagline !== undefined) data.tagline = b.tagline;
-    if (b.category !== undefined) data.category = b.category;
+    if (b.slug) data.slug = b.slug;
+    if (b.repoOwner) data.repoOwner = b.repoOwner;
+    if (b.repoName) data.repoName = b.repoName;
+    if (b.tagline) data.tagline = b.tagline;
+    if (b.category) data.category = b.category;
     if (b.status) data.status = b.status;
     if (b.featured !== undefined) data.featured = parseBoolean(b.featured);
     if (b.maintainer !== undefined) data.maintainer = b.maintainer;

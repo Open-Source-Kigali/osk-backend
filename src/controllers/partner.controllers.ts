@@ -84,7 +84,9 @@ async function updatePartner(
     const existing = await partnerService.findPartnerById(req.params.id);
     if (!existing) return response.failure(res, "Partner not found", 404);
 
-    const data: Partial<PartnerBody> = { ...req.body };
+    const data: Partial<PartnerBody> = Object.fromEntries(
+      Object.entries(req.body).filter(([, v]) => v !== ""),
+    ) as Partial<PartnerBody>;
 
     if (req.file) {
       const uploaded = await uploadBuffer(

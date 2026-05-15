@@ -48,7 +48,7 @@ function buildEventData(
     "registerUrl",
   ];
   for (const k of passthrough) {
-    if (body[k] !== undefined) data[k] = body[k];
+    if (body[k] !== undefined && body[k] !== "") data[k] = body[k];
   }
   if (body.featured !== undefined) data.featured = parseBoolean(body.featured);
   if (body.capacity !== undefined)
