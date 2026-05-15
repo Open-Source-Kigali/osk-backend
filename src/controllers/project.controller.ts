@@ -113,7 +113,7 @@ async function updateProject(
     if (b.repoName !== undefined) data.repoName = b.repoName;
     if (b.tagline !== undefined) data.tagline = b.tagline;
     if (b.category !== undefined) data.category = b.category;
-    if (b.status !== undefined) data.status = b.status;
+    if (b.status) data.status = b.status;
     if (b.featured !== undefined) data.featured = parseBoolean(b.featured);
     if (b.maintainer !== undefined) data.maintainer = b.maintainer;
     if (b.langColor !== undefined) data.langColor = b.langColor;
