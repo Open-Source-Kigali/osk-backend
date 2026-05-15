@@ -42,7 +42,7 @@ Cloudinary and GitHub variables are only needed if you're touching uploads or pr
 ## Branching
 
 - Branch off `main` for every change.
-- Use a discriptive branch name with a type prefix:
+- Use a descriptive branch name with a type prefix:
   - `feat/<short-description>` for new features
   - `fix/<short-description>` for bug fixes
   - `docs/<short-description>` for documentation
@@ -51,7 +51,7 @@ Cloudinary and GitHub variables are only needed if you're touching uploads or pr
 
 ## Commit messages
 
-We use [Convential Commits](https://www.conventionalcommits.org/). The first line should be:
+We use [Conventional Commits](https://www.conventionalcommits.org/). The first line should be:
 
 ```
 <type>: <short summary>
@@ -65,7 +65,7 @@ Examples from this repo:
 - `fix: simplify error handling in middleware`
 - `docs: document admin API key flow`
 
-Keep the summary under 72 charecters. Add a longer body if the change needs context.
+Keep the summary under 72 characters. Add a longer body if the change needs context.
 
 ## Code style
 
