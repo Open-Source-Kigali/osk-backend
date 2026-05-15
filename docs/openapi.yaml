@@ -3,7 +3,7 @@ info:
   title: oskbackend API
   version: 1.0.0
   description: |
-    Backend API for Open Source Kigali.
+    Backned API for Open Source Kigali.
 
     All responses follow a consistent envelope:
       Success: `{ "success": true, "message": string, "data": T }`
@@ -44,7 +44,7 @@ paths:
   /members:
     get:
       tags: [Members]
-      summary: List all members
+      summary: List all memebers
       responses:
         "200":
           description: Members retrieved successfully
@@ -254,7 +254,7 @@ paths:
   /partners:
     get:
       tags: [Partners]
-      summary: List all partners
+      summary: List all patners
       responses:
         "200":
           description: Partners retrieved successfully
@@ -403,7 +403,7 @@ paths:
   /projects/refresh:
     post:
       tags: [Projects]
-      summary: Refresh GitHub-cached fields for all projects (admin only)
+      summary: Refresh GitHub-cached filds for all projects (admin only)
       security:
         - adminApiKey: []
       responses:
