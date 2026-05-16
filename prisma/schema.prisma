@@ -81,7 +81,7 @@ model Partner {
   logoPublicId     String
   description      String
   email            String   @unique
-  partershipReason String
+  partnershipReason String
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }

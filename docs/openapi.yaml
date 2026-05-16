@@ -641,20 +641,20 @@ components:
         logoPublicId: { type: string }
         description: { type: string }
         email: { type: string, format: email }
-        partershipReason: { type: string }
+        partnershipReason: { type: string }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
 
     PartnerInput:
       type: object
-      required: [name, websiteUrl, file, description, email, partershipReason]
+      required: [name, websiteUrl, file, description, email, partnershipReason]
       properties:
         name: { type: string }
         websiteUrl: { type: string }
         file: { type: string, format: binary, description: "Partner logo" }
         description: { type: string }
         email: { type: string, format: email }
-        partershipReason: { type: string }
+        partnershipReason: { type: string }
 
     PartnerUpdateInput:
       type: object
@@ -669,7 +669,7 @@ components:
           }
         description: { type: string }
         email: { type: string, format: email }
-        partershipReason: { type: string }
+        partnershipReason: { type: string }
 
     Project:
       type: object
