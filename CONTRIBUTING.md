@@ -41,7 +41,11 @@ Cloudinary and GitHub variables are only needed if you're touching uploads or pr
 
 ## Branching
 
-- Branch off `main` for every change.
+We use a three-branch flow: `dev` → `staging` → `main`.
+
+- **Always branch off `dev`** — it is the default branch and the target for all contributor PRs.
+- `staging` is periodically merged from `dev` for pre-production testing.
+- `main` is production — only merged from `staging` when ready to ship.
 - Use a discriptive branch name with a type prefix:
   - `feat/<short-description>` for new features
   - `fix/<short-description>` for bug fixes
@@ -102,7 +106,7 @@ If you add or change a route:
 ## Pull requests
 
 1. Fork the repo and push your branch to your fork (or push to a branch on the main repo if you have access).
-2. Open a PR against `main` using the [PR template](.github/PULL_REQUEST_TEMPLATE.md).
+2. Open a PR against `dev` using the [PR template](.github/PULL_REQUEST_TEMPLATE.md).
 3. Link the issue your PR closes (`Closes #123`).
 4. Keep PRs focused. One logical change per PR is easier to review than a bundle.
 5. Be ready to iterate. Reviewers may suggest changes, and that's normal.
