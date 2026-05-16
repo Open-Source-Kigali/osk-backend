@@ -2,7 +2,7 @@
 
 Backend for the official website of [Open Source Kigali](https://github.com/Open-Source-Kigali).
 
-Build with Express, TypeScript, Prisma, and PostgreSQL.
+Built with Express, TypeScript, Prisma, and PostgreSQL.
 
 ## Tech stack
 
@@ -10,7 +10,7 @@ Build with Express, TypeScript, Prisma, and PostgreSQL.
 - **Language:** TypeScript (strict mode)
 - **Database:** PostgreSQL via Prisma
 - **Image storage:** Cloudinary
-- **API docs:** OpenAPI served trough Swagger UI
+- **API docs:** OpenAPI served through Swagger UI
 
 ## Getting started
 
@@ -80,7 +80,7 @@ To stop the database: `docker compose down` (add `-v` to wipe the data).
 
 ## API documentation
 
-Interractive Swagger UI is available at `http://localhost:3000/api/docs` once the server is running. The underlying spec lives at [`docs/openapi.yaml`](./docs/openapi.yaml).
+Interactive Swagger UI is available at `http://localhost:3000/api/docs` once the server is running. The underlying spec lives at [`docs/openapi.yaml`](./docs/openapi.yaml).
 
 Admin-only endpoints require an `x-api-key` header matching `ADMIN_API_KEY`.
 
