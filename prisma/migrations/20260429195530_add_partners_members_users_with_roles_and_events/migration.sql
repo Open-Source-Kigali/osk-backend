@@ -37,7 +37,7 @@ CREATE TABLE "Partner" (
     "logoUrl" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "email" TEXT NOT NULL,
-    "partershipReason" TEXT NOT NULL,
+    "partnershipReason" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
