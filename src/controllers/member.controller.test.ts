@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import request from "supertest";
 import app from "../app";
+import { CodingLevel } from "../generated/prisma/client";
 
 vi.mock("../services/member.service");
 import memberService from "../services/member.service";
@@ -14,9 +15,9 @@ const mockMember = {
   githubUsername: "alice",
   orgName: "OSK",
   joinReason: "Love OSS",
-  codingLevel: "intermediate",
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
+  codingLevel: CodingLevel.intermediate,
+  createdAt: new Date(),
+  updatedAt: new Date(),
 };
 
 beforeEach(() => vi.resetAllMocks());
