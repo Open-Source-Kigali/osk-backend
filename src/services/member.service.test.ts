@@ -62,7 +62,12 @@ describe("findMemberById", () => {
 describe("addMember", () => {
   it("creates and returns a new member", async () => {
     prismaMock.member.create.mockResolvedValue(mockMember);
-    const { id, createdAt, updatedAt, ...input } = mockMember;
+    const {
+      id: _id,
+      createdAt: _createdAt,
+      updatedAt: _updatedAt,
+      ...input
+    } = mockMember;
 
     const result = await memberService.addMember(input);
 
