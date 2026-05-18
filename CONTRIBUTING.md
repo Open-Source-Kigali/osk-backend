@@ -69,7 +69,7 @@ Examples from this repo:
 - `fix: simplify error handling in middleware`
 - `docs: document admin API key flow`
 
-Keep the summary under 72 charecters. Add a longer body if the change needs context.
+Keep the summary under 72 characters. Add a longer body if the change needs context.
 
 ## Code style
 
