@@ -3,7 +3,7 @@ info:
   title: oskbackend API
   version: 1.0.0
   description: |
-    Backned API for Open Source Kigali.
+    Backend API for Open Source Kigali.
 
     All responses follow a consistent envelope:
       Success: `{ "success": true, "message": string, "data": T }`
@@ -43,7 +43,7 @@ paths:
   /members:
     get:
       tags: [Members]
-      summary: List all memebers
+      summary: List all members
       responses:
         "200":
           description: Members retrieved successfully
