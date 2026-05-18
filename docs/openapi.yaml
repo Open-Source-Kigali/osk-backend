@@ -44,7 +44,7 @@ paths:
   /members:
     get:
       tags: [Members]
-      summary: List all memebers
+      summary: List all members
       responses:
         "200":
           description: Members retrieved successfully
