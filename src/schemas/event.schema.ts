@@ -53,27 +53,25 @@ const eventBaseSchema = z.object({
     .optional()
     .nullable()
     .transform((v) => {
-      if (!v) return [];
+      if (v === undefined) return undefined;
+      if (v === null) return [];
       if (Array.isArray(v)) return v.map(String);
-      if (typeof v === "string") {
-        const trimmed = v.trim();
-        if (!trimmed) return [];
-        if (trimmed.startsWith("[")) {
-          try {
-            const parsed = JSON.parse(trimmed);
-            if (Array.isArray(parsed)) return parsed.map(String);
-          } catch {
-            // fall through
-          }
+
+      const trimmed = v.trim();
+      if (!trimmed) return [];
+      if (trimmed.startsWith("[")) {
+        try {
+          const parsed = JSON.parse(trimmed);
+          if (Array.isArray(parsed)) return parsed.map(String);
+        } catch {
+          // fall through
         }
-        return trimmed
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean);
       }
-      return [];
-    })
-    .default([]),
+      return trimmed
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }),
   registerUrl: z.string().trim().optional().nullable(),
 });
 
