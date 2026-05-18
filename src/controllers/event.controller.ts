@@ -55,13 +55,10 @@ function buildEventData(
     data.capacity = body.capacity === null ? null : Number(body.capacity);
   if (body.registered !== undefined)
     data.registered = body.registered === null ? null : Number(body.registered);
-  //date fix
- const date = new Date(body.date as string)
- if (isNaN(date.getTime())) return body.date('date is not a valid date', 400)
-  // if (body.date !== undefined) data.date = new Date(body.date as string);
-  // if (body.endDate !== undefined)
-  //   data.endDate = body.endDate ? new Date(body.endDate as string) : null;
-  
+  if (body.date !== undefined) data.date = new Date(body.date as string);
+  if (body.endDate !== undefined)
+    data.endDate = body.endDate === null ? null : new Date(body.endDate as string);
+
   const speakers = parseSpeakers(body.speakers);
   if (speakers !== undefined) data.speakers = speakers;
   return data;
@@ -105,6 +102,19 @@ async function addEvent(
   try {
     const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
     publicId = uploaded.public_id;
+
+    if (req.body.date !== undefined) {
+      const d = new Date(req.body.date as string);
+      if (isNaN(d.getTime()))
+        return response.failure(res, "date is not a valid date", 400);
+      req.body.date = d as unknown as string;
+    }
+    if (req.body.endDate !== undefined && req.body.endDate !== null) {
+      const ed = new Date(req.body.endDate as string);
+      if (isNaN(ed.getTime()))
+        return response.failure(res, "endDate is not a valid date", 400);
+      req.body.endDate = ed as unknown as string;
+    }
 
     const data = buildEventData(req.body) as EventBody;
     data.imageUrl = uploaded.secure_url;
