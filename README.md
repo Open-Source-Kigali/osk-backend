@@ -2,7 +2,7 @@
 
 Backend for the official website of [Open Source Kigali](https://github.com/Open-Source-Kigali).
 
-Build with Express, TypeScript, Prisma, and PostgreSQL.
+Built with Express, TypeScript, Prisma, and PostgreSQL.
 
 ## Tech stack
 
