@@ -1,5 +1,3 @@
-
-// npm install --save-dev prisma dotenv
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
@@ -12,4 +10,3 @@ export default defineConfig({
     url: process.env["DATABASE_URL"],
   },
 });
- 
