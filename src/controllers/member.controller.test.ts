@@ -55,6 +55,20 @@ describe("GET /api/members/:id", () => {
 });
 
 describe("POST /api/members", () => {
+  it("returns 400 when required fields are missing", async () => {
+    const res = await request(app).post("/api/members").send({
+      name: "Alice",
+      email: "alice@example.com",
+      githubUsername: "alice",
+      orgName: "OSK",
+      codingLevel: "intermediate",
+    });
+
+    expect(res.status).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe("joinReason is required");
+  });
+
   it("returns 201 with the created member", async () => {
     vi.mocked(memberService.addMember).mockResolvedValue(mockMember);
 

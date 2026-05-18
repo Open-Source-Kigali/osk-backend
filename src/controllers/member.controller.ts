@@ -38,6 +38,21 @@ async function addMember(
   next: NextFunction,
 ) {
   try {
+    const requiredFields = [
+      "name",
+      "email",
+      "githubUsername",
+      "orgName",
+      "joinReason",
+      "codingLevel",
+    ] as const;
+    const body = req.body as Record<string, unknown>;
+    for (const field of requiredFields) {
+      if (body[field] === undefined || body[field] === null || body[field] === "") {
+        return response.failure(res, `${field} is required`, 400);
+      }
+    }
+
     const newMember = await memberService.addMember(req.body);
     response.success(res, newMember, 201, "Member created successfully");
   } catch (err) {
