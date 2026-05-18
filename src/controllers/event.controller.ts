@@ -140,6 +140,19 @@ async function updateEvent(
     const existing = await eventService.findEventById(req.params.id);
     if (!existing) return response.failure(res, "Event not found", 404);
 
+    if (req.body.date !== undefined) {
+      const d = new Date(req.body.date as string);
+      if (isNaN(d.getTime()))
+        return response.failure(res, "date is not a valid date", 400);
+      req.body.date = d as unknown as string;
+    }
+    if (req.body.endDate !== undefined && req.body.endDate !== null) {
+      const ed = new Date(req.body.endDate as string);
+      if (isNaN(ed.getTime()))
+        return response.failure(res, "endDate is not a valid date", 400);
+      req.body.endDate = ed as unknown as string;
+    }
+
     const data = buildEventData(req.body);
 
     if (req.file) {
