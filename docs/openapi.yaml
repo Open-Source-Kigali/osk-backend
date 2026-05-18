@@ -17,6 +17,7 @@ tags:
   - name: Events
   - name: Partners
   - name: Projects
+  - name: Contributors
   - name: Users
 
 paths:
@@ -423,6 +424,48 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "500": { $ref: "#/components/responses/InternalError" }
 
+  /contributors:
+    get:
+      tags: [Contributors]
+      summary: Read cached contributor profiles
+      responses:
+        "200":
+          description: Contributors retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          { $ref: "#/components/schemas/ContributorProfile" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
+  /contributors/refresh:
+    post:
+      tags: [Contributors]
+      summary: Refresh cached contributor profiles from CONTRIBUTORS.md (admin only)
+      security:
+        - adminApiKey: []
+      responses:
+        "200":
+          description: Refresh completed
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/ContributorRefreshSummary"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
   /projects/{slug}:
     parameters:
       - in: path
@@ -741,6 +784,34 @@ components:
         slug: { type: string }
         ok: { type: boolean }
         error: { type: string, nullable: true }
+
+    ContributorProfile:
+      type: object
+      properties:
+        login: { type: string }
+        name: { type: string, nullable: true }
+        avatarUrl: { type: string, format: uri }
+        profileUrl: { type: string, format: uri }
+        bio: { type: string, nullable: true }
+        company: { type: string, nullable: true }
+
+    ContributorRefreshResult:
+      type: object
+      properties:
+        login: { type: string }
+        status: { type: string, enum: [saved, skipped, failed] }
+        error: { type: string, nullable: true }
+
+    ContributorRefreshSummary:
+      type: object
+      properties:
+        total: { type: integer }
+        saved: { type: integer }
+        skipped: { type: integer }
+        failed: { type: integer }
+        results:
+          type: array
+          items: { $ref: "#/components/schemas/ContributorRefreshResult" }
 
     User:
       type: object

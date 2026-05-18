@@ -27,7 +27,11 @@ function headers() {
 async function gh(path: string) {
   const res = await fetch(`${API}${path}`, { headers: headers() });
   if (!res.ok) {
-    throw new Error(`GitHub ${res.status} on ${path}: ${await res.text()}`);
+    const error = new Error(
+      `GitHub ${res.status} on ${path}: ${await res.text()}`,
+    ) as Error & { status?: number };
+    error.status = res.status;
+    throw error;
   }
   return res;
 }
@@ -82,3 +86,5 @@ export async function fetchRepoSnapshot(
     pushedAt: repo.pushed_at ? new Date(repo.pushed_at) : null,
   };
 }
+
+export { gh };
