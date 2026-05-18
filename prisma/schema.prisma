@@ -26,7 +26,7 @@ enum UserRole {
 enum ProjectStatus {
   active
   archived
-  paused 
+  paused
 }
 
 model User {
