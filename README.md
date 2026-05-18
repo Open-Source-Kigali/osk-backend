@@ -83,6 +83,7 @@ To stop the database: `docker compose down` (add `-v` to wipe the data).
 Interractive Swagger UI is available at `http://localhost:3000/api/docs` once the server is running. The underlying spec lives at [`docs/openapi.yaml`](./docs/openapi.yaml).
 
 Admin-only endpoints require an `x-api-key` header matching `ADMIN_API_KEY`.
+If `ADMIN_API_KEY` is missing at startup, the server logs a warning and admin endpoints will continue to return `500` until the key is configured.
 
 ## Contributors
 
