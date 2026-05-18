@@ -6,7 +6,7 @@ import { env } from "./config/env";
 if (!env.adminApiKey) {
   console.error('FATAL: ADMIN_API_KEY is not set. Refusing to start.')
   process.exit(1)
-}
+} //stops at startup sith error
 app.listen(env.port, () => {
   console.log(`Server running on http://localhost:${env.port}`);
 });
