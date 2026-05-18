@@ -10,7 +10,7 @@ Build with Express, TypeScript, Prisma, and PostgreSQL.
 - **Language:** TypeScript (strict mode)
 - **Database:** PostgreSQL via Prisma
 - **Image storage:** Cloudinary
-- **API docs:** OpenAPI served trough Swagger UI
+- **API docs:** OpenAPI served through Swagger UI
 
 ## Getting started
 
