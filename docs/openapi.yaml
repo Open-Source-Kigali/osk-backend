@@ -452,6 +452,22 @@ paths:
         name: id
         required: true
         schema: { type: string, format: uuid }
+    get:
+      tags: [Projects]
+      summary: Get a project by id
+      responses:
+        "200":
+          description: Project retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/Project" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/InternalError" }
     put:
       tags: [Projects]
       summary: Update a project (admin only)
