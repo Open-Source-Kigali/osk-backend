@@ -3,6 +3,7 @@ import healthRoutes from "./health.routes";
 import memberRoutes from "./member.routes";
 import partnerRoutes from "./partner.routes";
 import eventRoutes from "./event.routes";
+import reviewRoutes from "./review.routes";
 import projectRoutes from "./project.routes";
 import contributorRoutes from "./contributors.routes";
 
@@ -12,6 +13,7 @@ router.use("/health", healthRoutes);
 router.use("/members", memberRoutes);
 router.use("/partners", partnerRoutes);
 router.use("/events", eventRoutes);
+router.use("/reviews", reviewRoutes);
 router.use("/projects", projectRoutes);
 router.use("/contributors", contributorRoutes);
 
