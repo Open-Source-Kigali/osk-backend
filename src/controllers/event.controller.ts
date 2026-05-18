@@ -55,9 +55,13 @@ function buildEventData(
     data.capacity = body.capacity === null ? null : Number(body.capacity);
   if (body.registered !== undefined)
     data.registered = body.registered === null ? null : Number(body.registered);
-  if (body.date !== undefined) data.date = new Date(body.date as string);
-  if (body.endDate !== undefined)
-    data.endDate = body.endDate ? new Date(body.endDate as string) : null;
+  //date fix
+ const date = new Date(body.date as string)
+ if (isNaN(date.getTime())) return body.date('date is not a valid date', 400)
+  // if (body.date !== undefined) data.date = new Date(body.date as string);
+  // if (body.endDate !== undefined)
+  //   data.endDate = body.endDate ? new Date(body.endDate as string) : null;
+  
   const speakers = parseSpeakers(body.speakers);
   if (speakers !== undefined) data.speakers = speakers;
   return data;
