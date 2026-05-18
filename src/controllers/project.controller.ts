@@ -28,12 +28,13 @@ function parseBoolean(value: unknown) {
 }
 
 async function findAllProjects(
-  _req: Request,
+  req: Request<object, unknown, unknown, { featured?: string }>,
   res: Response,
   next: NextFunction,
 ) {
   try {
-    const projects = await projectService.findAllProjects();
+    const featured = req.query.featured === "true" ? true : undefined;
+    const projects = await projectService.findAllProjects(featured);
     response.success(res, projects, 200, "Projects retrieved successfully");
   } catch (err) {
     next(err);

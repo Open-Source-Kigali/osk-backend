@@ -149,6 +149,14 @@ paths:
     get:
       tags: [Events]
       summary: List all events
+      parameters:
+        - in: query
+          name: featured
+          required: false
+          schema:
+            type: string
+            enum: ["true"]
+          description: When set to true, only featured events are returned
       responses:
         "200":
           description: Events retrieved successfully
@@ -361,6 +369,14 @@ paths:
     get:
       tags: [Projects]
       summary: List all projects
+      parameters:
+        - in: query
+          name: featured
+          required: false
+          schema:
+            type: string
+            enum: ["true"]
+          description: When set to true, only featured projects are returned
       responses:
         "200":
           description: Projects retrieved successfully
