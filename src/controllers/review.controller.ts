@@ -7,22 +7,26 @@ import trimStrings from "../utils/trim-strings";
 
 type ReviewBody = Omit<Review, "id" | "createdAt" | "updatedAt">;
 
-async function findAll(_req: Request, res: Response, next: NextFunction) {
+async function findAllReviews(
+  _req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   try {
-    const reviews = await reviewService.findAll();
+    const reviews = await reviewService.findAllReviews();
     response.success(res, reviews, 200, "Reviews retrieved successfully");
   } catch (err) {
     next(err);
   }
 }
 
-async function findById(
+async function findReviewById(
   req: Request<{ id: string }>,
   res: Response,
   next: NextFunction,
 ) {
   try {
-    const review = await reviewService.findById(req.params.id);
+    const review = await reviewService.findReviewById(req.params.id);
     if (!review) {
       return response.failure(res, "Review not found", 404);
     }
@@ -32,7 +36,7 @@ async function findById(
   }
 }
 
-async function create(
+async function addReview(
   req: Request<
     unknown,
     unknown,
@@ -42,7 +46,7 @@ async function create(
   next: NextFunction,
 ) {
   if (!req.file) {
-    return response.failure(res, "Profile image is required", 400);
+    return response.failure(res, "Profile image file is required", 400);
   }
 
   let publicId: string | undefined;
@@ -53,7 +57,7 @@ async function create(
     );
     publicId = uploaded.public_id;
 
-    const newReview = await reviewService.create({
+    const newReview = await reviewService.addReview({
       ...trimStrings(req.body),
       profileUrl: uploaded.secure_url,
       profilePublicId: uploaded.public_id,
@@ -66,18 +70,18 @@ async function create(
   }
 }
 
-async function update(
+async function updateReview(
   req: Request<
     { id: string },
     unknown,
-    Partial<Omit<ReviewBody, "profileUrl" | "profilePublicId">>
+    Partial<Omit<ReviewBody, "profilePublicId">>
   >,
   res: Response,
   next: NextFunction,
 ) {
   let newPublicId: string | undefined;
   try {
-    const existing = await reviewService.findById(req.params.id);
+    const existing = await reviewService.findReviewById(req.params.id);
     if (!existing) return response.failure(res, "Review not found", 404);
 
     const data: Partial<ReviewBody> = Object.fromEntries(
@@ -94,7 +98,7 @@ async function update(
       data.profilePublicId = uploaded.public_id;
     }
 
-    const updatedReview = await reviewService.update(req.params.id, data);
+    const updatedReview = await reviewService.updateReview(req.params.id, data);
 
     if (req.file && existing.profilePublicId) {
       await destroyImage(existing.profilePublicId);
@@ -113,12 +117,11 @@ async function deleteReview(
   next: NextFunction,
 ) {
   try {
-    const existing = await reviewService.findById(req.params.id);
+    const existing = await reviewService.findReviewById(req.params.id);
     if (!existing) return response.failure(res, "Review not found", 404);
 
-    await reviewService.delete(req.params.id);
+    await reviewService.deleteReview(req.params.id);
     if (existing.profilePublicId) await destroyImage(existing.profilePublicId);
-
     response.success(res, null, 204, "Review deleted successfully");
   } catch (err) {
     next(err);
@@ -126,9 +129,9 @@ async function deleteReview(
 }
 
 export default {
-  findAll,
-  findById,
-  create,
-  update,
-  delete: deleteReview,
+  findAllReviews,
+  findReviewById,
+  addReview,
+  updateReview,
+  deleteReview,
 };

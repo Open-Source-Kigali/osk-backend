@@ -1,44 +1,37 @@
-import { Prisma, Review } from "../generated/prisma/client";
 import { prisma } from "../config/prisma";
+import { Review } from "../generated/prisma/client";
 
-export async function findAll(): Promise<Review[]> {
-  return prisma.review.findMany({
-    orderBy: { createdAt: "desc" },
-  });
+async function findAllReviews(): Promise<Review[]> {
+  return prisma.review.findMany({ orderBy: { createdAt: "desc" } });
 }
 
-export async function findById(id: string): Promise<Review | null> {
-  return prisma.review.findUnique({
-    where: { id },
-  });
+async function findReviewById(id: string): Promise<Review | null> {
+  return prisma.review.findUnique({ where: { id } });
 }
 
-export async function create(data: Prisma.ReviewCreateInput): Promise<Review> {
-  return prisma.review.create({
-    data,
-  });
-}
-
-export async function update(
-  id: string,
-  data: Prisma.ReviewUpdateInput,
+async function addReview(
+  reviewData: Omit<Review, "id" | "createdAt" | "updatedAt">,
 ): Promise<Review> {
-  return prisma.review.update({
-    where: { id },
-    data,
-  });
+  return prisma.review.create({ data: reviewData });
 }
 
-export async function deleteReview(id: string): Promise<Review> {
-  return prisma.review.delete({
-    where: { id },
-  });
+async function updateReview(
+  id: string,
+  reviewData: Partial<
+    Omit<Review, "id" | "createdAt" | "updatedAt" | "profilePublicId">
+  >,
+): Promise<Review> {
+  return prisma.review.update({ where: { id }, data: reviewData });
+}
+
+async function deleteReview(id: string): Promise<Review> {
+  return prisma.review.delete({ where: { id } });
 }
 
 export default {
-  findAll,
-  findById,
-  create,
-  update,
-  delete: deleteReview,
+  findAllReviews,
+  findReviewById,
+  addReview,
+  updateReview,
+  deleteReview,
 };
