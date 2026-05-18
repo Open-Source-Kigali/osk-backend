@@ -1,6 +1,6 @@
 # Contributing to oskbackend
 
-Thanks for you're interest in contributing! This is the backend for the [Open Source Kigali](https://github.com/Open-Source-Kigali) website. Whether you're fixing a bug, adding a feature, or improving the docs, this guide will help you get set up and submit a change.
+Thanks for your interest in contributing! This is the backend for the [Open Source Kigali](https://github.com/Open-Source-Kigali) website. Whether you're fixing a bug, adding a feature, or improving the docs, this guide will help you get set up and submit a change.
 
 ## Code of conduct
 
