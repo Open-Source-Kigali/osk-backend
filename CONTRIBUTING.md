@@ -46,7 +46,7 @@ We use a three-branch flow: `dev` → `staging` → `main`.
 - **Always branch off `dev`** — it is the default branch and the target for all contributor PRs.
 - `staging` is periodically merged from `dev` for pre-production testing.
 - `main` is production — only merged from `staging` when ready to ship.
-- Use a discriptive branch name with a type prefix:
+- Use a descriptive branch name with a type prefix:
   - `feat/<short-description>` for new features
   - `fix/<short-description>` for bug fixes
   - `docs/<short-description>` for documentation
