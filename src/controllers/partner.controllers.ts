@@ -43,7 +43,7 @@ async function findPartnerById(
 }
 
 async function addPartner(
-  req: Request<unknown, unknown, CreatePartnerBody>,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) {
@@ -51,7 +51,8 @@ async function addPartner(
     return response.failure(res, "Logo file is required", 400);
   }
 
-  const { email } = req.body;
+  const body = req.body as CreatePartnerBody;
+  const { email } = body;
 
   // Validate email format before processing
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -68,7 +69,7 @@ async function addPartner(
     publicId = uploaded.public_id;
 
     const newPartner = await partnerService.addPartner({
-      ...req.body,
+      ...body,
       logoUrl: uploaded.secure_url,
       logoPublicId: uploaded.public_id,
     });
@@ -81,7 +82,7 @@ async function addPartner(
 }
 
 async function updatePartner(
-  req: Request<{ id: string }, unknown, UpdatePartnerBody>,
+  req: Request<{ id: string }>,
   res: Response,
   next: NextFunction,
 ) {
@@ -91,7 +92,7 @@ async function updatePartner(
     if (!existing) return response.failure(res, "Partner not found", 404);
 
     const data: Partial<PartnerBody> = Object.fromEntries(
-      Object.entries(req.body).filter(([, v]) => v !== ""),
+      Object.entries(req.body as UpdatePartnerBody).filter(([, v]) => v !== ""),
     ) as Partial<PartnerBody>;
 
     if (req.file) {
