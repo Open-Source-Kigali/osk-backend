@@ -2,6 +2,10 @@ import { Request, Response, NextFunction } from "express";
 import memberService from "../services/member.service";
 import response from "../utils/response";
 import { Member } from "../generated/prisma/client";
+import {
+  createMemberSchema,
+  updateMemberSchema,
+} from "../schemas/member.schema";
 
 async function findAllMembers(
   _req: Request,
@@ -38,7 +42,14 @@ async function addMember(
   next: NextFunction,
 ) {
   try {
-    const newMember = await memberService.addMember(req.body);
+    const validation = createMemberSchema.safeParse(req.body);
+    if (!validation.success) {
+      const messages = validation.error.issues
+        .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+        .join(", ");
+      return response.failure(res, messages, 400);
+    }
+    const newMember = await memberService.addMember(validation.data);
     response.success(res, newMember, 201, "Member created successfully");
   } catch (err) {
     next(err);
@@ -51,8 +62,15 @@ async function updateMember(
   next: NextFunction,
 ) {
   try {
+    const validation = updateMemberSchema.safeParse(req.body);
+    if (!validation.success) {
+      const messages = validation.error.issues
+        .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+        .join(", ");
+      return response.failure(res, messages, 400);
+    }
     const filtered = Object.fromEntries(
-      Object.entries(req.body).filter(([, v]) => v !== ""),
+      Object.entries(validation.data).filter(([, v]) => v !== ""),
     ) as Partial<Omit<Member, "id">>;
     const updatedMember = await memberService.updateMember(
       req.params.id,
