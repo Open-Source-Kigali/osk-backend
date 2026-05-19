@@ -61,6 +61,10 @@ async function addProject(
 ) {
   if (!req.file) return response.failure(res, "Image file is required", 400);
 
+  if (req.body.repoName !== undefined && req.body.repoName.trim() === "") {
+    return response.failure(res, "repoName cannot be empty", 400);
+  }
+
   let publicId: string | undefined;
   try {
     const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
@@ -110,7 +114,11 @@ async function updateProject(
     const b = req.body;
     if (b.slug) data.slug = b.slug;
     if (b.repoOwner) data.repoOwner = b.repoOwner;
-    if (b.repoName) data.repoName = b.repoName;
+    if (b.repoName !== undefined) {
+      if (b.repoName.trim() === "")
+        return response.failure(res, "repoName cannot be empty", 400);
+      data.repoName = b.repoName;
+    }
     if (b.tagline) data.tagline = b.tagline;
     if (b.category) data.category = b.category;
     if (b.status) data.status = b.status;
