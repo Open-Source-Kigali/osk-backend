@@ -54,6 +54,13 @@ async function updateMember(
     const filtered = Object.fromEntries(
       Object.entries(req.body).filter(([, v]) => v !== ""),
     ) as Partial<Omit<Member, "id">>;
+
+    if (
+      filtered.codingLevel !== undefined &&
+      !["beginner", "intermediate", "advanced"].includes(filtered.codingLevel)
+    ) {
+      return response.failure(res, "Invalid codingLevel value", 400);
+    }
     const updatedMember = await memberService.updateMember(
       req.params.id,
       filtered,
