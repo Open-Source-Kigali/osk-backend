@@ -6,7 +6,12 @@ function success<T>(
   status: number = 200,
   message: string = "Success",
 ) {
-  if (status === 204) return res.status(204).end();
+
+  if (status === 204) {
+    // HTTP 204 responses must not include a message body.
+    return res.status(status).end();
+  }
+
   return res.status(status).json({ success: true, message, data });
 }
 

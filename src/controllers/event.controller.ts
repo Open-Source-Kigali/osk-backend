@@ -27,10 +27,14 @@ function parseSpeakers(v: unknown): string[] | undefined {
       // fall through
     }
   }
-  return trimmed
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
+  return [
+    ...new Set(
+      trimmed
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
+    ),
+  ];
 }
 
 function buildEventData(
