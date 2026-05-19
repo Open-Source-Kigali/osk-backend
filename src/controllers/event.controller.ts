@@ -5,6 +5,7 @@ import { Event, Prisma } from "../generated/prisma/client";
 import { destroyImage, uploadBuffer } from "../utils/cloudinary-upload";
 
 const FOLDER = "open-source-kigali/events";
+const ALLOWED_MODES = ["in-person", "online", "hybrid"] as const;
 
 type EventBody = Omit<Event, "id" | "createdAt" | "updatedAt">;
 
@@ -68,8 +69,21 @@ function validateEventCapacity(
   registered: unknown,
 ): string | null {
   if (capacity == null || registered == null) return null;
-  if (typeof capacity !== "number" || typeof registered !== "number") return null;
+  if (
+    typeof capacity !== "number" ||
+    typeof registered !== "number"
+  )
+    return null;
   if (registered > capacity) return "registered cannot exceed capacity";
+  return null;
+}
+
+function validateEventMode(mode: unknown): string | null {
+  if (mode == null || mode === "") return null;
+  if (typeof mode !== "string") return null;
+  if (!ALLOWED_MODES.includes(mode as (typeof ALLOWED_MODES)[number])) {
+    return `mode must be one of: ${ALLOWED_MODES.join(", ")}`;
+  }
   return null;
 }
 
@@ -115,6 +129,10 @@ async function addEvent(
   let publicId: string | undefined;
   try {
     const data = buildEventData(req.body) as EventBody;
+    const modeError = validateEventMode(req.body.mode);
+    if (modeError) {
+      return response.failure(res, modeError, 400);
+    }
     const capacityError = validateEventCapacity(
       data.capacity,
       data.registered,
@@ -150,6 +168,12 @@ async function updateEvent(
     if (!existing) return response.failure(res, "Event not found", 404);
 
     const data = buildEventData(req.body);
+    const modeError = validateEventMode(
+      data.mode ?? existing.mode,
+    );
+    if (modeError) {
+      return response.failure(res, modeError, 400);
+    }
     const capacityError = validateEventCapacity(
       data.capacity ?? existing.capacity,
       data.registered ?? existing.registered,
