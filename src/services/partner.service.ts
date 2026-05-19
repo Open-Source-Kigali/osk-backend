@@ -2,7 +2,9 @@ import { prisma } from "../config/prisma";
 import { Partner } from "../generated/prisma/client";
 
 async function findAllPartners() {
-  return prisma.partner.findMany();
+  return prisma.partner.findMany({
+    omit: { logoPublicId: true },
+  });
 }
 
 async function addPartner(

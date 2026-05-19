@@ -5,6 +5,7 @@ async function findAllEvents(featured?: boolean) {
   return prisma.event.findMany({
     where: featured !== undefined ? { featured } : undefined,
     orderBy: { date: "asc" },
+    omit: { imagePublicId: true },
   });
 }
 
