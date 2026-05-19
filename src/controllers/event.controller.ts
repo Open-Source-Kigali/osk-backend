@@ -55,7 +55,9 @@ function buildEventData(
     data.capacity = body.capacity === null ? null : Number(body.capacity);
   if (body.registered !== undefined)
     data.registered = body.registered === null ? null : Number(body.registered);
-  if (body.date !== undefined) data.date = new Date(body.date as string);
+  const d = new Date(body.date as string)
+if (isNaN(d.getTime())) return response.failure(res, 'date is not a valid date', 400)
+data.date = d;
   if (body.endDate !== undefined)
     data.endDate = body.endDate ? new Date(body.endDate as string) : null;
   const speakers = parseSpeakers(body.speakers);
