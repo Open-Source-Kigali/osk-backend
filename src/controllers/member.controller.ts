@@ -3,6 +3,8 @@ import memberService from "../services/member.service";
 import response from "../utils/response";
 import { Member } from "../generated/prisma/client";
 
+const ALLOWED_CODING_LEVELS = ["beginner", "intermediate", "advanced"] as const;
+
 async function findAllMembers(
   _req: Request,
   res: Response,
@@ -52,6 +54,17 @@ async function addMember(
         return response.failure(res, `${field} is required`, 400);
       }
     }
+    if (
+      !ALLOWED_CODING_LEVELS.includes(
+        body.codingLevel as (typeof ALLOWED_CODING_LEVELS)[number],
+      )
+    ) {
+      return response.failure(
+        res,
+        `codingLevel must be one of: ${ALLOWED_CODING_LEVELS.join(", ")}`,
+        400,
+      );
+    }
 
     const newMember = await memberService.addMember(req.body);
     response.success(res, newMember, 201, "Member created successfully");
@@ -69,6 +82,18 @@ async function updateMember(
     const filtered = Object.fromEntries(
       Object.entries(req.body).filter(([, v]) => v !== ""),
     ) as Partial<Omit<Member, "id">>;
+    if (
+      filtered.codingLevel &&
+      !ALLOWED_CODING_LEVELS.includes(
+        filtered.codingLevel as (typeof ALLOWED_CODING_LEVELS)[number],
+      )
+    ) {
+      return response.failure(
+        res,
+        `codingLevel must be one of: ${ALLOWED_CODING_LEVELS.join(", ")}`,
+        400,
+      );
+    }
     const updatedMember = await memberService.updateMember(
       req.params.id,
       filtered,
