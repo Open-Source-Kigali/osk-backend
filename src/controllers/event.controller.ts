@@ -63,6 +63,16 @@ function buildEventData(
   return data;
 }
 
+function validateEventCapacity(
+  capacity: unknown,
+  registered: unknown,
+): string | null {
+  if (capacity == null || registered == null) return null;
+  if (typeof capacity !== "number" || typeof registered !== "number") return null;
+  if (registered > capacity) return "registered cannot exceed capacity";
+  return null;
+}
+
 async function findAllEvents(
   req: Request<object, unknown, unknown, { featured?: string }>,
   res: Response,
@@ -104,10 +114,18 @@ async function addEvent(
 
   let publicId: string | undefined;
   try {
+    const data = buildEventData(req.body) as EventBody;
+    const capacityError = validateEventCapacity(
+      data.capacity,
+      data.registered,
+    );
+    if (capacityError) {
+      return response.failure(res, capacityError, 400);
+    }
+
     const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
     publicId = uploaded.public_id;
 
-    const data = buildEventData(req.body) as EventBody;
     data.imageUrl = uploaded.secure_url;
     data.imagePublicId = uploaded.public_id;
     if (!data.speakers) data.speakers = [];
@@ -132,6 +150,13 @@ async function updateEvent(
     if (!existing) return response.failure(res, "Event not found", 404);
 
     const data = buildEventData(req.body);
+    const capacityError = validateEventCapacity(
+      data.capacity ?? existing.capacity,
+      data.registered ?? existing.registered,
+    );
+    if (capacityError) {
+      return response.failure(res, capacityError, 400);
+    }
 
     if (req.file) {
       const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
