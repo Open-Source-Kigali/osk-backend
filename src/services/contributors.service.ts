@@ -18,7 +18,7 @@ export async function readContributors(): Promise<Contributor[]> {
   try {
     const data = await fs.readFile(CONTRIBUTORS_JSON_PATH, "utf8");
     return JSON.parse(data) as Contributor[];
-  } catch (error) {
+  } catch {
     return [];
   }
 }
@@ -41,7 +41,7 @@ export async function refreshContributors() {
   const fetchPromises = usernames.map(async (username) => {
     try {
       const res = await gh(`/users/${username}`);
-      const data = await res.json() as any;
+      const data = (await res.json()) as { login: string; name: string | null; avatar_url: string; html_url: string; bio: string | null; company: string | null };
       
       const contributor: Contributor = {
         login: data.login,
@@ -52,8 +52,8 @@ export async function refreshContributors() {
         company: data.company || null,
       };
       return contributor;
-    } catch (e: any) {
-      if (e.message && e.message.includes("404")) {
+    } catch (e: unknown) {
+      if (e instanceof Error && e.message.includes("404")) {
         throw new Error(`User ${username} not found (404)`);
       }
       throw e;
