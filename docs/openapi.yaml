@@ -253,7 +253,7 @@ paths:
   /partners:
     get:
       tags: [Partners]
-      summary: List all patners
+      summary: List all partners
       responses:
         "200":
           description: Partners retrieved successfully
