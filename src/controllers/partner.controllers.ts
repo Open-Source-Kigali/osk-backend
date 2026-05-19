@@ -49,6 +49,10 @@ async function addPartner(
     return response.failure(res, "Logo file is required", 400);
   }
 
+  if (req.body.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(req.body.email)) {
+    return response.failure(res, "Invalid email format", 400);
+  }
+
   let publicId: string | undefined;
   try {
     const uploaded = await uploadBuffer(
@@ -87,6 +91,10 @@ async function updatePartner(
     const data: Partial<PartnerBody> = Object.fromEntries(
       Object.entries(req.body).filter(([, v]) => v !== ""),
     ) as Partial<PartnerBody>;
+
+    if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+      return response.failure(res, "Invalid email format", 400);
+    }
 
     if (req.file) {
       const uploaded = await uploadBuffer(
