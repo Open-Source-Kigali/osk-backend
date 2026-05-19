@@ -69,6 +69,22 @@ describe("POST /api/members", () => {
     expect(res.body.message).toBe("joinReason is required");
   });
 
+  it("returns 400 when email is invalid", async () => {
+    const res = await request(app).post("/api/members").send({
+      name: "Alice",
+      email: "notanemail",
+      githubUsername: "alice",
+      orgName: "OSK",
+      joinReason: "Love OSS",
+      codingLevel: "intermediate",
+    });
+
+    expect(res.status).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe("Invalid email address");
+    expect(memberService.addMember).not.toHaveBeenCalled();
+  });
+
   it("returns 201 with the created member", async () => {
     vi.mocked(memberService.addMember).mockResolvedValue(mockMember);
 

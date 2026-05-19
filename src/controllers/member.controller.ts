@@ -54,6 +54,12 @@ async function addMember(
         return response.failure(res, `${field} is required`, 400);
       }
     }
+
+    const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!EMAIL_RE.test(String(body.email))) {
+      return response.failure(res, "Invalid email address", 400);
+    }
+
     if (
       !ALLOWED_CODING_LEVELS.includes(
         body.codingLevel as (typeof ALLOWED_CODING_LEVELS)[number],
