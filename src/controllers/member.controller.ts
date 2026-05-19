@@ -37,12 +37,20 @@ async function addMember(
   res: Response,
   next: NextFunction,
 ) {
+  const required = ['name', 'email', 'githubUsername', 'orgName', 'joinReason', 'codingLevel'];
+  for (const field of required) {
+    if (!req.body[field as keyof typeof req.body]) {
+      return response.failure(res, `${field} is required`, 400);
+    }
+  }
+
   try {
     const newMember = await memberService.addMember(req.body);
     response.success(res, newMember, 201, "Member created successfully");
   } catch (err) {
     next(err);
   }
+}
 }
 
 async function updateMember(
