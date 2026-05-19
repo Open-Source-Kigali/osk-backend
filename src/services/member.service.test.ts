@@ -28,12 +28,14 @@ const mockMember = {
 beforeEach(() => mockReset(prismaMock));
 
 describe("findAllMembers", () => {
-  it("returns all members", async () => {
+  it("returns all members in descending creation order", async () => {
     prismaMock.member.findMany.mockResolvedValue([mockMember]);
 
     const result = await memberService.findAllMembers();
 
-    expect(prismaMock.member.findMany).toHaveBeenCalledOnce();
+    expect(prismaMock.member.findMany).toHaveBeenCalledWith({
+      orderBy: { createdAt: "desc" },
+    });
     expect(result).toEqual([mockMember]);
   });
 });
