@@ -19,6 +19,25 @@ describe("GET /api/events", () => {
 });
 
 describe("POST /api/events", () => {
+  it("returns 400 when required fields are missing", async () => {
+    const res = await request(app)
+      .post("/api/events")
+      .set("x-api-key", "test-admin-key")
+      .field("title", "Launch Night")
+      .field("description", "Community event")
+      .field("category", "community")
+      .field("location", "Kigali")
+      .attach("file", Buffer.from("fake"), {
+        filename: "event.png",
+        contentType: "image/png",
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe("date is required");
+    expect(eventService.addEvent).not.toHaveBeenCalled();
+  });
+
   it("rejects registered counts that exceed capacity", async () => {
     const res = await request(app)
       .post("/api/events")

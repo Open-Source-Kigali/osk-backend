@@ -126,33 +126,51 @@ async function addEvent(
     return response.failure(res, "Image file is required", 400);
   }
 
-  let publicId: string | undefined;
   try {
-    const data = buildEventData(req.body) as EventBody;
-    const modeError = validateEventMode(req.body.mode);
-    if (modeError) {
-      return response.failure(res, modeError, 400);
+    const requiredFields = [
+      "title",
+      "description",
+      "category",
+      "location",
+      "date",
+    ] as const;
+    const body = req.body as Record<string, unknown>;
+    for (const field of requiredFields) {
+      if (body[field] === undefined || body[field] === null || body[field] === "") {
+        return response.failure(res, `${field} is required`, 400);
+      }
     }
-    const capacityError = validateEventCapacity(
-      data.capacity,
-      data.registered,
-    );
-    if (capacityError) {
-      return response.failure(res, capacityError, 400);
+
+    let publicId: string | undefined;
+    try {
+      const data = buildEventData(req.body) as EventBody;
+      const modeError = validateEventMode(req.body.mode);
+      if (modeError) {
+        return response.failure(res, modeError, 400);
+      }
+      const capacityError = validateEventCapacity(
+        data.capacity,
+        data.registered,
+      );
+      if (capacityError) {
+        return response.failure(res, capacityError, 400);
+      }
+
+      const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
+      publicId = uploaded.public_id;
+
+      data.imageUrl = uploaded.secure_url;
+      data.imagePublicId = uploaded.public_id;
+      if (!data.speakers) data.speakers = [];
+
+      const newEvent = await eventService.addEvent(data);
+
+      response.success(res, newEvent, 201, "Event created successfully");
+    } catch (err) {
+      if (publicId) await destroyImage(publicId);
+      throw err;
     }
-
-    const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
-    publicId = uploaded.public_id;
-
-    data.imageUrl = uploaded.secure_url;
-    data.imagePublicId = uploaded.public_id;
-    if (!data.speakers) data.speakers = [];
-
-    const newEvent = await eventService.addEvent(data);
-
-    response.success(res, newEvent, 201, "Event created successfully");
   } catch (err) {
-    if (publicId) await destroyImage(publicId);
     next(err);
   }
 }
