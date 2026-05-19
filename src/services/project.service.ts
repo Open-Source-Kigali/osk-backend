@@ -75,7 +75,10 @@ async function addProject(
   });
 }
 
-async function updateProject(id: string, projectData: Prisma.ProjectUpdateInput) {
+async function updateProject(
+  id: string,
+  projectData: Prisma.ProjectUpdateInput,
+) {
   return prisma.project.update({
     where: { id },
     data: projectData,
