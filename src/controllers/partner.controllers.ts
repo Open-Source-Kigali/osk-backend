@@ -49,6 +49,16 @@ async function addPartner(
     return response.failure(res, "Logo file is required", 400);
   }
 
+  try {
+    const websiteUrl = String(req.body.websiteUrl ?? "");
+    const parsed = new URL(websiteUrl);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      throw new Error("Invalid protocol");
+    }
+  } catch {
+    return response.failure(res, "Invalid websiteUrl", 400);
+  }
+
   let publicId: string | undefined;
   try {
     const uploaded = await uploadBuffer(
