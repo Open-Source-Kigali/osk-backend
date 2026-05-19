@@ -2,7 +2,7 @@ import { prisma } from "../config/prisma";
 import { Event, Prisma } from "../generated/prisma/client";
 
 async function findAllEvents() {
-  return prisma.event.findMany();
+  return prisma.event.findMany({ orderBy: { date: "asc" } });
 }
 
 async function addEvent(
