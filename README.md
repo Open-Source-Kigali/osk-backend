@@ -29,6 +29,7 @@ The server runs on `http://localhost:3000` by default.
 - `npm run dev` - start the server in watch mode
 - `npm run build` - compile TypeScript to `dist/`
 - `npm start` - run the compiled build
+- `npm test` - run tests using Vitest
 
 ## Environment variables
 
