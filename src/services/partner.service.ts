@@ -9,7 +9,7 @@ const partnerSafeSelect = {
   logoUrl: true,
   description: true,
   email: true,
-  partershipReason: true,
+  partnershipReason: true,
   createdAt: true,
   updatedAt: true,
 } satisfies Prisma.PartnerSelect;
