@@ -57,6 +57,15 @@ function buildEventData(
   if (body.registered !== undefined)
     data.registered = body.registered === null ? null : Number(body.registered);
 
+  if (
+    data.capacity != null &&
+    data.registered != null &&
+    (data.registered as number) > (data.capacity as number)
+  ) {
+    response.failure(res, "registered cannot exceed capacity", 400);
+    return undefined;
+  }
+
   if (body.date !== undefined) {
     const d = new Date(body.date as string);
     if (isNaN(d.getTime())) {
