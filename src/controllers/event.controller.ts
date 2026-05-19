@@ -43,16 +43,23 @@ function buildEventData(
     "tagline",
     "description",
     "category",
-    "mode",
     "location",
     "timeLabel",
     "registerUrl",
   ];
+  
   for (const k of passthrough) {
     if (body[k] !== undefined && body[k] !== "") data[k] = body[k];
   }
 
-  if (body.featured !== undefined) data.featured = parseBoolean(body.featured);
+  if (body.featured !== undefined) {
+    const featured = parseBoolean(body.featured);
+    if (featured === undefined) {
+      response.failure(res, "featured must be a boolean", 400);
+      return null;
+    }
+    data.featured = featured;
+  }
 
   if (body.capacity !== undefined) {
     if (body.capacity === null) {
@@ -100,6 +107,23 @@ function buildEventData(
       }
       data.endDate = d;
     }
+  }
+  const ALLOWED_MODES = ["in-person", "online", "hybrid"] as const;
+  if (body.mode !== undefined && body.mode !== "") {
+    if (typeof body.mode !== "string") {
+      response.failure(res, "mode must be a string", 400);
+      return null;
+    }
+    const mode = body.mode as (typeof ALLOWED_MODES)[number];
+    if (!ALLOWED_MODES.includes(mode)) {
+      response.failure(
+        res,
+        `mode must be one of: ${ALLOWED_MODES.join(", ")}`,
+        400,
+      );
+      return null;
+    }
+    data.mode = mode;
   }
 
   const speakers = parseSpeakers(body.speakers);
@@ -159,7 +183,9 @@ async function addEvent(
       req.body.endDate = ed as unknown as string;
     }
 
-    const data = buildEventData(req.body,res) as EventBody;
+    const built = buildEventData(req.body, res);
+    if (!built) return; // buildEventData already sent error response
+    const data = built as EventBody;
     data.imageUrl = uploaded.secure_url;
     data.imagePublicId = uploaded.public_id;
     if (!data.speakers) data.speakers = [];
