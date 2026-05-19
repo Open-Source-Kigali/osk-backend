@@ -75,7 +75,6 @@ describe("POST /api/members", () => {
 describe("PUT /api/members/:id", () => {
   it("returns 403 without admin key", async () => {
     const res = await request(app).put("/api/members/1").send({ name: "Bob" });
-
     expect(res.status).toBe(403);
   });
 
@@ -93,6 +92,15 @@ describe("PUT /api/members/:id", () => {
 
     expect(res.status).toBe(200);
     expect(res.body.data.name).toBe("Bob");
+  });
+  it("returns 400 when codingLevel is invalid", async () => {
+    const res = await request(app)
+      .put("/api/members/1")
+      .set("x-api-key", ADMIN_KEY)
+      .send({ codingLevel: "expert" });
+
+    expect(res.status).toBe(400);
+    expect(res.body.success).toBe(false);
   });
 });
 
