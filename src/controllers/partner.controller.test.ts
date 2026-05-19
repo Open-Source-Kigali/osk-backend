@@ -15,7 +15,7 @@ describe("POST /api/partners", () => {
       .field("websiteUrl", "notaurl")
       .field("description", "Community partner")
       .field("email", "partner@example.com")
-      .field("partershipReason", "Support open source")
+      .field("partnershipReason", "Support open source")
       .attach("file", Buffer.from("fake"), {
         filename: "logo.png",
         contentType: "image/png",

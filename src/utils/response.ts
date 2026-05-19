@@ -6,6 +6,9 @@ function success<T>(
   status: number = 200,
   message: string = "Success",
 ) {
+  if (status === 204) {
+    return res.status(204).end();
+  }
   return res.status(status).json({ success: true, message, data });
 }
 
