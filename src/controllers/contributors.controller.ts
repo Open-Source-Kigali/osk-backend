@@ -14,7 +14,7 @@ export async function getContributors(req: Request, res: Response) {
 export async function refresh(req: Request, res: Response) {
   try {
     const result = await refreshContributors();
-    return response.success(res, result, "Contributors refreshed successfully");
+    return response.success(res, result, 200, "Contributors refreshed successfully");
   } catch (error) {
     return response.failure(res, "Failed to refresh contributors", 500);
   }
