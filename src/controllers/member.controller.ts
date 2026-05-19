@@ -38,6 +38,13 @@ async function addMember(
   next: NextFunction,
 ) {
   try {
+    const requiredFields = ["name", "email", "githubUsername", "orgName", "joinReason", "codingLevel"];
+    for (const field of requiredFields) {
+      if (!(req.body as Record<string, unknown>)[field]) {
+        return response.failure(res, `Missing required field: ${field}`, 400);
+      }
+    }
+
     const newMember = await memberService.addMember(req.body);
     response.success(res, newMember, 201, "Member created successfully");
   } catch (err) {
