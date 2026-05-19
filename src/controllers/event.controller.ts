@@ -101,12 +101,19 @@ async function addEvent(
     return response.failure(res, "Image file is required", 400);
   }
 
+  const data = buildEventData(req.body) as EventBody;
+  if (
+    data.capacity != null &&
+    data.registered != null &&
+    (data.registered as number) > (data.capacity as number)
+  ) {
+    return response.failure(res, "registered cannot exceed capacity", 400);
+  }
+
   let publicId: string | undefined;
   try {
     const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
     publicId = uploaded.public_id;
-
-    const data = buildEventData(req.body) as EventBody;
     data.imageUrl = uploaded.secure_url;
     data.imagePublicId = uploaded.public_id;
     if (!data.speakers) data.speakers = [];
@@ -131,6 +138,14 @@ async function updateEvent(
     if (!existing) return response.failure(res, "Event not found", 404);
 
     const data = buildEventData(req.body);
+
+    if (
+      data.capacity != null &&
+      data.registered != null &&
+      (data.registered as number) > (data.capacity as number)
+    ) {
+      return response.failure(res, "registered cannot exceed capacity", 400);
+    }
 
     if (req.file) {
       const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
