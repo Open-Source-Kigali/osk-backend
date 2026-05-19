@@ -54,6 +54,20 @@ async function findProjectBySlug(
   }
 }
 
+async function findProjectById(
+  req: Request<{ id: string }>,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const project = await projectService.findProjectById(req.params.id);
+    if (!project) return response.failure(res, "Project not found", 404);
+    response.success(res, project, 200, "Project retrieved successfully");
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function addProject(
   req: Request<unknown, unknown, CreateBody>,
   res: Response,
@@ -189,6 +203,7 @@ async function refreshAll(_req: Request, res: Response, next: NextFunction) {
 export default {
   findAllProjects,
   findProjectBySlug,
+  findProjectById,
   addProject,
   updateProject,
   deleteProject,
