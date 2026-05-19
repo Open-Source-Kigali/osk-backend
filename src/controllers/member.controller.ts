@@ -79,6 +79,9 @@ async function updateMember(
   next: NextFunction,
 ) {
   try {
+    const existing = await memberService.findMemberById(req.params.id);
+    if (!existing) return response.failure(res, "Member not found", 404);
+
     const filtered = Object.fromEntries(
       Object.entries(req.body).filter(([, v]) => v !== ""),
     ) as Partial<Omit<Member, "id">>;
