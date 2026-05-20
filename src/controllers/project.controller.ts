@@ -61,12 +61,23 @@ async function addProject(
 ) {
   if (!req.file) return response.failure(res, "Image file is required", 400);
 
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(req.body.slug)) {
+    return response.failure(
+      res,
+      "slug must be lowercase alphanumeric with hyphens only",
+      400,
+    );
+  }
+
   let publicId: string | undefined;
   try {
     const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
     publicId = uploaded.public_id;
 
     const featured = parseBoolean(req.body.featured) ?? false;
+    if (!req.body.repoOwner?.trim()) {
+      return response.failure(res, 'repoOwner is required', 400)
+    }
     const created = await projectService.addProject({
       slug: req.body.slug,
       repoOwner: req.body.repoOwner,
