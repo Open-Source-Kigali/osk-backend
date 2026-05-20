@@ -24,7 +24,11 @@ const eventSafeSelect = {
 } satisfies Prisma.EventSelect;
 
 async function findAllEvents() {
-  return prisma.event.findMany({ select: eventSafeSelect });
+  return prisma.event.findMany({
+    // Sort events by date ascending (soonest first) for calendar-style listings
+    orderBy: { date: "asc" },
+    select: eventSafeSelect,
+  });
 }
 
 async function findEventByIdSafe(id: string) {
