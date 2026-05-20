@@ -3,7 +3,7 @@ info:
   title: oskbackend API
   version: 1.0.0
   description: |
-    Backend API for Open Source Kigali.
+    Backned API for Open Source Kigali.
 
     All responses follow a consistent envelope:
       Success: `{ "success": true, "message": string, "data": T }`
@@ -17,6 +17,8 @@ tags:
   - name: Events
   - name: Partners
   - name: Projects
+  - name: Reviews
+  - name: Contributors
   - name: Users
 
 paths:
@@ -39,26 +41,11 @@ paths:
                         properties:
                           status: { type: string, example: ok }
                           uptime: { type: number }
-                          db: { type: string, example: ok }
-        "503":
-          description: Database unreachable
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: ok
-                  uptime:
-                    type: number
-                  db:
-                    type: string
-                    example: unreachable
+
   /members:
     get:
       tags: [Members]
-      summary: List all members
+      summary: List all memebers
       responses:
         "200":
           description: Members retrieved successfully
@@ -370,6 +357,109 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "500": { $ref: "#/components/responses/InternalError" }
 
+  /reviews:
+    get:
+      tags: [Reviews]
+      summary: List all reviews
+      responses:
+        "200":
+          description: Reviews retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/Review" }
+        "500": { $ref: "#/components/responses/InternalError" }
+    post:
+      tags: [Reviews]
+      summary: Create a review
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema: { $ref: "#/components/schemas/ReviewInput" }
+      responses:
+        "201":
+          description: Review created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/Review" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
+  /reviews/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [Reviews]
+      summary: Get a review by id
+      responses:
+        "200":
+          description: Review retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/Review" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/InternalError" }
+    put:
+      tags: [Reviews]
+      summary: Update a review (admin only)
+      security:
+        - adminApiKey: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema: { $ref: "#/components/schemas/ReviewUpdateInput" }
+      responses:
+        "200":
+          description: Review updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/Review" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/InternalError" }
+    delete:
+      tags: [Reviews]
+      summary: Delete a review (admin only)
+      security:
+        - adminApiKey: []
+      responses:
+        "204":
+          description: Review deleted successfully
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiSuccess" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
   /projects:
     get:
       tags: [Projects]
@@ -508,6 +598,48 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "500": { $ref: "#/components/responses/InternalError" }
 
+  /contributors:
+    get:
+      tags: [Contributors]
+      summary: List contributor profiles
+      responses:
+        "200":
+          description: Contributors retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/ContributorProfile" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
+  /contributors/refresh:
+    post:
+      tags: [Contributors]
+      summary: Refresh contributor profiles from CONTRIBUTORS.md
+      security:
+        - adminApiKey: []
+      responses:
+        "200":
+          description: Contributors refresh completed successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/ContributorRefreshResult" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
 components:
   securitySchemes:
     adminApiKey:
@@ -523,6 +655,25 @@ components:
         message: { type: string }
         data: {}
       required: [success, message, data]
+
+    ContributorProfile:
+      type: object
+      properties:
+        login: { type: string }
+        name: { type: string, nullable: true }
+        avatarUrl: { type: string, format: uri }
+        profileUrl: { type: string, format: uri }
+        bio: { type: string, nullable: true }
+        company: { type: string, nullable: true }
+      required: [login, avatarUrl, profileUrl]
+
+    ContributorRefreshResult:
+      type: object
+      properties:
+        login: { type: string }
+        ok: { type: boolean }
+        error: { type: string }
+      required: [login, ok]
 
     ApiError:
       type: object
@@ -655,20 +806,20 @@ components:
         logoPublicId: { type: string }
         description: { type: string }
         email: { type: string, format: email }
-        partnershipReason: { type: string }
+        partershipReason: { type: string }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
 
     PartnerInput:
       type: object
-      required: [name, websiteUrl, file, description, email, partnershipReason]
+      required: [name, websiteUrl, file, description, email, partershipReason]
       properties:
         name: { type: string }
         websiteUrl: { type: string }
         file: { type: string, format: binary, description: "Partner logo" }
         description: { type: string }
         email: { type: string, format: email }
-        partnershipReason: { type: string }
+        partershipReason: { type: string }
 
     PartnerUpdateInput:
       type: object
@@ -683,7 +834,41 @@ components:
           }
         description: { type: string }
         email: { type: string, format: email }
-        partnershipReason: { type: string }
+        partershipReason: { type: string }
+
+    Review:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        profileUrl: { type: string }
+        profilePublicId: { type: string }
+        role: { type: string }
+        message: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    ReviewInput:
+      type: object
+      required: [name, role, file, message]
+      properties:
+        name: { type: string }
+        role: { type: string }
+        file: { type: string, format: binary, description: "Profile image" }
+        message: { type: string }
+
+    ReviewUpdateInput:
+      type: object
+      properties:
+        name: { type: string }
+        role: { type: string }
+        file:
+          {
+            type: string,
+            format: binary,
+            description: "Replacement profile image (optional)",
+          }
+        message: { type: string }
 
     Project:
       type: object
