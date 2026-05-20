@@ -88,6 +88,7 @@ async function deleteMember(
     if (!existing) return response.failure(res, "Member not found", 404);
 
     await memberService.deleteMember(req.params.id);
+    // Return 204 No Content (no body) for successful deletion
     response.success(res, null, 204, "Member deleted successfully");
   } catch (err) {
     next(err);

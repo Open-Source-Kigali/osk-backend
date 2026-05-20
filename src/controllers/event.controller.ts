@@ -177,6 +177,7 @@ async function deleteEvent(
     await eventService.deleteEvent(req.params.id);
     if (existing.imagePublicId) await destroyImage(existing.imagePublicId);
 
+    // Return 204 No Content (no body) for successful deletion
     response.success(res, null, 204, "Event deleted successfully");
   } catch (err) {
     next(err);

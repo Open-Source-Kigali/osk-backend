@@ -150,6 +150,7 @@ async function deleteProject(
     await projectService.deleteProject(req.params.id);
     if (existing.imagePublicId) await destroyImage(existing.imagePublicId);
 
+    // Return 204 No Content (no body) for successful deletion
     response.success(res, null, 204, "Project deleted successfully");
   } catch (err) {
     next(err);

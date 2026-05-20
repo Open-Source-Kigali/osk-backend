@@ -142,6 +142,7 @@ async function deletePartner(
     await partnerService.deletePartner(req.params.id);
     if (existing.logoPublicId) await destroyImage(existing.logoPublicId);
 
+    // Return 204 No Content (no body) for successful deletion
     response.success(res, null, 204, "Partner deleted successfully");
   } catch (err) {
     next(err);
