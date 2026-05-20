@@ -18,6 +18,7 @@ const mockEvent = {
   title: "Event 1",
   tagline: "Tagline 1",
   imageUrl: "http://example.com/image.png",
+  imagePublicId: "events/mock-image",
   description: "Description 1",
   category: "Workshop",
   mode: "IN_PERSON",
