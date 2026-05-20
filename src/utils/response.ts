@@ -9,8 +9,13 @@ function success<T>(
   return res.status(status).json({ success: true, message, data });
 }
 
-function failure(res: Response, message: string, status: number = 400) {
-  return res.status(status).json({ success: false, message, data: null });
+function failure(
+  res: Response,
+  message: string,
+  status: number = 400,
+  data: unknown = null,
+) {
+  return res.status(status).json({ success: false, message, data });
 }
 
 export default { success, failure };

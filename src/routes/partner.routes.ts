@@ -2,15 +2,30 @@ import { Router } from "express";
 import partnerControllers from "../controllers/partner.controllers";
 import authMiddleware from "../middlewares/auth.middleware";
 import { upload } from "../middlewares/upload.middleware";
+import { validate } from "../middlewares/validation.middleware";
+import {
+  partnerCreateSchema,
+  partnerUpdateSchema,
+} from "../validators/partner.validator";
 
 const route = Router();
 
 route.get("/", partnerControllers.findAllPartners);
 route.get("/:id", partnerControllers.findPartnerById);
-route.post("/", upload.single("file"), partnerControllers.addPartner);
+route.post(
+  "/",
+  upload.single("file"),
+  validate(partnerCreateSchema),
+  partnerControllers.addPartner,
+);
 
 route.use(authMiddleware.requireAdmin);
-route.put("/:id", upload.single("file"), partnerControllers.updatePartner);
+route.put(
+  "/:id",
+  upload.single("file"),
+  validate(partnerUpdateSchema),
+  partnerControllers.updatePartner,
+);
 route.delete("/:id", partnerControllers.deletePartner);
 
 export default route;
