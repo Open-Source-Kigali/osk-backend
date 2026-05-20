@@ -26,6 +26,9 @@ route.put(
   validate(partnerUpdateSchema),
   partnerControllers.updatePartner,
 );
+route.use(authMiddleware.requireAdmin);
+route.post("/", upload.single("file"), partnerControllers.addPartner);
+route.put("/:id", upload.single("file"), partnerControllers.updatePartner);
 route.delete("/:id", partnerControllers.deletePartner);
 
 export default route;

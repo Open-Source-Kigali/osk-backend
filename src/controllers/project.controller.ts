@@ -61,6 +61,14 @@ async function addProject(
 ) {
   if (!req.file) return response.failure(res, "Image file is required", 400);
 
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(req.body.slug)) {
+    return response.failure(
+      res,
+      "slug must be lowercase alphanumeric with hyphens only",
+      400,
+    );
+  }
+
   let publicId: string | undefined;
   try {
     const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
