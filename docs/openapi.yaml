@@ -18,8 +18,29 @@ tags:
   - name: Partners
   - name: Projects
   - name: Users
+  - name: Contributors
 
 paths:
+  /contributors:
+    get:
+      tags: [Contributors]
+      summary: List all contributors
+      description: Reads usernames from CONTRIBUTORS.md and fetches their public GitHub profiles.
+      responses:
+        "200":
+          description: Contributors retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/Contributor" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
   /health:
     get:
       tags: [Health]
@@ -546,6 +567,16 @@ components:
           enum: [beginner, intermediate, advanced]
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
+
+    Contributor:
+      type: object
+      properties:
+        login: { type: string }
+        name: { type: string, nullable: true }
+        avatarUrl: { type: string, format: uri }
+        htmlUrl: { type: string, format: uri }
+        bio: { type: string, nullable: true }
+        location: { type: string, nullable: true }
 
     MemberInput:
       type: object

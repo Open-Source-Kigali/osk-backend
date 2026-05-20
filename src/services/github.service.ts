@@ -12,6 +12,15 @@ export type RepoSnapshot = {
   pushedAt: Date | null;
 };
 
+export type UserProfile = {
+  login: string;
+  name: string | null;
+  avatarUrl: string;
+  htmlUrl: string;
+  bio: string | null;
+  location: string | null;
+};
+
 const API = "https://api.github.com";
 
 function headers() {
@@ -80,5 +89,26 @@ export async function fetchRepoSnapshot(
     contributors,
     pullRequests,
     pushedAt: repo.pushed_at ? new Date(repo.pushed_at) : null,
+  };
+}
+
+export async function fetchUserProfile(username: string): Promise<UserProfile> {
+  const res = await gh(`/users/${username}`);
+  const user = (await res.json()) as {
+    login: string;
+    name: string | null;
+    avatar_url: string;
+    html_url: string;
+    bio: string | null;
+    location: string | null;
+  };
+
+  return {
+    login: user.login,
+    name: user.name,
+    avatarUrl: user.avatar_url,
+    htmlUrl: user.html_url,
+    bio: user.bio,
+    location: user.location,
   };
 }
