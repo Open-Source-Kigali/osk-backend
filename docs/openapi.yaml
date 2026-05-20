@@ -125,62 +125,6 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "500": { $ref: "#/components/responses/InternalError" }
 
-  /contributors:
-    get:
-      tags: [Contributors]
-      summary: Get all contributors
-      description: Returns the cached list of contributors from contributors.json
-      responses:
-        "200":
-          description: A list of contributors
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  data:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/Contributor"
-        "500":
-          $ref: "#/components/responses/InternalError"
-
-  /contributors/refresh:
-    post:
-      tags: [Contributors]
-      summary: Refresh contributors data
-      description: Parses CONTRIBUTORS.md, fetches data from GitHub, and updates contributors.json
-      security:
-        - AdminApiKeyAuth: []
-      responses:
-        "200":
-          description: Refresh summary
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
-                  data:
-                    type: object
-                    properties:
-                      success:
-                        type: number
-                      failed:
-                        type: number
-                      total:
-                        type: number
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "500":
-          $ref: "#/components/responses/InternalError"
   /health:
     get:
       tags: [Health]
