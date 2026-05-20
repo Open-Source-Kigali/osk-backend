@@ -116,3 +116,14 @@ model Project {
 
   @@unique([repoOwner, repoName])
 }
+
+model Review {
+  id              String   @id @default(uuid())
+  name            String
+  profileUrl      String
+  profilePublicId String
+  role            String
+  message         String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
