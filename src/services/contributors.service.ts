@@ -19,7 +19,8 @@ export async function readContributors(): Promise<Contributor[]> {
     const data = await fs.readFile(CONTRIBUTORS_JSON_PATH, "utf-8");
     return JSON.parse(data);
   } catch (error) {
-    return [];
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error("Failed to read contributors data: " + message);
   }
 }
 
