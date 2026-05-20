@@ -5,3 +5,4 @@ Everyone listed here appears on the Open Source Kigali website. To add yourself,
 <!-- Add your GitHub username below, one per line -->
 
 Nick-Lemy
+Agahozo3
