@@ -6,11 +6,7 @@ import { destroyImage, uploadBuffer } from "../utils/cloudinary-upload";
 
 type ReviewBody = Omit<Review, "id" | "createdAt" | "updatedAt">;
 
-async function findAll(
-  _req: Request,
-  res: Response,
-  next: NextFunction,
-) {
+async function findAll(_req: Request, res: Response, next: NextFunction) {
   try {
     const reviews = await reviewService.findAll();
     response.success(res, reviews, 200, "Reviews retrieved successfully");
@@ -36,7 +32,11 @@ async function findById(
 }
 
 async function create(
-  req: Request<unknown, unknown, Omit<ReviewBody, "profileUrl" | "profilePublicId">>,
+  req: Request<
+    unknown,
+    unknown,
+    Omit<ReviewBody, "profileUrl" | "profilePublicId">
+  >,
   res: Response,
   next: NextFunction,
 ) {

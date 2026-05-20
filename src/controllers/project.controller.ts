@@ -76,7 +76,7 @@ async function addProject(
 
     const featured = parseBoolean(req.body.featured) ?? false;
     if (!req.body.repoOwner?.trim()) {
-      return response.failure(res, 'repoOwner is required', 400)
+      return response.failure(res, "repoOwner is required", 400);
     }
     const created = await projectService.addProject({
       slug: req.body.slug,
