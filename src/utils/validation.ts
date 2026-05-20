@@ -15,7 +15,11 @@ export function formatZodError(error: ZodError) {
     .join("; ");
 }
 
-export function parseRequestBody<T>(schema: ZodSchema<T>, body: unknown, res: Response): T | undefined {
+export function parseRequestBody<T>(
+  schema: ZodSchema<T>,
+  body: unknown,
+  res: Response,
+): T | undefined {
   try {
     return schema.parse(body);
   } catch (err) {

@@ -37,7 +37,11 @@ async function findReviewById(
 }
 
 async function addReview(
-  req: Request<unknown, unknown, Omit<ReviewBody, "profileUrl" | "profilePublicId">>,
+  req: Request<
+    unknown,
+    unknown,
+    Omit<ReviewBody, "profileUrl" | "profilePublicId">
+  >,
   res: Response,
   next: NextFunction,
 ) {
@@ -67,7 +71,11 @@ async function addReview(
 }
 
 async function updateReview(
-  req: Request<{ id: string }, unknown, Partial<Omit<ReviewBody, "profilePublicId">>>,
+  req: Request<
+    { id: string },
+    unknown,
+    Partial<Omit<ReviewBody, "profilePublicId">>
+  >,
   res: Response,
   next: NextFunction,
 ) {

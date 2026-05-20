@@ -46,11 +46,7 @@ async function findPartnerById(
   }
 }
 
-async function addPartner(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) {
+async function addPartner(req: Request, res: Response, next: NextFunction) {
   if (!req.file) {
     return response.failure(res, "Logo file is required", 400);
   }

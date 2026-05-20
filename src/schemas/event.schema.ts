@@ -5,7 +5,9 @@ const eventBaseSchema = z.object({
   tagline: z.string().trim().optional().nullable(),
   description: z.string().min(1, "Description is required").trim(),
   category: z.string().min(1, "Category is required").trim(),
-  mode: z.enum(["in-person", "virtual", "hybrid"] as const).default("in-person"),
+  mode: z
+    .enum(["in-person", "virtual", "hybrid"] as const)
+    .default("in-person"),
   featured: z
     .union([z.boolean(), z.string().transform((v) => v === "true")])
     .default(false),
@@ -77,7 +79,10 @@ const eventBaseSchema = z.object({
 
 export const createEventSchema = eventBaseSchema.refine(
   (data) => {
-    if (typeof data.capacity === "number" && typeof data.registered === "number") {
+    if (
+      typeof data.capacity === "number" &&
+      typeof data.registered === "number"
+    ) {
       return data.capacity >= data.registered;
     }
     return true;
@@ -93,10 +98,9 @@ export const updateEventSchema = eventBaseSchema
   .partial()
   .extend({
     mode: z.enum(["in-person", "virtual", "hybrid"] as const).optional(),
-    featured: z.union([
-      z.boolean(),
-      z.string().transform((v) => v === "true"),
-    ]).optional(),
+    featured: z
+      .union([z.boolean(), z.string().transform((v) => v === "true")])
+      .optional(),
     speakers: z
       .union([z.array(z.string()), z.string()])
       .optional()

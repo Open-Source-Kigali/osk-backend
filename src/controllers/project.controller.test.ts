@@ -44,7 +44,9 @@ describe("GET /api/projects", () => {
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.data).toHaveLength(1);
-    expect(vi.mocked(projectService.findAllProjects)).toHaveBeenCalledWith(true);
+    expect(vi.mocked(projectService.findAllProjects)).toHaveBeenCalledWith(
+      true,
+    );
   });
 
   it("returns 200 and fetches all projects when featured is not provided", async () => {
@@ -54,6 +56,8 @@ describe("GET /api/projects", () => {
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
-    expect(vi.mocked(projectService.findAllProjects)).toHaveBeenCalledWith(undefined);
+    expect(vi.mocked(projectService.findAllProjects)).toHaveBeenCalledWith(
+      undefined,
+    );
   });
 });

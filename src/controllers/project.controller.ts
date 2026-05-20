@@ -41,11 +41,7 @@ async function findProjectBySlug(
   }
 }
 
-async function addProject(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) {
+async function addProject(req: Request, res: Response, next: NextFunction) {
   if (!req.file) return response.failure(res, "Image file is required", 400);
 
   let publicId: string | undefined;
@@ -117,7 +113,10 @@ async function updateProject(
       cleanedData.imagePublicId = uploaded.public_id;
     }
 
-    const updated = await projectService.updateProject(req.params.id, cleanedData);
+    const updated = await projectService.updateProject(
+      req.params.id,
+      cleanedData,
+    );
 
     if (req.file && existing.imagePublicId) {
       await destroyImage(existing.imagePublicId);

@@ -43,16 +43,18 @@ async function findEventById(
   }
 }
 
-async function addEvent(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) {
+async function addEvent(req: Request, res: Response, next: NextFunction) {
   if (!req.file) {
     return response.failure(res, "Image file is required", 400);
   }
 
-  const requiredFields = ["title", "description", "category", "location", "date"];
+  const requiredFields = [
+    "title",
+    "description",
+    "category",
+    "location",
+    "date",
+  ];
   for (const field of requiredFields) {
     if (!req.body[field]) {
       return response.failure(res, `Missing required field: ${field}`, 400);

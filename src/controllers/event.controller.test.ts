@@ -48,6 +48,8 @@ describe("GET /api/events", () => {
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
-    expect(vi.mocked(eventService.findAllEvents)).toHaveBeenCalledWith(undefined);
+    expect(vi.mocked(eventService.findAllEvents)).toHaveBeenCalledWith(
+      undefined,
+    );
   });
 });

@@ -19,7 +19,10 @@ export const createProjectSchema = z.object({
     .trim(),
   tagline: z.string().min(1, "Tagline is required").trim(),
   category: z.string().min(1, "Category is required").trim(),
-  status: z.enum(["active", "archived", "paused"] as const).optional().default("active"),
+  status: z
+    .enum(["active", "archived", "paused"] as const)
+    .optional()
+    .default("active"),
   featured: z
     .union([z.boolean(), z.string().transform((v) => v === "true")])
     .optional()
@@ -33,10 +36,9 @@ export const updateProjectSchema = createProjectSchema
   .partial()
   .extend({
     status: z.enum(["active", "archived", "paused"] as const).optional(),
-    featured: z.union([
-      z.boolean(),
-      z.string().transform((v) => v === "true"),
-    ]).optional(),
+    featured: z
+      .union([z.boolean(), z.string().transform((v) => v === "true")])
+      .optional(),
   });
 
 export type CreateProjectInput = z.infer<typeof createProjectSchema>;

@@ -56,7 +56,9 @@ export async function readContributors(): Promise<ContributorProfile[]> {
   return JSON.parse(raw) as ContributorProfile[];
 }
 
-export async function refreshContributors(): Promise<ContributorRefreshResult[]> {
+export async function refreshContributors(): Promise<
+  ContributorRefreshResult[]
+> {
   const contributorsMd = await fs.readFile(CONTRIBUTORS_MD, "utf-8");
   const usernames = parseContributorUsernames(contributorsMd);
 
@@ -80,7 +82,10 @@ export async function refreshContributors(): Promise<ContributorRefreshResult[]>
       continue;
     }
 
-    const error = result.reason instanceof Error ? result.reason.message : String(result.reason);
+    const error =
+      result.reason instanceof Error
+        ? result.reason.message
+        : String(result.reason);
     if (error.includes("GitHub 404")) {
       summary.push({ login, ok: false, error: "GitHub user not found" });
       continue;
@@ -89,7 +94,11 @@ export async function refreshContributors(): Promise<ContributorRefreshResult[]>
     summary.push({ login, ok: false, error });
   }
 
-  await fs.writeFile(CONTRIBUTORS_JSON, `${JSON.stringify(profiles, null, 2)}\n`, "utf-8");
+  await fs.writeFile(
+    CONTRIBUTORS_JSON,
+    `${JSON.stringify(profiles, null, 2)}\n`,
+    "utf-8",
+  );
   return summary;
 }
 

@@ -629,7 +629,8 @@ paths:
                     properties:
                       data:
                         type: array
-                        items: { $ref: "#/components/schemas/ContributorProfile" }
+                        items:
+                          { $ref: "#/components/schemas/ContributorProfile" }
         "500": { $ref: "#/components/responses/InternalError" }
 
   /contributors/refresh:
@@ -650,7 +651,10 @@ paths:
                     properties:
                       data:
                         type: array
-                        items: { $ref: "#/components/schemas/ContributorRefreshResult" }
+                        items:
+                          {
+                            $ref: "#/components/schemas/ContributorRefreshResult",
+                          }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "500": { $ref: "#/components/responses/InternalError" }

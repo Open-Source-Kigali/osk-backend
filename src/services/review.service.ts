@@ -9,13 +9,17 @@ async function findReviewById(id: string) {
   return prisma.review.findUnique({ where: { id } });
 }
 
-async function addReview(reviewData: Omit<Review, "id" | "createdAt" | "updatedAt">) {
+async function addReview(
+  reviewData: Omit<Review, "id" | "createdAt" | "updatedAt">,
+) {
   return prisma.review.create({ data: reviewData });
 }
 
 async function updateReview(
   id: string,
-  reviewData: Partial<Omit<Review, "id" | "createdAt" | "updatedAt" | "profilePublicId">>,
+  reviewData: Partial<
+    Omit<Review, "id" | "createdAt" | "updatedAt" | "profilePublicId">
+  >,
 ) {
   return prisma.review.update({ where: { id }, data: reviewData });
 }
