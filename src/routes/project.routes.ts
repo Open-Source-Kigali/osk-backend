@@ -6,6 +6,7 @@ import { upload } from "../middlewares/upload.middleware";
 const route = Router();
 
 route.get("/", projectController.findAllProjects);
+route.get("/:id", projectController.findProjectById);
 route.get("/:slug", projectController.findProjectBySlug);
 
 route.use(authMiddleware.requireAdmin);
