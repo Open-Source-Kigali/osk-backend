@@ -83,6 +83,7 @@ To stop the database: `docker compose down` (add `-v` to wipe the data).
 Interactive Swagger UI is available at `http://localhost:3000/api/docs` once the server is running. The underlying spec lives at [`docs/openapi.yaml`](./docs/openapi.yaml).
 
 ### Default Sorting
+
 - **Events:** Sorted by `date` ascending (soonest first) for calendar-style listings.
 - **Projects:** Sorted by `createdAt` descending (newest first).
 - **Partners:** Sorted by `name` ascending.
