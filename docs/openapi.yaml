@@ -269,7 +269,7 @@ paths:
   /partners:
     get:
       tags: [Partners]
-      summary: List all patners
+      summary: List all partners
       responses:
         "200":
           description: Partners retrieved successfully
@@ -418,7 +418,7 @@ paths:
   /projects/refresh:
     post:
       tags: [Projects]
-      summary: Refresh GitHub-cached filds for all projects (admin only)
+      summary: Refresh GitHub-cached fields for all projects (admin only)
       security:
         - adminApiKey: []
       responses:
