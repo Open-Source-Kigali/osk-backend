@@ -73,10 +73,27 @@ describe("POST /api/members", () => {
 });
 
 describe("PUT /api/members/:id", () => {
+  beforeEach(() => {
+    vi.mocked(memberService.findMemberById).mockResolvedValue(mockMember);
+  });
+
   it("returns 403 without admin key", async () => {
     const res = await request(app).put("/api/members/1").send({ name: "Bob" });
 
     expect(res.status).toBe(403);
+  });
+
+  it("returns 404 when the member does not exist", async () => {
+    vi.mocked(memberService.findMemberById).mockResolvedValue(null);
+
+    const res = await request(app)
+      .put("/api/members/nonexistent")
+      .set("x-api-key", ADMIN_KEY)
+      .send({ name: "Bob" });
+
+    expect(res.status).toBe(404);
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe("Member not found");
   });
 
   it("returns 400 for an invalid codingLevel", async () => {
@@ -92,7 +109,6 @@ describe("PUT /api/members/:id", () => {
   });
 
   it("returns 200 with valid admin key", async () => {
-    vi.mocked(memberService.findMemberById).mockResolvedValue(mockMember);
     vi.mocked(memberService.updateMember).mockResolvedValue({
       ...mockMember,
       name: "Bob",
