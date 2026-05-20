@@ -18,6 +18,7 @@ tags:
   - name: Partners
   - name: Reviews
   - name: Projects
+  - name: Contributors
   - name: Users
 
 paths:
@@ -666,6 +667,66 @@ paths:
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
+  /contributors:
+    get:
+      tags: [Contributors]
+      summary: Read and return contributors.json
+      responses:
+        "200":
+          description: Contributors retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            login: { type: string }
+                            name: { type: string }
+                            avatarUrl: { type: string }
+                            profileUrl: { type: string }
+                            bio: { type: string }
+                            company: { type: string }
+        "500": { $ref: "#/components/responses/InternalError" }
+
+  /contributors/refresh:
+    post:
+      tags: [Contributors]
+      summary: Parse CONTRIBUTORS.md, fetch all GitHub profiles, overwrite contributors.json
+      security:
+        - adminApiKey: []
+      responses:
+        "200":
+          description: Contributors refreshed successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          totalParsed: { type: number }
+                          success: { type: number }
+                          failures: { type: number }
+                          failedList:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                login: { type: string }
+                                error: { type: string }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
         "500": { $ref: "#/components/responses/InternalError" }
 
 components:
