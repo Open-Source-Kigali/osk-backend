@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+const codingLevelEnum = z.enum([
+  "beginner",
+  "intermediate",
+  "advanced",
+] as const);
+
 export const createMemberSchema = z.object({
   name: z.string().min(1, "Name is required").trim(),
   email: z
@@ -10,13 +16,11 @@ export const createMemberSchema = z.object({
   githubUsername: z.string().min(1, "GitHub username is required").trim(),
   orgName: z.string().min(1, "Organization name is required").trim(),
   joinReason: z.string().min(1, "Join reason is required").trim(),
-  codingLevel: z.enum(["beginner", "intermediate", "advanced"] as const),
+  codingLevel: codingLevelEnum,
 });
 
 export const updateMemberSchema = createMemberSchema.partial().extend({
-  codingLevel: z
-    .enum(["beginner", "intermediate", "advanced"] as const)
-    .optional(),
+  codingLevel: codingLevelEnum.optional(),
 });
 
 export type CreateMemberInput = z.infer<typeof createMemberSchema>;

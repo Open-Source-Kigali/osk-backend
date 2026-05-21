@@ -14,10 +14,9 @@ export async function getContributors(
   try {
     let contributors = await readContributors();
 
-    // If readContributors returns an empty list (or nothing), fall back to the
-    // legacy contributor service and normalize legacy profiles into the
-    // modern `Contributor` shape so TypeScript and the rest of the codebase
-    // can consume a consistent type.
+    // If readContributors returns an empty list, fall back to the legacy
+    // contributor service and normalize legacy profiles into the modern
+    // Contributor shape.
     if (!Array.isArray(contributors) || contributors.length === 0) {
       const legacy = await contributorService.getContributors();
       contributors = legacy.map((p: unknown) => {
