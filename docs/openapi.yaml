@@ -25,8 +25,8 @@ paths:
   /contributors:
     get:
       tags: [Contributors]
-      summary: List all contributors
-      description: Reads usernames from CONTRIBUTORS.md and fetches their public GitHub profiles.
+      summary: Read and return contributors.json
+      description: Returns the cached list of contributors. Use /contributors/refresh to update this list.
       responses:
         "200":
           description: Contributors retrieved successfully
@@ -530,33 +530,6 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "500": { $ref: "#/components/responses/InternalError" }
 
-  /contributors:
-    get:
-      tags: [Contributors]
-      summary: Read and return contributors.json
-      responses:
-        "200":
-          description: Contributors retrieved successfully
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ApiSuccess"
-                  - type: object
-                    properties:
-                      data:
-                        type: array
-                        items:
-                          type: object
-                          properties:
-                            login: { type: string }
-                            name: { type: string }
-                            avatarUrl: { type: string }
-                            profileUrl: { type: string }
-                            bio: { type: string }
-                            company: { type: string }
-        "500": { $ref: "#/components/responses/InternalError" }
-
   /contributors/refresh:
     post:
       tags: [Contributors]
@@ -771,9 +744,9 @@ components:
         login: { type: string }
         name: { type: string, nullable: true }
         avatarUrl: { type: string, format: uri }
-        htmlUrl: { type: string, format: uri }
+        profileUrl: { type: string, format: uri }
         bio: { type: string, nullable: true }
-        location: { type: string, nullable: true }
+        company: { type: string, nullable: true }
 
     MemberInput:
       type: object
