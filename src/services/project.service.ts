@@ -3,7 +3,10 @@ import { Prisma, Project } from "../generated/prisma/client";
 import { RepoSnapshot } from "./github.service";
 
 async function findAllProjects() {
-  return prisma.project.findMany({ orderBy: { createdAt: "desc" } });
+  return prisma.project.findMany({
+    orderBy: { createdAt: "desc" },
+    omit: { imagePublicId: true },
+  });
 }
 
 async function findProjectById(id: string) {

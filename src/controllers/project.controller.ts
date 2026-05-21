@@ -48,7 +48,16 @@ async function findProjectBySlug(
   try {
     const project = await projectService.findProjectBySlug(req.params.slug);
     if (!project) return response.failure(res, "Project not found", 404);
-    response.success(res, project, 200, "Project retrieved successfully");
+    const { imagePublicId: _imagePublicId, ...publicProject } = project;
+    response.success(
+      res,
+      publicProject as Omit<
+        import("../generated/prisma/client").Project,
+        "imagePublicId"
+      >,
+      200,
+      "Project retrieved successfully",
+    );
   } catch (err) {
     next(err);
   }
@@ -75,9 +84,6 @@ async function addProject(
     publicId = uploaded.public_id;
 
     const featured = parseBoolean(req.body.featured) ?? false;
-    if (!req.body.repoOwner?.trim()) {
-      return response.failure(res, 'repoOwner is required', 400)
-    }
     const created = await projectService.addProject({
       slug: req.body.slug,
       repoOwner: req.body.repoOwner,

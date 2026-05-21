@@ -29,9 +29,10 @@ async function findPartnerById(
     if (!partner) {
       return response.failure(res, "Partner not found", 404);
     }
+    const { logoPublicId: _logoPublicId, ...publicPartner } = partner;
     return response.success(
       res,
-      partner,
+      publicPartner as Omit<Partner, "logoPublicId">,
       200,
       "Partner retrieved successfully",
     );
