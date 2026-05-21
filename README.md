@@ -88,6 +88,15 @@ Interactive Swagger UI is available at `http://localhost:3000/api/docs` once the
 - **Projects:** Sorted by `createdAt` descending (newest first).
 - **Partners:** Sorted by `name` ascending.
 
+### Input Validation
+
+The API enforces strict validation on all POST and PUT endpoints:
+
+- **Missing Fields:** Returns `400 Bad Request` if a required field is missing.
+- **Project Creation:** Explicitly requires non-empty `repoOwner` and `repoName` to ensure GitHub synchronization works correctly.
+- **Slug Format:** Project slugs must be lowercase alphanumeric with hyphens only.
+- **Email Format:** Partner and Member emails must follow a valid email pattern.
+
 Admin-only endpoints require an `x-api-key` header matching `ADMIN_API_KEY`.
 If `ADMIN_API_KEY` is missing at startup, the server logs a warning and admin endpoints will continue to return `500` until the key is configured.
 Delete endpoints return `204 No Content` with an empty response body to stay compliant with the HTTP spec.

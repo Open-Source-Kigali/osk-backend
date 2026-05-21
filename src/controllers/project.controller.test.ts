@@ -65,6 +65,7 @@ describe("GET /api/projects", () => {
 });
 
 describe("POST /api/projects", () => {
+  // Test case for missing repoName field
   it("returns 400 when repoName is missing", async () => {
     const res = await request(app)
       .post("/api/projects")
@@ -79,6 +80,7 @@ describe("POST /api/projects", () => {
     expect(res.body.message).toBe("repoName is required");
   });
 
+  // Test case for empty/whitespace repoName field
   it("returns 400 when repoName is empty string", async () => {
     const res = await request(app)
       .post("/api/projects")
@@ -94,6 +96,7 @@ describe("POST /api/projects", () => {
     expect(res.body.message).toBe("repoName is required");
   });
 
+  // Test case for missing repoOwner field
   it("returns 400 when repoOwner is missing", async () => {
     const res = await request(app)
       .post("/api/projects")
