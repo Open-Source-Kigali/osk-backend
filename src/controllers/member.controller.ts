@@ -10,7 +10,6 @@ import {
   UpdateMemberInput,
 } from "../schemas/member.schema";
 
-
 const allowedCodingLevels = new Set(Object.values(CodingLevel));
 
 async function findAllMembers(
@@ -85,6 +84,9 @@ async function updateMember(
         400,
       );
     }
+    const existing = await memberService.findMemberById(req.params.id);
+    if (!existing) return response.failure(res, "Member not found", 404);
+
     const existing = await memberService.findMemberById(req.params.id);
     if (!existing) return response.failure(res, "Member not found", 404);
 
