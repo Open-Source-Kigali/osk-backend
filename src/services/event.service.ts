@@ -33,6 +33,11 @@ async function findAllEvents() {
 
 async function findEventByIdSafe(id: string) {
   return prisma.event.findUnique({ where: { id }, select: eventSafeSelect });
+async function findAllEvents(featured?: boolean) {
+  return prisma.event.findMany({
+    where: featured !== undefined ? { featured } : undefined,
+    orderBy: { date: "asc" },
+  });
 }
 
 async function addEvent(
