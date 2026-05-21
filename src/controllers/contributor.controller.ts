@@ -8,8 +8,7 @@ async function findAllContributors(
   next: NextFunction,
 ) {
   try {
-    const contributors = await contributorService.findAllContributors();
-    // Return the list of contributors with standard success response format
+    const contributors = await contributorService.getContributors();
     response.success(
       res,
       contributors,
