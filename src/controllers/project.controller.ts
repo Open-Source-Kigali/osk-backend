@@ -13,10 +13,6 @@ import {
 
 const FOLDER = "open-source-kigali/projects";
 
-/**
- * Fetches all projects from the database.
- * Supports filtering by featured status.
- */
 async function findAllProjects(
   _req: Request,
   res: Response,
@@ -48,12 +44,16 @@ async function findProjectBySlug(
   }
 }
 
-/**
- * Validates the request body using Zod and adds a new project.
- * Handles file upload to Cloudinary and initial GitHub metadata fetch.
- */
 async function addProject(req: Request, res: Response, next: NextFunction) {
   if (!req.file) return response.failure(res, "Image file is required", 400);
+
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(req.body.slug)) {
+    return response.failure(
+      res,
+      "slug must be lowercase alphanumeric with hyphens only",
+      400,
+    );
+  }
 
   let publicId: string | undefined;
   try {

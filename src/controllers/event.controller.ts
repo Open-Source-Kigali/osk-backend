@@ -15,12 +15,10 @@ const FOLDER = "open-source-kigali/events";
 
 type EventBody = Omit<Event, "id" | "createdAt" | "updatedAt">;
 
-/**
- * Fetches all events from the database.
- */
 async function findAllEvents(_req: Request, res: Response, next: NextFunction) {
   try {
-    const allEvents = await eventService.findAllEvents();
+    const featured = _req.query.featured === "true" ? true : undefined;
+    const allEvents = await eventService.findAllEvents(featured);
     response.success(res, allEvents, 200, "Events retrieved successfully");
   } catch (err) {
     next(err);
@@ -46,13 +44,22 @@ async function findEventById(
   }
 }
 
-/**
- * Validates the request body using Zod and adds a new event.
- * Handles file upload to Cloudinary and ensures non-empty speakers array.
- */
 async function addEvent(req: Request, res: Response, next: NextFunction) {
   if (!req.file) {
     return response.failure(res, "Image file is required", 400);
+  }
+
+  const requiredFields = [
+    "title",
+    "description",
+    "category",
+    "location",
+    "date",
+  ];
+  for (const field of requiredFields) {
+    if (!req.body[field]) {
+      return response.failure(res, `Missing required field: ${field}`, 400);
+    }
   }
 
   let publicId: string | undefined;
@@ -67,14 +74,13 @@ async function addEvent(req: Request, res: Response, next: NextFunction) {
     const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
     publicId = uploaded.public_id;
 
-    const eventData: EventBody = {
+    const dataToSave: EventBody = {
       ...data,
       imageUrl: uploaded.secure_url,
       imagePublicId: uploaded.public_id,
-      speakers: data.speakers ?? [],
     } as EventBody;
 
-    const newEvent = await eventService.addEvent(eventData);
+    const newEvent = await eventService.addEvent(dataToSave);
 
     response.success(res, newEvent, 201, "Event created successfully");
   } catch (err) {
@@ -104,21 +110,20 @@ async function updateEvent(
     );
     if (!data) return;
 
-    // Filter out empty strings or undefined values that shouldn't be updated
-    const cleanedData: Record<string, unknown> = Object.fromEntries(
+    const filteredData: Prisma.EventUpdateInput = Object.fromEntries(
       Object.entries(data).filter(([, v]) => v !== "" && v !== undefined),
-    );
+    ) as Prisma.EventUpdateInput;
 
     if (req.file) {
       const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
       newPublicId = uploaded.public_id;
-      cleanedData.imageUrl = uploaded.secure_url;
-      cleanedData.imagePublicId = uploaded.public_id;
+      filteredData.imageUrl = uploaded.secure_url;
+      filteredData.imagePublicId = uploaded.public_id;
     }
 
     const updatedEvent = await eventService.updateEvent(
       req.params.id,
-      cleanedData,
+      filteredData,
     );
 
     if (req.file && existing.imagePublicId) {

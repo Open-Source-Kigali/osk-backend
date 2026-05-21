@@ -7,7 +7,6 @@ import { parseRequestBody } from "../utils/validation";
 import {
   createPartnerSchema,
   updatePartnerSchema,
-  CreatePartnerInput,
   UpdatePartnerInput,
 } from "../schemas/partner.schema";
 
@@ -53,22 +52,22 @@ async function findPartnerById(
   }
 }
 
-/**
- * Validates the request body using Zod and adds a new partner.
- * Handles file upload to Cloudinary.
- */
 async function addPartner(req: Request, res: Response, next: NextFunction) {
   if (!req.file) {
     return response.failure(res, "Logo file is required", 400);
   }
 
+  if (req.body.websiteUrl) {
+    try {
+      new URL(req.body.websiteUrl as string);
+    } catch {
+      return response.failure(res, "Invalid websiteUrl format", 400);
+    }
+  }
+
   let publicId: string | undefined;
   try {
-    const data = parseRequestBody<CreatePartnerInput>(
-      createPartnerSchema,
-      req.body,
-      res,
-    );
+    const data = parseRequestBody(createPartnerSchema, req.body, res);
     if (!data) return;
 
     const uploaded = await uploadBuffer(
@@ -111,10 +110,17 @@ async function updatePartner(
     );
     if (!data) return;
 
-    // Filter out empty strings or undefined values that shouldn't be updated
     const cleanedData: Partial<PartnerBody> = Object.fromEntries(
       Object.entries(data).filter(([, v]) => v !== "" && v !== undefined),
     ) as Partial<PartnerBody>;
+
+    if (data.websiteUrl) {
+      try {
+        new URL(data.websiteUrl as string);
+      } catch {
+        return response.failure(res, "Invalid websiteUrl format", 400);
+      }
+    }
 
     if (req.file) {
       const uploaded = await uploadBuffer(

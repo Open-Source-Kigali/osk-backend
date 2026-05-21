@@ -1,14 +1,9 @@
 import { z } from "zod";
 
-/**
- * Schema for creating a new project.
- * Validates slug format and ensures repository details are non-empty.
- */
 export const createProjectSchema = z.object({
   slug: z
     .string()
     .min(1, "Slug is required")
-    // Ensure slug is URL-safe (lowercase, hyphens only)
     .regex(
       /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
       "Slug must be lowercase with hyphens only, no spaces or special characters",
@@ -36,9 +31,6 @@ export const createProjectSchema = z.object({
   langColor: z.string().trim().optional().nullable(),
 });
 
-/**
- * Schema for updating an existing project.
- */
 export const updateProjectSchema = createProjectSchema
   .omit({ status: true, featured: true })
   .partial()
