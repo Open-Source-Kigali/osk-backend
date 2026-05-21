@@ -24,17 +24,23 @@ function headers() {
   return h;
 }
 
-async function gh(path: string) {
+export class GitHubError extends Error {
+  constructor(
+    public status: number,
+    message: string,
+  ) {
+    super(message);
+    this.name = "GitHubError";
+  }
+}
+
+export async function gh(path: string) {
   const res = await fetch(`${API}${path}`, { headers: headers() });
   if (!res.ok) {
-    // Provide a specific, actionable message when GitHub rate limits us.
-    // This often happens if GITHUB_TOKEN is missing or has limited quota.
-    if (res.status === 403) {
-      throw new Error(
-        "GitHub rate limit exceeded. Set GITHUB_TOKEN to increase your limit.",
-      );
-    }
-    throw new Error(`GitHub ${res.status} on ${path}: ${await res.text()}`);
+    throw new GitHubError(
+      res.status,
+      `GitHub ${res.status} on ${path}: ${await res.text()}`,
+    );
   }
   return res;
 }
