@@ -66,6 +66,12 @@ docs/
 └── openapi.yaml        OpenAPI specification
 ```
 
+## Data validation
+
+We use standard regular expressions to validate data formats in our controllers before performing database operations:
+
+- **Email validation:** Both `Member` and `Partner` emails are validated against the `/^[^\s@]+@[^\s@]+\.[^\s@]+$/` regex to ensure they follow a standard email format before creation.
+
 ## Database
 
 PostgreSQL runs locally via Docker. Make sure Docker is installed, then:
