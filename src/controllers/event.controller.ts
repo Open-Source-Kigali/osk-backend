@@ -119,7 +119,10 @@ async function addEvent(
     if (req.body.date && isNaN(new Date(req.body.date as string).getTime())) {
       return response.failure(res, "Invalid date format for 'date'", 400);
     }
-    if (req.body.endDate && isNaN(new Date(req.body.endDate as string).getTime())) {
+    if (
+      req.body.endDate &&
+      isNaN(new Date(req.body.endDate as string).getTime())
+    ) {
       return response.failure(res, "Invalid date format for 'endDate'", 400);
     }
 
@@ -150,7 +153,10 @@ async function updateEvent(
     if (req.body.date && isNaN(new Date(req.body.date as string).getTime())) {
       return response.failure(res, "Invalid date format for 'date'", 400);
     }
-    if (req.body.endDate && isNaN(new Date(req.body.endDate as string).getTime())) {
+    if (
+      req.body.endDate &&
+      isNaN(new Date(req.body.endDate as string).getTime())
+    ) {
       return response.failure(res, "Invalid date format for 'endDate'", 400);
     }
 
