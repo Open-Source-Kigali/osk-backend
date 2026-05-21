@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import memberService from "../services/member.service";
 import response from "../utils/response";
-import { CodingLevel } from "../generated/prisma/client";
 import { parseRequestBody } from "../utils/validation";
 import {
   createMemberSchema,
@@ -9,8 +8,6 @@ import {
   CreateMemberInput,
   UpdateMemberInput,
 } from "../schemas/member.schema";
-
-const allowedCodingLevels = new Set(Object.values(CodingLevel));
 
 async function findAllMembers(
   _req: Request,
@@ -73,17 +70,6 @@ async function updateMember(
     const filtered = Object.fromEntries(
       Object.entries(data).filter(([, v]) => v !== "" && v !== undefined),
     ) as UpdateMemberInput;
-
-    if (
-      filtered.codingLevel !== undefined &&
-      !allowedCodingLevels.has(filtered.codingLevel)
-    ) {
-      return response.failure(
-        res,
-        "Invalid codingLevel. Allowed values: beginner, intermediate, advanced",
-        400,
-      );
-    }
 
     const updatedMember = await memberService.updateMember(
       req.params.id,

@@ -1,15 +1,25 @@
 import { Request, Response, NextFunction } from "express";
+import { Prisma, Review } from "../generated/prisma/client";
 import reviewService from "../services/review.service";
 import response from "../utils/response";
-import { Review } from "../generated/prisma/client";
 import { destroyImage, uploadBuffer } from "../utils/cloudinary-upload";
+import trimStrings from "../utils/trim-strings";
 
 type ReviewBody = Omit<Review, "id" | "createdAt" | "updatedAt">;
+
+type CreateReviewBody = Omit<ReviewBody, "profileUrl" | "profilePublicId">;
+
+type UpdateReviewBody = Partial<Omit<ReviewBody, "profileUrl" | "profilePublicId">>;
 
 async function findAll(_req: Request, res: Response, next: NextFunction) {
   try {
     const reviews = await reviewService.findAll();
-    response.success(res, reviews, 200, "Reviews retrieved successfully");
+    return response.success(
+      res,
+      reviews,
+      200,
+      "Reviews retrieved successfully",
+    );
   } catch (err) {
     next(err);
   }
@@ -32,11 +42,7 @@ async function findById(
 }
 
 async function create(
-  req: Request<
-    unknown,
-    unknown,
-    Omit<ReviewBody, "profileUrl" | "profilePublicId">
-  >,
+  req: Request<unknown, unknown, CreateReviewBody>,
   res: Response,
   next: NextFunction,
 ) {
@@ -52,13 +58,14 @@ async function create(
     );
     publicId = uploaded.public_id;
 
+    const data = trimStrings(req.body as CreateReviewBody);
     const newReview = await reviewService.create({
-      ...req.body,
+      ...data,
       profileUrl: uploaded.secure_url,
       profilePublicId: uploaded.public_id,
     });
 
-    response.success(res, newReview, 201, "Review created successfully");
+    return response.success(res, newReview, 201, "Review created successfully");
   } catch (err) {
     if (publicId) await destroyImage(publicId);
     next(err);
@@ -66,11 +73,7 @@ async function create(
 }
 
 async function update(
-  req: Request<
-    { id: string },
-    unknown,
-    Partial<Omit<ReviewBody, "profileUrl" | "profilePublicId">>
-  >,
+  req: Request<{ id: string }, unknown, UpdateReviewBody>,
   res: Response,
   next: NextFunction,
 ) {
@@ -79,9 +82,12 @@ async function update(
     const existing = await reviewService.findById(req.params.id);
     if (!existing) return response.failure(res, "Review not found", 404);
 
-    const data: Partial<ReviewBody> = Object.fromEntries(
-      Object.entries(req.body).filter(([, v]) => v !== ""),
-    ) as Partial<ReviewBody>;
+    const trimmedBody = trimStrings(req.body as UpdateReviewBody);
+    const data = Object.fromEntries(
+      Object.entries(trimmedBody).filter(
+        ([, value]) => value !== "" && value !== undefined,
+      ),
+    ) as Prisma.ReviewUpdateInput;
 
     if (req.file) {
       const uploaded = await uploadBuffer(
@@ -99,7 +105,12 @@ async function update(
       await destroyImage(existing.profilePublicId);
     }
 
-    response.success(res, updatedReview, 200, "Review updated successfully");
+    return response.success(
+      res,
+      updatedReview,
+      200,
+      "Review updated successfully",
+    );
   } catch (err) {
     if (newPublicId) await destroyImage(newPublicId);
     next(err);
@@ -118,7 +129,7 @@ async function deleteReview(
     await reviewService.delete(req.params.id);
     if (existing.profilePublicId) await destroyImage(existing.profilePublicId);
 
-    response.success(res, null, 204, "Review deleted successfully");
+    return response.success(res, null, 204, "Review deleted successfully");
   } catch (err) {
     next(err);
   }

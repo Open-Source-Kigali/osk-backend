@@ -14,9 +14,7 @@ export async function findById(id: string): Promise<Review | null> {
 }
 
 export async function create(data: Prisma.ReviewCreateInput): Promise<Review> {
-  return prisma.review.create({
-    data,
-  });
+  return prisma.review.create({ data });
 }
 
 export async function update(
