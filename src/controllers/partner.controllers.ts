@@ -1,4 +1,3 @@
-// Partner controller for managing community partners
 import { Request, Response, NextFunction } from "express";
 import partnerService from "../services/partner.service";
 import response from "../utils/response";
@@ -14,24 +13,24 @@ import {
 type PartnerBody = Omit<Partner, "id" | "createdAt" | "updatedAt">;
 type CreatePartnerBody = Omit<PartnerBody, "logoUrl" | "logoPublicId">;
 
-async function findAllPartners(
+const findAllPartners = async (
   _req: Request,
   res: Response,
   next: NextFunction,
-) {
+) => {
   try {
     const allPartners = await partnerService.findAllPartners();
     response.success(res, allPartners, 200, "Partners retrieved successfully");
   } catch (err) {
     next(err);
   }
-}
+};
 
-async function findPartnerById(
+const findPartnerById = async (
   req: Request<{ id: string }>,
   res: Response,
   next: NextFunction,
-) {
+) => {
   try {
     const partner = await partnerService.findPartnerById(req.params.id);
     if (!partner) {
@@ -46,9 +45,9 @@ async function findPartnerById(
   } catch (err) {
     next(err);
   }
-}
+};
 
-async function addPartner(req: Request, res: Response, next: NextFunction) {
+const addPartner = async (req: Request, res: Response, next: NextFunction) => {
   if (!req.file) {
     return response.failure(res, "Logo file is required", 400);
   }
@@ -56,7 +55,6 @@ async function addPartner(req: Request, res: Response, next: NextFunction) {
   const body = req.body as CreatePartnerBody;
   const { email, websiteUrl } = body;
 
-  // Validate email format before processing
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (email && !emailRegex.test(email)) {
     return response.failure(res, "Invalid email format", 400);
@@ -91,16 +89,18 @@ async function addPartner(req: Request, res: Response, next: NextFunction) {
 
     response.success(res, newPartner, 201, "Partner created successfully");
   } catch (err) {
-    if (publicId) await destroyImage(publicId);
+    if (publicId) {
+      await destroyImage(publicId);
+    }
     next(err);
   }
-}
+};
 
-async function updatePartner(
+const updatePartner = async (
   req: Request<{ id: string }>,
   res: Response,
   next: NextFunction,
-) {
+) => {
   let newPublicId: string | undefined;
   try {
     const existing = await partnerService.findPartnerById(req.params.id);
@@ -150,16 +150,18 @@ async function updatePartner(
 
     response.success(res, updatedPartner, 200, "Partner updated successfully");
   } catch (err) {
-    if (newPublicId) await destroyImage(newPublicId);
+    if (newPublicId) {
+      await destroyImage(newPublicId);
+    }
     next(err);
   }
-}
+};
 
-async function deletePartner(
+const deletePartner = async (
   req: Request<{ id: string }>,
   res: Response,
   next: NextFunction,
-) {
+) => {
   try {
     const existing = await partnerService.findPartnerById(req.params.id);
     if (!existing) {
@@ -167,13 +169,15 @@ async function deletePartner(
     }
 
     await partnerService.deletePartner(req.params.id);
-    if (existing.logoPublicId) await destroyImage(existing.logoPublicId);
+    if (existing.logoPublicId) {
+      await destroyImage(existing.logoPublicId);
+    }
 
     response.success(res, null, 204, "Partner deleted successfully");
   } catch (err) {
     next(err);
   }
-}
+};
 
 export default {
   findAllPartners,
