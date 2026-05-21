@@ -3,11 +3,11 @@ import {
   getContributors,
   refresh,
 } from "../controllers/contributors.controller";
-import auth from "../middlewares/auth.middleware";
+import authMiddleware from "../middlewares/auth.middleware";
 
 const router = Router();
 
 router.get("/", getContributors);
-router.post("/refresh", auth.requireAdmin, refresh);
+router.post("/refresh", authMiddleware.requireAdmin, refresh);
 
 export default router;
