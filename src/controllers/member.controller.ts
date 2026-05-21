@@ -1,8 +1,16 @@
 import { Request, Response, NextFunction } from "express";
 import memberService from "../services/member.service";
 import response from "../utils/response";
-import { Member } from "../generated/prisma/client";
-import { trimStrings } from "../utils/trim-strings";
+import { CodingLevel } from "../generated/prisma/client";
+import { parseRequestBody } from "../utils/validation";
+import {
+  createMemberSchema,
+  updateMemberSchema,
+  CreateMemberInput,
+  UpdateMemberInput,
+} from "../schemas/member.schema";
+
+const allowedCodingLevels = new Set(Object.values(CodingLevel));
 
 /**
  * Fetches all members from the database.
@@ -39,20 +47,16 @@ async function findMemberById(
   }
 }
 
-/**
- * Trims input strings and adds a new member to the database.
- */
-async function addMember(
-  req: Request<object, unknown, Omit<Member, "id">>,
-  res: Response,
-  next: NextFunction,
-) {
+async function addMember(req: Request, res: Response, next: NextFunction) {
   try {
-    // Automatically trim all string inputs before saving
-    const trimmedBody = trimStrings(req.body as Record<string, unknown>);
-    const newMember = await memberService.addMember(
-      trimmedBody as Omit<Member, "id">,
+    const data = parseRequestBody<CreateMemberInput>(
+      createMemberSchema,
+      req.body,
+      res,
     );
+    if (!data) return;
+
+    const newMember = await memberService.addMember(data);
     response.success(res, newMember, 201, "Member created successfully");
   } catch (err) {
     next(err);
@@ -63,16 +67,35 @@ async function addMember(
  * Trims input strings and updates an existing member.
  */
 async function updateMember(
-  req: Request<{ id: string }, unknown, Partial<Omit<Member, "id">>>,
+  req: Request<{ id: string }>,
   res: Response,
   next: NextFunction,
 ) {
   try {
-    // Automatically trim all string inputs before updating
-    const trimmedBody = trimStrings(req.body as Record<string, unknown>);
+    const data = parseRequestBody<UpdateMemberInput>(
+      updateMemberSchema,
+      req.body,
+      res,
+    );
+    if (!data) return;
+
     const filtered = Object.fromEntries(
-      Object.entries(trimmedBody).filter(([, v]) => v !== ""),
-    ) as Partial<Omit<Member, "id">>;
+      Object.entries(data).filter(([, v]) => v !== "" && v !== undefined),
+    ) as UpdateMemberInput;
+
+    if (
+      filtered.codingLevel !== undefined &&
+      !allowedCodingLevels.has(filtered.codingLevel)
+    ) {
+      return response.failure(
+        res,
+        "Invalid codingLevel. Allowed values: beginner, intermediate, advanced",
+        400,
+      );
+    }
+    const existing = await memberService.findMemberById(req.params.id);
+    if (!existing) return response.failure(res, "Member not found", 404);
+
     const updatedMember = await memberService.updateMember(
       req.params.id,
       filtered,
@@ -92,6 +115,9 @@ async function deleteMember(
   next: NextFunction,
 ) {
   try {
+    const existing = await memberService.findMemberById(req.params.id);
+    if (!existing) return response.failure(res, "Member not found", 404);
+
     await memberService.deleteMember(req.params.id);
     response.success(res, null, 204, "Member deleted successfully");
   } catch (err) {

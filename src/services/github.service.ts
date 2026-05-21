@@ -24,10 +24,23 @@ function headers() {
   return h;
 }
 
-async function gh(path: string) {
+export class GitHubError extends Error {
+  constructor(
+    public status: number,
+    message: string,
+  ) {
+    super(message);
+    this.name = "GitHubError";
+  }
+}
+
+export async function gh(path: string) {
   const res = await fetch(`${API}${path}`, { headers: headers() });
   if (!res.ok) {
-    throw new Error(`GitHub ${res.status} on ${path}: ${await res.text()}`);
+    throw new GitHubError(
+      res.status,
+      `GitHub ${res.status} on ${path}: ${await res.text()}`,
+    );
   }
   return res;
 }

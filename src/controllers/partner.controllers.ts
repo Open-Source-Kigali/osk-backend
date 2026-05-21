@@ -3,7 +3,12 @@ import partnerService from "../services/partner.service";
 import response from "../utils/response";
 import { Partner } from "../generated/prisma/client";
 import { destroyImage, uploadBuffer } from "../utils/cloudinary-upload";
-import { trimStrings } from "../utils/trim-strings";
+import { parseRequestBody } from "../utils/validation";
+import {
+  createPartnerSchema,
+  updatePartnerSchema,
+  UpdatePartnerInput,
+} from "../schemas/partner.schema";
 
 type PartnerBody = Omit<Partner, "id" | "createdAt" | "updatedAt">;
 
@@ -47,20 +52,24 @@ async function findPartnerById(
   }
 }
 
-/**
- * Trims input strings and adds a new partner.
- */
-async function addPartner(
-  req: Request<unknown, unknown, Omit<PartnerBody, "logoUrl" | "logoPublicId">>,
-  res: Response,
-  next: NextFunction,
-) {
+async function addPartner(req: Request, res: Response, next: NextFunction) {
   if (!req.file) {
     return response.failure(res, "Logo file is required", 400);
   }
 
+  if (req.body.websiteUrl) {
+    try {
+      new URL(req.body.websiteUrl as string);
+    } catch {
+      return response.failure(res, "Invalid websiteUrl format", 400);
+    }
+  }
+
   let publicId: string | undefined;
   try {
+    const data = parseRequestBody(createPartnerSchema, req.body, res);
+    if (!data) return;
+
     const uploaded = await uploadBuffer(
       req.file.buffer,
       "open-source-kigali/partners",
@@ -71,7 +80,7 @@ async function addPartner(
     const trimmedBody = trimStrings(req.body as Record<string, unknown>);
 
     const newPartner = await partnerService.addPartner({
-      ...(trimmedBody as Omit<PartnerBody, "logoUrl" | "logoPublicId">),
+      ...data,
       logoUrl: uploaded.secure_url,
       logoPublicId: uploaded.public_id,
     });
@@ -87,11 +96,7 @@ async function addPartner(
  * Trims input strings and updates an existing partner.
  */
 async function updatePartner(
-  req: Request<
-    { id: string },
-    unknown,
-    Partial<Omit<PartnerBody, "logoPublicId">>
-  >,
+  req: Request<{ id: string }>,
   res: Response,
   next: NextFunction,
 ) {
@@ -100,12 +105,24 @@ async function updatePartner(
     const existing = await partnerService.findPartnerById(req.params.id);
     if (!existing) return response.failure(res, "Partner not found", 404);
 
-    // Automatically trim all string inputs before updating
-    const trimmedBody = trimStrings(req.body as Record<string, unknown>);
+    const data = parseRequestBody<UpdatePartnerInput>(
+      updatePartnerSchema,
+      req.body,
+      res,
+    );
+    if (!data) return;
 
-    const data: Partial<PartnerBody> = Object.fromEntries(
-      Object.entries(trimmedBody).filter(([, v]) => v !== ""),
+    const cleanedData: Partial<PartnerBody> = Object.fromEntries(
+      Object.entries(data).filter(([, v]) => v !== "" && v !== undefined),
     ) as Partial<PartnerBody>;
+
+    if (data.websiteUrl) {
+      try {
+        new URL(data.websiteUrl as string);
+      } catch {
+        return response.failure(res, "Invalid websiteUrl format", 400);
+      }
+    }
 
     if (req.file) {
       const uploaded = await uploadBuffer(
@@ -113,13 +130,13 @@ async function updatePartner(
         "open-source-kigali/partners",
       );
       newPublicId = uploaded.public_id;
-      data.logoUrl = uploaded.secure_url;
-      data.logoPublicId = uploaded.public_id;
+      cleanedData.logoUrl = uploaded.secure_url;
+      cleanedData.logoPublicId = uploaded.public_id;
     }
 
     const updatedPartner = await partnerService.updatePartner(
       req.params.id,
-      data,
+      cleanedData,
     );
 
     if (req.file && existing.logoPublicId) {
