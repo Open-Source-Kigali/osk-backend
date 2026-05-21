@@ -40,6 +40,10 @@ async function addMember(
   next: NextFunction,
 ) {
   try {
+    const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!EMAIL_RE.test(req.body.email)) {
+      return response.failure(res, 'Invalid email address', 400)
+    }
     const newMember = await memberService.addMember(req.body);
     response.success(res, newMember, 201, "Member created successfully");
   } catch (err) {
