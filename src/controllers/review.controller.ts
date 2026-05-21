@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import * as reviewService from "../services/review.service";
+import reviewService from "../services/review.service";
 import response from "../utils/response";
 import { Review } from "../generated/prisma/client";
 import { destroyImage, uploadBuffer } from "../utils/cloudinary-upload";
@@ -8,8 +8,8 @@ type ReviewBody = Omit<Review, "id" | "createdAt" | "updatedAt">;
 
 async function findAll(_req: Request, res: Response, next: NextFunction) {
   try {
-    const allReviews = await reviewService.findAll();
-    response.success(res, allReviews, 200, "Reviews retrieved successfully");
+    const reviews = await reviewService.findAll();
+    response.success(res, reviews, 200, "Reviews retrieved successfully");
   } catch (err) {
     next(err);
   }
@@ -69,7 +69,7 @@ async function update(
   req: Request<
     { id: string },
     unknown,
-    Partial<Omit<ReviewBody, "profilePublicId">>
+    Partial<Omit<ReviewBody, "profileUrl" | "profilePublicId">>
   >,
   res: Response,
   next: NextFunction,
@@ -115,7 +115,7 @@ async function deleteReview(
     const existing = await reviewService.findById(req.params.id);
     if (!existing) return response.failure(res, "Review not found", 404);
 
-    await reviewService.deleteReview(req.params.id);
+    await reviewService.delete(req.params.id);
     if (existing.profilePublicId) await destroyImage(existing.profilePublicId);
 
     response.success(res, null, 204, "Review deleted successfully");
@@ -129,5 +129,5 @@ export default {
   findById,
   create,
   update,
-  deleteReview,
+  delete: deleteReview,
 };

@@ -19,6 +19,7 @@ tags:
   - name: Reviews
   - name: Projects
   - name: Contributors
+  - name: Reviews
   - name: Users
 
 paths:
@@ -713,6 +714,39 @@ components:
         data: { type: object, nullable: true, example: null }
       required: [success, message, data]
 
+    Review:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        profileUrl: { type: string }
+        profilePublicId: { type: string }
+        role: { type: string }
+        message: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    ReviewInput:
+      type: object
+      required: [name, role, message, file]
+      properties:
+        name: { type: string }
+        role: { type: string }
+        message: { type: string }
+        file:
+          type: string
+          format: binary
+
+    ReviewUpdateInput:
+      type: object
+      properties:
+        name: { type: string }
+        role: { type: string }
+        message: { type: string }
+        file:
+          type: string
+          format: binary
+
     Member:
       type: object
       properties:
@@ -890,38 +924,6 @@ components:
           type: string
           nullable: true
           description: Company name
-
-    Review:
-      type: object
-      properties:
-        id: { type: string, format: uuid }
-        name: { type: string }
-        profileUrl: { type: string }
-        profilePublicId: { type: string }
-        role: { type: string }
-        message: { type: string }
-        createdAt: { type: string, format: date-time }
-        updatedAt: { type: string, format: date-time }
-
-    ReviewInput:
-      type: object
-      required: [name, file, role, message]
-      properties:
-        name: { type: string }
-        file: { type: string, format: binary, description: "Profile picture" }
-        role: { type: string }
-        message: { type: string }
-
-    ReviewUpdateInput:
-      type: object
-      properties:
-        name: { type: string }
-        file:
-          type: string
-          format: binary
-          description: "Replacement profile picture (optional)"
-        role: { type: string }
-        message: { type: string }
     Project:
       type: object
       properties:
