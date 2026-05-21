@@ -579,7 +579,6 @@ components:
         title: { type: string }
         tagline: { type: string, nullable: true }
         imageUrl: { type: string }
-        imagePublicId: { type: string }
         description: { type: string }
         category: { type: string }
         mode: { type: string, example: "in-person" }
@@ -652,13 +651,11 @@ components:
         name: { type: string }
         websiteUrl: { type: string }
         logoUrl: { type: string }
-        logoPublicId: { type: string }
         description: { type: string }
         email: { type: string, format: email }
         partnershipReason: { type: string }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
-
     PartnerInput:
       type: object
       required: [name, websiteUrl, file, description, email, partnershipReason]
@@ -693,7 +690,6 @@ components:
         repoOwner: { type: string }
         repoName: { type: string }
         imageUrl: { type: string }
-        imagePublicId: { type: string }
         tagline: { type: string }
         category: { type: string }
         status: { type: string, enum: [active, archived, paused] }
@@ -714,7 +710,6 @@ components:
         lastFetchedAt: { type: string, format: date-time, nullable: true }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
-
     ProjectInput:
       type: object
       required: [slug, repoOwner, repoName, file, tagline, category]
