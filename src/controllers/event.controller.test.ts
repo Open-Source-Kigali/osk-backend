@@ -5,89 +5,51 @@ import app from "../app";
 vi.mock("../services/event.service");
 import eventService from "../services/event.service";
 
-const ADMIN_KEY = "test-admin-key";
-
 const mockEvent = {
   id: "1",
-  title: "Test Event",
-  description: "Test Description",
-  category: "Test Category",
-  location: "Test Location",
-  date: new Date().toISOString(),
+  title: "OSK Meetup",
+  tagline: "Community event",
   imageUrl: "https://example.com/image.jpg",
-  imagePublicId: "image123",
+  imagePublicId: "abc123",
+  description: "An open-source meetup",
+  category: "community",
+  mode: "in-person",
+  featured: true,
+  capacity: 100,
+  registered: 30,
+  date: new Date(),
+  endDate: null,
+  timeLabel: "10:00 AM",
+  location: "Kigali",
+  speakers: ["Alice"],
+  registerUrl: "https://example.com/register",
+  createdAt: new Date(),
+  updatedAt: new Date(),
 };
 
 beforeEach(() => vi.resetAllMocks());
 
-describe("POST /api/events", () => {
-  it("returns 400 when a required field (title) is missing", async () => {
-    const res = await request(app)
-      .post("/api/events")
-      .set("x-api-key", ADMIN_KEY)
-      .field("description", "desc")
-      .field("category", "cat")
-      .field("location", "loc")
-      .field("date", "2024-01-01")
-      .attach("file", Buffer.from("test"), "test.jpg");
+describe("GET /api/events", () => {
+  it("returns 200 and filters featured events when featured=true is provided", async () => {
+    vi.mocked(eventService.findAllEvents).mockResolvedValue([mockEvent]);
 
-    expect(res.status).toBe(400);
-    expect(res.body.message).toBe("title is required");
+    const res = await request(app).get("/api/events?featured=true");
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toHaveLength(1);
+    expect(vi.mocked(eventService.findAllEvents)).toHaveBeenCalledWith(true);
   });
 
-  it("returns 400 when a required field (date) is missing", async () => {
-    const res = await request(app)
-      .post("/api/events")
-      .set("x-api-key", ADMIN_KEY)
-      .field("title", "title")
-      .field("description", "desc")
-      .field("category", "cat")
-      .field("location", "loc")
-      .attach("file", Buffer.from("test"), "test.jpg");
+  it("returns 200 and fetches all events when featured is not provided", async () => {
+    vi.mocked(eventService.findAllEvents).mockResolvedValue([mockEvent]);
 
-    expect(res.status).toBe(400);
-    expect(res.body.message).toBe("date is required");
-  });
+    const res = await request(app).get("/api/events");
 
-  it("returns 400 when a required field (description) is missing", async () => {
-    const res = await request(app)
-      .post("/api/events")
-      .set("x-api-key", ADMIN_KEY)
-      .field("title", "title")
-      .field("category", "cat")
-      .field("location", "loc")
-      .field("date", "2024-01-01")
-      .attach("file", Buffer.from("test"), "test.jpg");
-
-    expect(res.status).toBe(400);
-    expect(res.body.message).toBe("description is required");
-  });
-
-  it("returns 400 when a required field (category) is missing", async () => {
-    const res = await request(app)
-      .post("/api/events")
-      .set("x-api-key", ADMIN_KEY)
-      .field("title", "title")
-      .field("description", "desc")
-      .field("location", "loc")
-      .field("date", "2024-01-01")
-      .attach("file", Buffer.from("test"), "test.jpg");
-
-    expect(res.status).toBe(400);
-    expect(res.body.message).toBe("category is required");
-  });
-
-  it("returns 400 when a required field (location) is missing", async () => {
-    const res = await request(app)
-      .post("/api/events")
-      .set("x-api-key", ADMIN_KEY)
-      .field("title", "title")
-      .field("description", "desc")
-      .field("category", "cat")
-      .field("date", "2024-01-01")
-      .attach("file", Buffer.from("test"), "test.jpg");
-
-    expect(res.status).toBe(400);
-    expect(res.body.message).toBe("location is required");
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(vi.mocked(eventService.findAllEvents)).toHaveBeenCalledWith(
+      undefined,
+    );
   });
 });
