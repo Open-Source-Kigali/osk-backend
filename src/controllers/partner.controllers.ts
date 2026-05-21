@@ -4,9 +4,11 @@ import response from "../utils/response";
 import { Partner } from "../generated/prisma/client";
 import { destroyImage, uploadBuffer } from "../utils/cloudinary-upload";
 import { parseRequestBody } from "../utils/validation";
+import { trimStrings } from "../utils/trim-strings";
 import {
   createPartnerSchema,
   updatePartnerSchema,
+  CreatePartnerInput,
   UpdatePartnerInput,
 } from "../schemas/partner.schema";
 
@@ -52,22 +54,25 @@ async function findPartnerById(
   }
 }
 
+/**
+ * Trims input strings and adds a new partner.
+ * Validates against Zod schema after trimming.
+ */
 async function addPartner(req: Request, res: Response, next: NextFunction) {
   if (!req.file) {
     return response.failure(res, "Logo file is required", 400);
   }
 
-  if (req.body.websiteUrl) {
-    try {
-      new URL(req.body.websiteUrl as string);
-    } catch {
-      return response.failure(res, "Invalid websiteUrl format", 400);
-    }
-  }
-
   let publicId: string | undefined;
   try {
-    const data = parseRequestBody(createPartnerSchema, req.body, res);
+    // Automatically trim all string inputs before validation/saving
+    const trimmedBody = trimStrings(req.body as Record<string, unknown>);
+
+    const data = parseRequestBody<CreatePartnerInput>(
+      createPartnerSchema,
+      trimmedBody,
+      res,
+    );
     if (!data) return;
 
     const uploaded = await uploadBuffer(
@@ -75,9 +80,6 @@ async function addPartner(req: Request, res: Response, next: NextFunction) {
       "open-source-kigali/partners",
     );
     publicId = uploaded.public_id;
-
-    // Automatically trim all string inputs before saving
-    const trimmedBody = trimStrings(req.body as Record<string, unknown>);
 
     const newPartner = await partnerService.addPartner({
       ...data,
@@ -105,24 +107,20 @@ async function updatePartner(
     const existing = await partnerService.findPartnerById(req.params.id);
     if (!existing) return response.failure(res, "Partner not found", 404);
 
+    // Automatically trim all string inputs before validation/updating
+    const trimmedBody = trimStrings(req.body as Record<string, unknown>);
+
     const data = parseRequestBody<UpdatePartnerInput>(
       updatePartnerSchema,
-      req.body,
+      trimmedBody,
       res,
     );
     if (!data) return;
 
+    // Filter out empty strings or undefined values that shouldn't be updated
     const cleanedData: Partial<PartnerBody> = Object.fromEntries(
       Object.entries(data).filter(([, v]) => v !== "" && v !== undefined),
     ) as Partial<PartnerBody>;
-
-    if (data.websiteUrl) {
-      try {
-        new URL(data.websiteUrl as string);
-      } catch {
-        return response.failure(res, "Invalid websiteUrl format", 400);
-      }
-    }
 
     if (req.file) {
       const uploaded = await uploadBuffer(
@@ -151,7 +149,7 @@ async function updatePartner(
 }
 
 /**
- * Deletes a partner and its associated logo.
+ * Deletes a partner by their ID.
  */
 async function deletePartner(
   req: Request<{ id: string }>,

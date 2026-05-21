@@ -1,16 +1,14 @@
 import { Request, Response, NextFunction } from "express";
 import memberService from "../services/member.service";
 import response from "../utils/response";
-import { CodingLevel } from "../generated/prisma/client";
 import { parseRequestBody } from "../utils/validation";
+import { trimStrings } from "../utils/trim-strings";
 import {
   createMemberSchema,
   updateMemberSchema,
   CreateMemberInput,
   UpdateMemberInput,
 } from "../schemas/member.schema";
-
-const allowedCodingLevels = new Set(Object.values(CodingLevel));
 
 /**
  * Fetches all members from the database.
@@ -47,11 +45,18 @@ async function findMemberById(
   }
 }
 
+/**
+ * Trims input strings and adds a new member.
+ * Validates against Zod schema after trimming.
+ */
 async function addMember(req: Request, res: Response, next: NextFunction) {
   try {
+    // Automatically trim all string inputs before validation/saving
+    const trimmedBody = trimStrings(req.body as Record<string, unknown>);
+
     const data = parseRequestBody<CreateMemberInput>(
       createMemberSchema,
-      req.body,
+      trimmedBody,
       res,
     );
     if (!data) return;
@@ -72,9 +77,12 @@ async function updateMember(
   next: NextFunction,
 ) {
   try {
+    // Automatically trim all string inputs before validation/updating
+    const trimmedBody = trimStrings(req.body as Record<string, unknown>);
+
     const data = parseRequestBody<UpdateMemberInput>(
       updateMemberSchema,
-      req.body,
+      trimmedBody,
       res,
     );
     if (!data) return;
@@ -83,16 +91,6 @@ async function updateMember(
       Object.entries(data).filter(([, v]) => v !== "" && v !== undefined),
     ) as UpdateMemberInput;
 
-    if (
-      filtered.codingLevel !== undefined &&
-      !allowedCodingLevels.has(filtered.codingLevel)
-    ) {
-      return response.failure(
-        res,
-        "Invalid codingLevel. Allowed values: beginner, intermediate, advanced",
-        400,
-      );
-    }
     const existing = await memberService.findMemberById(req.params.id);
     if (!existing) return response.failure(res, "Member not found", 404);
 

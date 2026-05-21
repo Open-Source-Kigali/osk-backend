@@ -3,7 +3,14 @@ import request from "supertest";
 import app from "../app";
 
 vi.mock("../services/event.service");
+vi.mock("../utils/cloudinary-upload", () => ({
+  uploadBuffer: vi.fn(),
+  destroyImage: vi.fn(),
+}));
+
 import eventService from "../services/event.service";
+
+const ADMIN_KEY = "test-admin-key";
 
 const mockEvent = {
   id: "1",
@@ -51,5 +58,20 @@ describe("GET /api/events", () => {
     expect(vi.mocked(eventService.findAllEvents)).toHaveBeenCalledWith(
       undefined,
     );
+  });
+});
+
+describe("POST /api/events", () => {
+  it("returns 400 when a required field (title) is missing", async () => {
+    const res = await request(app)
+      .post("/api/events")
+      .set("x-api-key", ADMIN_KEY)
+      .field("description", "desc")
+      .field("category", "cat")
+      .field("location", "loc")
+      .field("date", "2024-01-01")
+      .attach("file", Buffer.from("test"), "test.jpg");
+
+    expect(res.status).toBe(400);
   });
 });
