@@ -1,31 +1,17 @@
 import { Request, Response, NextFunction } from "express";
 import projectService from "../services/project.service";
 import response from "../utils/response";
-import { ProjectStatus } from "../generated/prisma/client";
 import { destroyImage, uploadBuffer } from "../utils/cloudinary-upload";
 import { fetchRepoSnapshot } from "../services/github.service";
+import { parseRequestBody } from "../utils/validation";
+import {
+  createProjectSchema,
+  updateProjectSchema,
+  CreateProjectInput,
+  UpdateProjectInput,
+} from "../schemas/project.schema";
 
 const FOLDER = "open-source-kigali/projects";
-
-type CreateBody = {
-  slug: string;
-  repoOwner: string;
-  repoName: string;
-  tagline: string;
-  category: string;
-  status?: ProjectStatus;
-  featured?: string | boolean;
-  maintainer?: string;
-  langColor?: string;
-};
-
-type UpdateBody = Partial<CreateBody>;
-
-function parseBoolean(value: unknown) {
-  if (typeof value === "boolean") return value;
-  if (typeof value === "string") return value === "true" || value === "1";
-  return undefined;
-}
 
 async function findAllProjects(
   _req: Request,
@@ -33,7 +19,8 @@ async function findAllProjects(
   next: NextFunction,
 ) {
   try {
-    const projects = await projectService.findAllProjects();
+    const featured = _req.query.featured === "true" ? true : undefined;
+    const projects = await projectService.findAllProjects(featured);
     response.success(res, projects, 200, "Projects retrieved successfully");
   } catch (err) {
     next(err);
@@ -54,11 +41,7 @@ async function findProjectBySlug(
   }
 }
 
-async function addProject(
-  req: Request<unknown, unknown, CreateBody>,
-  res: Response,
-  next: NextFunction,
-) {
+async function addProject(req: Request, res: Response, next: NextFunction) {
   if (!req.file) return response.failure(res, "Image file is required", 400);
 
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(req.body.slug)) {
@@ -71,20 +54,26 @@ async function addProject(
 
   let publicId: string | undefined;
   try {
+    const data = parseRequestBody<CreateProjectInput>(
+      createProjectSchema,
+      req.body,
+      res,
+    );
+    if (!data) return;
+
     const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
     publicId = uploaded.public_id;
 
-    const featured = parseBoolean(req.body.featured) ?? false;
     const created = await projectService.addProject({
-      slug: req.body.slug,
-      repoOwner: req.body.repoOwner,
-      repoName: req.body.repoName,
-      tagline: req.body.tagline,
-      category: req.body.category,
-      status: req.body.status ?? "active",
-      featured,
-      maintainer: req.body.maintainer ?? null,
-      langColor: req.body.langColor ?? null,
+      slug: data.slug,
+      repoOwner: data.repoOwner,
+      repoName: data.repoName,
+      tagline: data.tagline,
+      category: data.category,
+      status: data.status,
+      featured: data.featured,
+      maintainer: data.maintainer ?? null,
+      langColor: data.langColor ?? null,
       imageUrl: uploaded.secure_url,
       imagePublicId: uploaded.public_id,
     });
@@ -105,7 +94,7 @@ async function addProject(
 }
 
 async function updateProject(
-  req: Request<{ id: string }, unknown, UpdateBody>,
+  req: Request<{ id: string }>,
   res: Response,
   next: NextFunction,
 ) {
@@ -114,26 +103,28 @@ async function updateProject(
     const existing = await projectService.findProjectById(req.params.id);
     if (!existing) return response.failure(res, "Project not found", 404);
 
-    const data: Record<string, unknown> = {};
-    const b = req.body;
-    if (b.slug) data.slug = b.slug;
-    if (b.repoOwner) data.repoOwner = b.repoOwner;
-    if (b.repoName) data.repoName = b.repoName;
-    if (b.tagline) data.tagline = b.tagline;
-    if (b.category) data.category = b.category;
-    if (b.status) data.status = b.status;
-    if (b.featured !== undefined) data.featured = parseBoolean(b.featured);
-    if (b.maintainer !== undefined) data.maintainer = b.maintainer;
-    if (b.langColor !== undefined) data.langColor = b.langColor;
+    const data = parseRequestBody<UpdateProjectInput>(
+      updateProjectSchema,
+      req.body,
+      res,
+    );
+    if (!data) return;
+
+    const cleanedData: Record<string, unknown> = Object.fromEntries(
+      Object.entries(data).filter(([, v]) => v !== "" && v !== undefined),
+    );
 
     if (req.file) {
       const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
       newPublicId = uploaded.public_id;
-      data.imageUrl = uploaded.secure_url;
-      data.imagePublicId = uploaded.public_id;
+      cleanedData.imageUrl = uploaded.secure_url;
+      cleanedData.imagePublicId = uploaded.public_id;
     }
 
-    const updated = await projectService.updateProject(req.params.id, data);
+    const updated = await projectService.updateProject(
+      req.params.id,
+      cleanedData,
+    );
 
     if (req.file && existing.imagePublicId) {
       await destroyImage(existing.imagePublicId);
