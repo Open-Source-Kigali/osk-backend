@@ -55,7 +55,9 @@ We use a three-branch flow: `dev` → `staging` → `main`.
 
 ## Commit messages
 
-We use [Convential Commits](https://www.conventionalcommits.org/). The first line should be:
+<!-- Corrected typo: Convential -> Conventional -->
+
+We use [Conventional Commits](https://www.conventionalcommits.org/). The first line should be:
 
 ```
 <type>: <short summary>
