@@ -13,7 +13,8 @@ import {
 type PartnerBody = Omit<Partner, "id" | "createdAt" | "updatedAt">;
 type CreatePartnerBody = Omit<PartnerBody, "logoUrl" | "logoPublicId">;
 
-async function findAllPartners(  _req: Request,
+async function findAllPartners(
+  _req: Request,
   res: Response,
   next: NextFunction,
 ) {
