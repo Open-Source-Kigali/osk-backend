@@ -39,7 +39,8 @@ function parseSpeakers(v: unknown): string[] | undefined {
 
 function buildEventData(
   body: Record<string, unknown>,
-): Prisma.EventUpdateInput {
+  res: Response,
+): Prisma.EventUpdateInput | undefined {
   const data: Record<string, unknown> = {};
   const passthrough = [
     "title",
@@ -59,9 +60,29 @@ function buildEventData(
     data.capacity = body.capacity === null ? null : Number(body.capacity);
   if (body.registered !== undefined)
     data.registered = body.registered === null ? null : Number(body.registered);
-  if (body.date !== undefined) data.date = new Date(body.date as string);
-  if (body.endDate !== undefined)
-    data.endDate = body.endDate ? new Date(body.endDate as string) : null;
+
+  if (body.date !== undefined) {
+    const d = new Date(body.date as string);
+    if (isNaN(d.getTime())) {
+      response.failure(res, "date is not a valid date", 400);
+      return undefined;
+    }
+    data.date = d;
+  }
+
+  if (body.endDate !== undefined) {
+    if (body.endDate) {
+      const d = new Date(body.endDate as string);
+      if (isNaN(d.getTime())) {
+        response.failure(res, "endDate is not a valid date", 400);
+        return undefined;
+      }
+      data.endDate = d;
+    } else {
+      data.endDate = null;
+    }
+  }
+
   const speakers = parseSpeakers(body.speakers);
   if (speakers !== undefined) data.speakers = speakers;
   return data;
@@ -97,6 +118,12 @@ async function addEvent(
   res: Response,
   next: NextFunction,
 ) {
+  const required = ["title", "description", "category", "location", "date"];
+  for (const field of required) {
+    if (!req.body[field])
+      return response.failure(res, `${field} is required`, 400);
+  }
+
   if (!req.file) {
     return response.failure(res, "Image file is required", 400);
   }
@@ -116,10 +143,22 @@ async function addEvent(
 
   let publicId: string | undefined;
   try {
+    if (req.body.date && isNaN(new Date(req.body.date as string).getTime())) {
+      return response.failure(res, "Invalid date format for 'date'", 400);
+    }
+    if (
+      req.body.endDate &&
+      isNaN(new Date(req.body.endDate as string).getTime())
+    ) {
+      return response.failure(res, "Invalid date format for 'endDate'", 400);
+    }
+
     const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
     publicId = uploaded.public_id;
 
-    const data = buildEventData(req.body) as EventBody;
+    const data = buildEventData(req.body, res) as EventBody | undefined;
+    if (!data) return;
+
     data.imageUrl = uploaded.secure_url;
     data.imagePublicId = uploaded.public_id;
     if (!data.speakers) data.speakers = [];
@@ -140,10 +179,21 @@ async function updateEvent(
 ) {
   let newPublicId: string | undefined;
   try {
+    if (req.body.date && isNaN(new Date(req.body.date as string).getTime())) {
+      return response.failure(res, "Invalid date format for 'date'", 400);
+    }
+    if (
+      req.body.endDate &&
+      isNaN(new Date(req.body.endDate as string).getTime())
+    ) {
+      return response.failure(res, "Invalid date format for 'endDate'", 400);
+    }
+
     const existing = await eventService.findEventById(req.params.id);
     if (!existing) return response.failure(res, "Event not found", 404);
 
-    const data = buildEventData(req.body);
+    const data = buildEventData(req.body, res);
+    if (!data) return;
 
     if (req.file) {
       const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
