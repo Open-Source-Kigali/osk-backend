@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import eventService from "../services/event.service";
 import response from "../utils/response";
-import { Event } from "../generated/prisma/client";
+import { Event, Prisma } from "../generated/prisma/client";
 import { destroyImage, uploadBuffer } from "../utils/cloudinary-upload";
 import { parseRequestBody } from "../utils/validation";
 import {
