@@ -18,10 +18,15 @@ export function uploadBuffer(
   });
 }
 
+/**
+ * Attempts to delete an image from Cloudinary by its public ID.
+ * Failures are logged but not thrown to avoid blocking the main request flow.
+ */
 export async function destroyImage(publicId: string) {
   try {
     await cloudinary.uploader.destroy(publicId);
-  } catch {
-    // best-effort cleanup; ignore failures
+  } catch (err) {
+    // Log the error so operators can detect orphan images or configuration issues
+    console.error("Failed to destroy Cloudinary image", publicId, err);
   }
 }
