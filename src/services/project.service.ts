@@ -2,12 +2,50 @@ import { prisma } from "../config/prisma";
 import { Prisma, Project } from "../generated/prisma/client";
 import { RepoSnapshot } from "./github.service";
 
-async function findAllProjects() {
-  return prisma.project.findMany({ orderBy: { createdAt: "desc" } });
+// Public project responses include the rendered image URL but never the Cloudinary asset id.
+const projectSafeSelect = {
+  id: true,
+  slug: true,
+  repoOwner: true,
+  repoName: true,
+  imageUrl: true,
+  tagline: true,
+  category: true,
+  status: true,
+  featured: true,
+  maintainer: true,
+  langColor: true,
+  ghDescription: true,
+  ghLanguage: true,
+  ghTopics: true,
+  ghStars: true,
+  ghForks: true,
+  ghOpenIssues: true,
+  ghContributors: true,
+  ghPullRequests: true,
+  ghPushedAt: true,
+  lastFetchedAt: true,
+  createdAt: true,
+  updatedAt: true,
+} satisfies Prisma.ProjectSelect;
+
+async function findAllProjects(featured?: boolean) {
+  return prisma.project.findMany({
+    where: featured !== undefined ? { featured } : undefined,
+    orderBy: { createdAt: "desc" },
+    select: projectSafeSelect,
+  });
 }
 
 async function findProjectById(id: string) {
   return prisma.project.findUnique({ where: { id } });
+}
+
+async function findProjectBySlugSafe(slug: string) {
+  return prisma.project.findUnique({
+    where: { slug },
+    select: projectSafeSelect,
+  });
 }
 
 async function findProjectBySlug(slug: string) {
@@ -15,11 +53,9 @@ async function findProjectBySlug(slug: string) {
 }
 
 async function addProject(
-  data: Omit<
+  projectData: Omit<
     Project,
     | "id"
-    | "createdAt"
-    | "updatedAt"
     | "ghDescription"
     | "ghLanguage"
     | "ghTopics"
@@ -30,13 +66,25 @@ async function addProject(
     | "ghPullRequests"
     | "ghPushedAt"
     | "lastFetchedAt"
+    | "createdAt"
+    | "updatedAt"
   >,
 ) {
-  return prisma.project.create({ data });
+  return prisma.project.create({
+    data: projectData,
+    select: projectSafeSelect,
+  });
 }
 
-async function updateProject(id: string, data: Prisma.ProjectUpdateInput) {
-  return prisma.project.update({ where: { id }, data });
+async function updateProject(
+  id: string,
+  projectData: Prisma.ProjectUpdateInput,
+) {
+  return prisma.project.update({
+    where: { id },
+    data: projectData,
+    select: projectSafeSelect,
+  });
 }
 
 async function deleteProject(id: string) {
@@ -45,7 +93,7 @@ async function deleteProject(id: string) {
 
 async function findAllProjectsForRefresh() {
   return prisma.project.findMany({
-    select: { id: true, slug: true, repoOwner: true, repoName: true },
+    select: { id: true, repoOwner: true, repoName: true, slug: true },
   });
 }
 
@@ -64,12 +112,14 @@ async function applyGithubSnapshot(id: string, snap: RepoSnapshot) {
       ghPushedAt: snap.pushedAt,
       lastFetchedAt: new Date(),
     },
+    select: projectSafeSelect,
   });
 }
 
 export default {
   findAllProjects,
   findProjectById,
+  findProjectBySlugSafe,
   findProjectBySlug,
   addProject,
   updateProject,

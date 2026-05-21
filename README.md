@@ -82,6 +82,15 @@ To stop the database: `docker compose down` (add `-v` to wipe the data).
 
 Interractive Swagger UI is available at `http://localhost:3000/api/docs` once the server is running. The underlying spec lives at [`docs/openapi.yaml`](./docs/openapi.yaml).
 
+### Input Validation overhaul
+
+We have overhauled the input validation system using [Zod](https://zod.dev/):
+
+- **Structured Validation:** All POST and PUT endpoints now use Zod schemas to validate request bodies.
+- **Clear Errors:** Validation failures return a `400 Bad Request` with a descriptive message identifying exactly which fields failed.
+- **Consistency:** The `parseRequestBody` helper ensures a consistent error format across the entire API.
+- **Schema Location:** Schemas are organized in `src/schemas/` for easy maintenance and re-use.
+
 Admin-only endpoints require an `x-api-key` header matching `ADMIN_API_KEY`.
 
 ## Contributors

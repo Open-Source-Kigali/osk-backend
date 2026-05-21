@@ -1,68 +1,23 @@
 import { Request, Response, NextFunction } from "express";
 import eventService from "../services/event.service";
 import response from "../utils/response";
-import { Event, Prisma } from "../generated/prisma/client";
+import { Event } from "../generated/prisma/client";
 import { destroyImage, uploadBuffer } from "../utils/cloudinary-upload";
+import { parseRequestBody } from "../utils/validation";
+import {
+  createEventSchema,
+  updateEventSchema,
+  CreateEventInput,
+  UpdateEventInput,
+} from "../schemas/event.schema";
 
 const FOLDER = "open-source-kigali/events";
 
 type EventBody = Omit<Event, "id" | "createdAt" | "updatedAt">;
 
-function parseBoolean(v: unknown) {
-  if (typeof v === "boolean") return v;
-  if (typeof v === "string") return v === "true" || v === "1";
-  return undefined;
-}
-
-function parseSpeakers(v: unknown): string[] | undefined {
-  if (Array.isArray(v)) return v.map(String);
-  if (typeof v !== "string") return undefined;
-  const trimmed = v.trim();
-  if (!trimmed) return [];
-  if (trimmed.startsWith("[")) {
-    try {
-      const parsed = JSON.parse(trimmed);
-      if (Array.isArray(parsed)) return parsed.map(String);
-    } catch {
-      // fall through
-    }
-  }
-  return trimmed
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-}
-
-function buildEventData(
-  body: Record<string, unknown>,
-): Prisma.EventUpdateInput {
-  const data: Record<string, unknown> = {};
-  const passthrough = [
-    "title",
-    "tagline",
-    "description",
-    "category",
-    "mode",
-    "location",
-    "timeLabel",
-    "registerUrl",
-  ];
-  for (const k of passthrough) {
-    if (body[k] !== undefined && body[k] !== "") data[k] = body[k];
-  }
-  if (body.featured !== undefined) data.featured = parseBoolean(body.featured);
-  if (body.capacity !== undefined)
-    data.capacity = body.capacity === null ? null : Number(body.capacity);
-  if (body.registered !== undefined)
-    data.registered = body.registered === null ? null : Number(body.registered);
-  if (body.date !== undefined) data.date = new Date(body.date as string);
-  if (body.endDate !== undefined)
-    data.endDate = body.endDate ? new Date(body.endDate as string) : null;
-  const speakers = parseSpeakers(body.speakers);
-  if (speakers !== undefined) data.speakers = speakers;
-  return data;
-}
-
+/**
+ * Fetches all events from the database.
+ */
 async function findAllEvents(_req: Request, res: Response, next: NextFunction) {
   try {
     const allEvents = await eventService.findAllEvents();
@@ -72,6 +27,9 @@ async function findAllEvents(_req: Request, res: Response, next: NextFunction) {
   }
 }
 
+/**
+ * Fetches a single event by its ID.
+ */
 async function findEventById(
   req: Request<{ id: string }>,
   res: Response,
@@ -88,26 +46,35 @@ async function findEventById(
   }
 }
 
-async function addEvent(
-  req: Request<unknown, unknown, Record<string, unknown>>,
-  res: Response,
-  next: NextFunction,
-) {
+/**
+ * Validates the request body using Zod and adds a new event.
+ * Handles file upload to Cloudinary and ensures non-empty speakers array.
+ */
+async function addEvent(req: Request, res: Response, next: NextFunction) {
   if (!req.file) {
     return response.failure(res, "Image file is required", 400);
   }
 
   let publicId: string | undefined;
   try {
+    const data = parseRequestBody<CreateEventInput>(
+      createEventSchema,
+      req.body,
+      res,
+    );
+    if (!data) return;
+
     const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
     publicId = uploaded.public_id;
 
-    const data = buildEventData(req.body) as EventBody;
-    data.imageUrl = uploaded.secure_url;
-    data.imagePublicId = uploaded.public_id;
-    if (!data.speakers) data.speakers = [];
+    const eventData: EventBody = {
+      ...data,
+      imageUrl: uploaded.secure_url,
+      imagePublicId: uploaded.public_id,
+      speakers: data.speakers ?? [],
+    } as EventBody;
 
-    const newEvent = await eventService.addEvent(data);
+    const newEvent = await eventService.addEvent(eventData);
 
     response.success(res, newEvent, 201, "Event created successfully");
   } catch (err) {
@@ -116,8 +83,12 @@ async function addEvent(
   }
 }
 
+/**
+ * Validates the request body using Zod and updates an existing event.
+ * Handles optional file update to Cloudinary.
+ */
 async function updateEvent(
-  req: Request<{ id: string }, unknown, Record<string, unknown>>,
+  req: Request<{ id: string }>,
   res: Response,
   next: NextFunction,
 ) {
@@ -126,16 +97,29 @@ async function updateEvent(
     const existing = await eventService.findEventById(req.params.id);
     if (!existing) return response.failure(res, "Event not found", 404);
 
-    const data = buildEventData(req.body);
+    const data = parseRequestBody<UpdateEventInput>(
+      updateEventSchema,
+      req.body,
+      res,
+    );
+    if (!data) return;
+
+    // Filter out empty strings or undefined values that shouldn't be updated
+    const cleanedData: Record<string, unknown> = Object.fromEntries(
+      Object.entries(data).filter(([, v]) => v !== "" && v !== undefined),
+    );
 
     if (req.file) {
       const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
       newPublicId = uploaded.public_id;
-      data.imageUrl = uploaded.secure_url;
-      data.imagePublicId = uploaded.public_id;
+      cleanedData.imageUrl = uploaded.secure_url;
+      cleanedData.imagePublicId = uploaded.public_id;
     }
 
-    const updatedEvent = await eventService.updateEvent(req.params.id, data);
+    const updatedEvent = await eventService.updateEvent(
+      req.params.id,
+      cleanedData,
+    );
 
     if (req.file && existing.imagePublicId) {
       await destroyImage(existing.imagePublicId);
@@ -148,6 +132,9 @@ async function updateEvent(
   }
 }
 
+/**
+ * Deletes an event by its ID and removes its image from Cloudinary.
+ */
 async function deleteEvent(
   req: Request<{ id: string }>,
   res: Response,
