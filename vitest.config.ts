@@ -2,6 +2,7 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
+    include: ["src/**/*.test.ts"],
     globals: true,
     environment: "node",
     setupFiles: ["./vitest.setup.ts"],
@@ -11,5 +12,6 @@ export default defineConfig({
       reporter: ["text", "lcov"],
       exclude: ["src/generated/**", "dist/**", "vitest.setup.ts"],
     },
+    exclude: ["dist/**"],
   },
 });
