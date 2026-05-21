@@ -1,3 +1,4 @@
+// Partner controller for managing community partners
 import { Request, Response, NextFunction } from "express";
 import partnerService from "../services/partner.service";
 import response from "../utils/response";
