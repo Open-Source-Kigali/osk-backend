@@ -2,8 +2,6 @@
 
 Backend for the official website of [Open Source Kigali](https://github.com/Open-Source-Kigali).
 
-<!-- Corrected typos: Build -> Built, trough -> through, wacth -> watch, Interractive -> Interactive -->
-
 Built with Express, TypeScript, Prisma, and PostgreSQL.
 
 ## Tech stack
@@ -85,6 +83,8 @@ To stop the database: `docker compose down` (add `-v` to wipe the data).
 Interactive Swagger UI is available at `http://localhost:3000/api/docs` once the server is running. The underlying spec lives at [`docs/openapi.yaml`](./docs/openapi.yaml).
 
 Admin-only endpoints require an `x-api-key` header matching `ADMIN_API_KEY`.
+If `ADMIN_API_KEY` is missing at startup, the server logs a warning and admin endpoints will continue to return `500` until the key is configured.
+Delete endpoints return `204 No Content` with an empty response body to stay compliant with the HTTP spec.
 
 ## Contributors
 
