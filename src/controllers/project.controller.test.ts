@@ -6,6 +6,8 @@ import { ProjectStatus } from "../generated/prisma/client";
 vi.mock("../services/project.service");
 import projectService from "../services/project.service";
 
+const ADMIN_KEY = "test-admin-key";
+
 const mockProject = {
   id: "1",
   slug: "osk-backend",
@@ -59,5 +61,50 @@ describe("GET /api/projects", () => {
     expect(vi.mocked(projectService.findAllProjects)).toHaveBeenCalledWith(
       undefined,
     );
+  });
+});
+
+describe("POST /api/projects", () => {
+  it("returns 400 when repoName is missing", async () => {
+    const res = await request(app)
+      .post("/api/projects")
+      .set("x-api-key", ADMIN_KEY)
+      .field("slug", "test-project")
+      .field("repoOwner", "owner")
+      .field("tagline", "tagline")
+      .field("category", "cat")
+      .attach("file", Buffer.from("test"), "test.jpg");
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe("repoName is required");
+  });
+
+  it("returns 400 when repoName is empty string", async () => {
+    const res = await request(app)
+      .post("/api/projects")
+      .set("x-api-key", ADMIN_KEY)
+      .field("slug", "test-project")
+      .field("repoOwner", "owner")
+      .field("repoName", "  ")
+      .field("tagline", "tagline")
+      .field("category", "cat")
+      .attach("file", Buffer.from("test"), "test.jpg");
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe("repoName is required");
+  });
+
+  it("returns 400 when repoOwner is missing", async () => {
+    const res = await request(app)
+      .post("/api/projects")
+      .set("x-api-key", ADMIN_KEY)
+      .field("slug", "test-project")
+      .field("repoName", "repo")
+      .field("tagline", "tagline")
+      .field("category", "cat")
+      .attach("file", Buffer.from("test"), "test.jpg");
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe("repoOwner is required");
   });
 });

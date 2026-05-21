@@ -44,6 +44,14 @@ async function findProjectBySlug(
 async function addProject(req: Request, res: Response, next: NextFunction) {
   if (!req.file) return response.failure(res, "Image file is required", 400);
 
+  if (!req.body.repoOwner?.trim()) {
+    return response.failure(res, "repoOwner is required", 400);
+  }
+
+  if (!req.body.repoName?.trim()) {
+    return response.failure(res, "repoName is required", 400);
+  }
+
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(req.body.slug)) {
     return response.failure(
       res,
