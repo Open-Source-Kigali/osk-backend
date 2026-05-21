@@ -6,3 +6,4 @@ Everyone listed here appears on the Open Source Kigali website. To add yourself,
 
 Nick-Lemy
 Agahozo3
+marikoRw
