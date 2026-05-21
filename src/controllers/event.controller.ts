@@ -63,9 +63,10 @@ function buildEventData(
   return data;
 }
 
-async function findAllEvents(_req: Request, res: Response, next: NextFunction) {
+async function findAllEvents(req: Request, res: Response, next: NextFunction) {
   try {
-    const allEvents = await eventService.findAllEvents();
+    const featured = req.query.featured === "true" ? true : undefined;
+    const allEvents = await eventService.findAllEvents(featured);
     response.success(res, allEvents, 200, "Events retrieved successfully");
   } catch (err) {
     next(err);
