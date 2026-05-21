@@ -116,6 +116,13 @@ async function addEvent(
 
   let publicId: string | undefined;
   try {
+    if (req.body.date && isNaN(new Date(req.body.date as string).getTime())) {
+      return response.failure(res, "Invalid date format for 'date'", 400);
+    }
+    if (req.body.endDate && isNaN(new Date(req.body.endDate as string).getTime())) {
+      return response.failure(res, "Invalid date format for 'endDate'", 400);
+    }
+
     const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
     publicId = uploaded.public_id;
 
@@ -140,6 +147,13 @@ async function updateEvent(
 ) {
   let newPublicId: string | undefined;
   try {
+    if (req.body.date && isNaN(new Date(req.body.date as string).getTime())) {
+      return response.failure(res, "Invalid date format for 'date'", 400);
+    }
+    if (req.body.endDate && isNaN(new Date(req.body.endDate as string).getTime())) {
+      return response.failure(res, "Invalid date format for 'endDate'", 400);
+    }
+
     const existing = await eventService.findEventById(req.params.id);
     if (!existing) return response.failure(res, "Event not found", 404);
 
