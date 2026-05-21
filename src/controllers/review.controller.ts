@@ -9,7 +9,9 @@ type ReviewBody = Omit<Review, "id" | "createdAt" | "updatedAt">;
 
 type CreateReviewBody = Omit<ReviewBody, "profileUrl" | "profilePublicId">;
 
-type UpdateReviewBody = Partial<Omit<ReviewBody, "profileUrl" | "profilePublicId">>;
+type UpdateReviewBody = Partial<
+  Omit<ReviewBody, "profileUrl" | "profilePublicId">
+>;
 
 async function findAll(_req: Request, res: Response, next: NextFunction) {
   try {

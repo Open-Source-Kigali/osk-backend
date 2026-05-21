@@ -32,10 +32,11 @@ export async function readContributors(): Promise<ContributorProfile[]> {
 }
 
 export async function refreshContributors(): Promise<ContributorRefreshResult> {
+  const mdRaw = await fs.readFile(CONTRIBUTORS_MD_PATH, "utf-8");
 
   const usernames = mdRaw
     .split("\n")
-    .map((line) => line.trim())
+    .map((line) => line.trim().replace(/^[-*+]?\s*/, ""))
     .filter(
       (line) =>
         line &&
@@ -47,14 +48,14 @@ export async function refreshContributors(): Promise<ContributorRefreshResult> {
   const results = await Promise.allSettled(
     usernames.map(async (username) => {
       const res = await gh(`/users/${username}`);
-      const data = await res.json();
+      const data = (await res.json()) as Record<string, unknown>;
       return {
-        login: data.login,
-        name: data.name || data.login,
-        avatarUrl: data.avatar_url,
-        profileUrl: data.html_url,
-        bio: data.bio || "",
-        company: data.company || "",
+        login: String(data.login),
+        name: data.name ? String(data.name) : String(data.login),
+        avatarUrl: String(data.avatar_url),
+        profileUrl: String(data.html_url),
+        bio: data.bio ? String(data.bio) : "",
+        company: data.company ? String(data.company) : "",
       } as ContributorProfile;
     }),
   );
@@ -70,7 +71,11 @@ export async function refreshContributors(): Promise<ContributorRefreshResult> {
       contributors.push(result.value);
       successful.push(username);
     } else {
-      failed.push({ login: username, error: result.reason.message });
+      const error =
+        result.reason instanceof Error
+          ? result.reason.message
+          : String(result.reason);
+      failed.push({ login: username, error });
     }
   }
 

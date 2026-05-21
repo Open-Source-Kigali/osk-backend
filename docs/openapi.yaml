@@ -513,7 +513,7 @@ paths:
   /contributors:
     get:
       tags: [Contributors]
-      summary: Read and return contributors.json
+      summary: List contributor profiles
       responses:
         "200":
           description: Contributors retrieved successfully
@@ -527,25 +527,18 @@ paths:
                       data:
                         type: array
                         items:
-                          type: object
-                          properties:
-                            login: { type: string }
-                            name: { type: string }
-                            avatarUrl: { type: string }
-                            profileUrl: { type: string }
-                            bio: { type: string }
-                            company: { type: string }
+                          { $ref: "#/components/schemas/ContributorProfile" }
         "500": { $ref: "#/components/responses/InternalError" }
 
   /contributors/refresh:
     post:
       tags: [Contributors]
-      summary: Parse CONTRIBUTORS.md, fetch all GitHub profiles, overwrite contributors.json
+      summary: Refresh contributor profiles from CONTRIBUTORS.md
       security:
         - adminApiKey: []
       responses:
         "200":
-          description: Contributors refreshed successfully
+          description: Contributors refresh completed successfully
           content:
             application/json:
               schema:
@@ -562,10 +555,9 @@ paths:
                           failedList:
                             type: array
                             items:
-                              type: object
-                              properties:
-                                login: { type: string }
-                                error: { type: string }
+                              {
+                                $ref: "#/components/schemas/ContributorRefreshError",
+                              }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "500": { $ref: "#/components/responses/InternalError" }
@@ -672,7 +664,6 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
         "500": { $ref: "#/components/responses/InternalError" }
-
 components:
   securitySchemes:
     adminApiKey:
@@ -688,6 +679,35 @@ components:
         message: { type: string }
         data: {}
       required: [success, message, data]
+
+    ContributorProfile:
+      type: object
+      properties:
+        login: { type: string }
+        name: { type: string, nullable: true }
+        avatarUrl: { type: string, format: uri }
+        profileUrl: { type: string, format: uri }
+        bio: { type: string, nullable: true }
+        company: { type: string, nullable: true }
+      required: [login, avatarUrl, profileUrl]
+
+    ContributorRefreshResult:
+      type: object
+      properties:
+        totalParsed: { type: number }
+        success: { type: number }
+        failures: { type: number }
+        failedList:
+          type: array
+          items: { $ref: "#/components/schemas/ContributorRefreshError" }
+      required: [totalParsed, success, failures, failedList]
+
+    ContributorRefreshError:
+      type: object
+      properties:
+        login: { type: string }
+        error: { type: string }
+      required: [login, error]
 
     ApiError:
       type: object
