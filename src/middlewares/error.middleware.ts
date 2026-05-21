@@ -12,9 +12,8 @@ export function errorHandler(
 
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
     if (err.code === "P2002") {
-      const rawField =
-        (err.meta?.target as string[] | undefined)?.[0] ?? "field";
-      const field = String(rawField).replace(/_/g, " ");
+      const rawField = (err.meta?.target as string[] | undefined)?.[0] ?? 'field';
+      const field = String(rawField).replace(/_/g, ' ');
       return response.failure(res, `${field} is already taken`, 409);
     }
     if (err.code === "P2025") {
