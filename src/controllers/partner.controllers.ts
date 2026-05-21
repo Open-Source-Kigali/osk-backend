@@ -12,10 +12,8 @@ import {
 
 type PartnerBody = Omit<Partner, "id" | "createdAt" | "updatedAt">;
 type CreatePartnerBody = Omit<PartnerBody, "logoUrl" | "logoPublicId">;
-type UpdatePartnerBody = Partial<Omit<PartnerBody, "logoPublicId">>;
 
-async function findAllPartners(
-  _req: Request,
+async function findAllPartners(  _req: Request,
   res: Response,
   next: NextFunction,
 ) {
