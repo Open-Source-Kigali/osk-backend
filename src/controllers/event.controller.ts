@@ -15,9 +15,9 @@ const FOLDER = "open-source-kigali/events";
 
 type EventBody = Omit<Event, "id" | "createdAt" | "updatedAt">;
 
-async function findAllEvents(_req: Request, res: Response, next: NextFunction) {
+async function findAllEvents(req: Request, res: Response, next: NextFunction) {
   try {
-    const featured = _req.query.featured === "true" ? true : undefined;
+    const featured = req.query.featured === "true" ? true : undefined;
     const allEvents = await eventService.findAllEvents(featured);
     response.success(res, allEvents, 200, "Events retrieved successfully");
   } catch (err) {
