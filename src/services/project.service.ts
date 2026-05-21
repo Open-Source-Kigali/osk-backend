@@ -2,37 +2,10 @@ import { prisma } from "../config/prisma";
 import { Prisma, Project } from "../generated/prisma/client";
 import { RepoSnapshot } from "./github.service";
 
-// Public project responses include the rendered image URL but never the Cloudinary asset id.
-const projectSafeSelect = {
-  id: true,
-  slug: true,
-  repoOwner: true,
-  repoName: true,
-  imageUrl: true,
-  tagline: true,
-  category: true,
-  status: true,
-  featured: true,
-  maintainer: true,
-  langColor: true,
-  ghDescription: true,
-  ghLanguage: true,
-  ghTopics: true,
-  ghStars: true,
-  ghForks: true,
-  ghOpenIssues: true,
-  ghContributors: true,
-  ghPullRequests: true,
-  ghPushedAt: true,
-  lastFetchedAt: true,
-  createdAt: true,
-  updatedAt: true,
-} satisfies Prisma.ProjectSelect;
-
-async function findAllProjects() {
+async function findAllProjects(featured?: boolean) {
   return prisma.project.findMany({
+    where: featured !== undefined ? { featured } : undefined,
     orderBy: { createdAt: "desc" },
-    select: projectSafeSelect,
   });
 }
 
