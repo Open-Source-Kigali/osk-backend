@@ -70,6 +70,29 @@ describe("POST /api/members", () => {
     expect(res.status).toBe(201);
     expect(res.body.success).toBe(true);
   });
+
+  it("trims input strings before saving", async () => {
+    vi.mocked(memberService.addMember).mockResolvedValue(mockMember);
+
+    await request(app).post("/api/members").send({
+      name: "  Alice  ",
+      email: " alice@example.com ",
+      githubUsername: " alice ",
+      orgName: " OSK ",
+      joinReason: " Love OSS ",
+      codingLevel: "intermediate",
+    });
+
+    expect(memberService.addMember).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "Alice",
+        email: "alice@example.com",
+        githubUsername: "alice",
+        orgName: "OSK",
+        joinReason: "Love OSS",
+      }),
+    );
+  });
 });
 
 describe("PUT /api/members/:id", () => {

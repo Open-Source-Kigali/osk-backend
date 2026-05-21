@@ -3,6 +3,7 @@ import eventService from "../services/event.service";
 import response from "../utils/response";
 import { Event, Prisma } from "../generated/prisma/client";
 import { destroyImage, uploadBuffer } from "../utils/cloudinary-upload";
+import { trimStrings } from "../utils/trim-strings";
 
 const FOLDER = "open-source-kigali/events";
 
@@ -36,6 +37,9 @@ function parseSpeakers(v: unknown): string[] | undefined {
 function buildEventData(
   body: Record<string, unknown>,
 ): Prisma.EventUpdateInput {
+  // Automatically trim all string inputs before processing
+  const trimmedBody = trimStrings(body);
+
   const data: Record<string, unknown> = {};
   const passthrough = [
     "title",
@@ -48,21 +52,31 @@ function buildEventData(
     "registerUrl",
   ];
   for (const k of passthrough) {
-    if (body[k] !== undefined && body[k] !== "") data[k] = body[k];
+    if (trimmedBody[k] !== undefined && trimmedBody[k] !== "")
+      data[k] = trimmedBody[k];
   }
-  if (body.featured !== undefined) data.featured = parseBoolean(body.featured);
-  if (body.capacity !== undefined)
-    data.capacity = body.capacity === null ? null : Number(body.capacity);
-  if (body.registered !== undefined)
-    data.registered = body.registered === null ? null : Number(body.registered);
-  if (body.date !== undefined) data.date = new Date(body.date as string);
-  if (body.endDate !== undefined)
-    data.endDate = body.endDate ? new Date(body.endDate as string) : null;
-  const speakers = parseSpeakers(body.speakers);
+  if (trimmedBody.featured !== undefined)
+    data.featured = parseBoolean(trimmedBody.featured);
+  if (trimmedBody.capacity !== undefined)
+    data.capacity =
+      trimmedBody.capacity === null ? null : Number(trimmedBody.capacity);
+  if (trimmedBody.registered !== undefined)
+    data.registered =
+      trimmedBody.registered === null ? null : Number(trimmedBody.registered);
+  if (trimmedBody.date !== undefined)
+    data.date = new Date(trimmedBody.date as string);
+  if (trimmedBody.endDate !== undefined)
+    data.endDate = trimmedBody.endDate
+      ? new Date(trimmedBody.endDate as string)
+      : null;
+  const speakers = parseSpeakers(trimmedBody.speakers);
   if (speakers !== undefined) data.speakers = speakers;
   return data;
 }
 
+/**
+ * Fetches all events from the database.
+ */
 async function findAllEvents(_req: Request, res: Response, next: NextFunction) {
   try {
     const allEvents = await eventService.findAllEvents();
@@ -72,6 +86,9 @@ async function findAllEvents(_req: Request, res: Response, next: NextFunction) {
   }
 }
 
+/**
+ * Fetches a single event by its ID.
+ */
 async function findEventById(
   req: Request<{ id: string }>,
   res: Response,
@@ -88,6 +105,9 @@ async function findEventById(
   }
 }
 
+/**
+ * Trims input strings and adds a new event.
+ */
 async function addEvent(
   req: Request<unknown, unknown, Record<string, unknown>>,
   res: Response,
@@ -116,6 +136,9 @@ async function addEvent(
   }
 }
 
+/**
+ * Trims input strings and updates an existing event.
+ */
 async function updateEvent(
   req: Request<{ id: string }, unknown, Record<string, unknown>>,
   res: Response,
@@ -148,6 +171,9 @@ async function updateEvent(
   }
 }
 
+/**
+ * Deletes an event and its associated image.
+ */
 async function deleteEvent(
   req: Request<{ id: string }>,
   res: Response,

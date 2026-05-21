@@ -3,9 +3,13 @@ import partnerService from "../services/partner.service";
 import response from "../utils/response";
 import { Partner } from "../generated/prisma/client";
 import { destroyImage, uploadBuffer } from "../utils/cloudinary-upload";
+import { trimStrings } from "../utils/trim-strings";
 
 type PartnerBody = Omit<Partner, "id" | "createdAt" | "updatedAt">;
 
+/**
+ * Fetches all partners from the database.
+ */
 async function findAllPartners(
   _req: Request,
   res: Response,
@@ -19,6 +23,9 @@ async function findAllPartners(
   }
 }
 
+/**
+ * Fetches a single partner by their ID.
+ */
 async function findPartnerById(
   req: Request<{ id: string }>,
   res: Response,
@@ -40,6 +47,9 @@ async function findPartnerById(
   }
 }
 
+/**
+ * Trims input strings and adds a new partner.
+ */
 async function addPartner(
   req: Request<unknown, unknown, Omit<PartnerBody, "logoUrl" | "logoPublicId">>,
   res: Response,
@@ -57,8 +67,11 @@ async function addPartner(
     );
     publicId = uploaded.public_id;
 
+    // Automatically trim all string inputs before saving
+    const trimmedBody = trimStrings(req.body as Record<string, unknown>);
+
     const newPartner = await partnerService.addPartner({
-      ...req.body,
+      ...(trimmedBody as Omit<PartnerBody, "logoUrl" | "logoPublicId">),
       logoUrl: uploaded.secure_url,
       logoPublicId: uploaded.public_id,
     });
@@ -70,6 +83,9 @@ async function addPartner(
   }
 }
 
+/**
+ * Trims input strings and updates an existing partner.
+ */
 async function updatePartner(
   req: Request<
     { id: string },
@@ -84,8 +100,11 @@ async function updatePartner(
     const existing = await partnerService.findPartnerById(req.params.id);
     if (!existing) return response.failure(res, "Partner not found", 404);
 
+    // Automatically trim all string inputs before updating
+    const trimmedBody = trimStrings(req.body as Record<string, unknown>);
+
     const data: Partial<PartnerBody> = Object.fromEntries(
-      Object.entries(req.body).filter(([, v]) => v !== ""),
+      Object.entries(trimmedBody).filter(([, v]) => v !== ""),
     ) as Partial<PartnerBody>;
 
     if (req.file) {
@@ -114,6 +133,9 @@ async function updatePartner(
   }
 }
 
+/**
+ * Deletes a partner and its associated logo.
+ */
 async function deletePartner(
   req: Request<{ id: string }>,
   res: Response,

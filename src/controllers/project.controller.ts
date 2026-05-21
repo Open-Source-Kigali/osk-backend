@@ -4,6 +4,7 @@ import response from "../utils/response";
 import { ProjectStatus } from "../generated/prisma/client";
 import { destroyImage, uploadBuffer } from "../utils/cloudinary-upload";
 import { fetchRepoSnapshot } from "../services/github.service";
+import { trimStrings } from "../utils/trim-strings";
 
 const FOLDER = "open-source-kigali/projects";
 
@@ -27,6 +28,9 @@ function parseBoolean(value: unknown) {
   return undefined;
 }
 
+/**
+ * Fetches all projects from the database.
+ */
 async function findAllProjects(
   _req: Request,
   res: Response,
@@ -40,6 +44,9 @@ async function findAllProjects(
   }
 }
 
+/**
+ * Fetches a single project by its slug.
+ */
 async function findProjectBySlug(
   req: Request<{ slug: string }>,
   res: Response,
@@ -54,6 +61,9 @@ async function findProjectBySlug(
   }
 }
 
+/**
+ * Trims input strings and adds a new project.
+ */
 async function addProject(
   req: Request<unknown, unknown, CreateBody>,
   res: Response,
@@ -66,17 +76,20 @@ async function addProject(
     const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
     publicId = uploaded.public_id;
 
-    const featured = parseBoolean(req.body.featured) ?? false;
+    // Automatically trim all string inputs before saving
+    const trimmedBody = trimStrings(req.body as Record<string, unknown>);
+
+    const featured = parseBoolean(trimmedBody.featured) ?? false;
     const created = await projectService.addProject({
-      slug: req.body.slug,
-      repoOwner: req.body.repoOwner,
-      repoName: req.body.repoName,
-      tagline: req.body.tagline,
-      category: req.body.category,
-      status: req.body.status ?? "active",
+      slug: trimmedBody.slug as string,
+      repoOwner: trimmedBody.repoOwner as string,
+      repoName: trimmedBody.repoName as string,
+      tagline: trimmedBody.tagline as string,
+      category: trimmedBody.category as string,
+      status: (trimmedBody.status as ProjectStatus) ?? "active",
       featured,
-      maintainer: req.body.maintainer ?? null,
-      langColor: req.body.langColor ?? null,
+      maintainer: (trimmedBody.maintainer as string) ?? null,
+      langColor: (trimmedBody.langColor as string) ?? null,
       imageUrl: uploaded.secure_url,
       imagePublicId: uploaded.public_id,
     });
@@ -96,6 +109,9 @@ async function addProject(
   }
 }
 
+/**
+ * Trims input strings and updates an existing project.
+ */
 async function updateProject(
   req: Request<{ id: string }, unknown, UpdateBody>,
   res: Response,
@@ -106,8 +122,11 @@ async function updateProject(
     const existing = await projectService.findProjectById(req.params.id);
     if (!existing) return response.failure(res, "Project not found", 404);
 
+    // Automatically trim all string inputs before updating
+    const trimmedBody = trimStrings(req.body as Record<string, unknown>);
+
     const data: Record<string, unknown> = {};
-    const b = req.body;
+    const b = trimmedBody;
     if (b.slug) data.slug = b.slug;
     if (b.repoOwner) data.repoOwner = b.repoOwner;
     if (b.repoName) data.repoName = b.repoName;
@@ -138,6 +157,9 @@ async function updateProject(
   }
 }
 
+/**
+ * Deletes a project and its associated image.
+ */
 async function deleteProject(
   req: Request<{ id: string }>,
   res: Response,
@@ -156,6 +178,9 @@ async function deleteProject(
   }
 }
 
+/**
+ * Refreshes GitHub metadata for all projects.
+ */
 async function refreshAll(_req: Request, res: Response, next: NextFunction) {
   try {
     const projects = await projectService.findAllProjectsForRefresh();
