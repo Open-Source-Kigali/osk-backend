@@ -1,10 +1,13 @@
-import { Router } from 'express';
-import { contributorsController } from '../controllers/contributors.controller';
-import { requireAdmin } from '../middlewares/auth';
+import { Router } from "express";
+import {
+  getContributors,
+  refresh,
+} from "../controllers/contributors.controller";
+import auth from "../middlewares/auth.middleware";
 
 const router = Router();
 
-router.get('/', contributorsController.getContributors);
-router.post('/refresh', requireAdmin, contributorsController.refresh);
+router.get("/", getContributors);
+router.post("/refresh", auth.requireAdmin, refresh);
 
 export default router;

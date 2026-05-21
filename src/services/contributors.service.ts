@@ -1,68 +1,83 @@
-import fs from 'fs/promises';
-import path from 'path';
-import { gh } from './github.service';
-import { env } from '../config/env';
+import fs from "fs/promises";
+import path from "path";
+import { gh } from "./github.service";
 
-const CONTRIBUTORS_MD = path.resolve('CONTRIBUTORS.md');
-const CONTRIBUTORS_JSON = path.resolve('contributors.json');
+const CONTRIBUTORS_JSON_PATH = path.join(process.cwd(), "contributors.json");
+const CONTRIBUTORS_MD_PATH = path.join(process.cwd(), "CONTRIBUTORS.md");
 
 export interface Contributor {
   login: string;
-  name: string | null;
+  name: string;
   avatarUrl: string;
   profileUrl: string;
-  bio: string | null;
-  company: string | null;
+  bio: string;
+  company: string;
 }
 
-export const contributorsService = {
-  async readContributors(): Promise<Contributor[]> {
-    try {
-      const raw = await fs.readFile(CONTRIBUTORS_JSON, 'utf-8');
-      return JSON.parse(raw) as Contributor[];
-    } catch {
-      return [];
-    }
-  },
+export async function readContributors(): Promise<Contributor[]> {
+  try {
+    const data = await fs.readFile(CONTRIBUTORS_JSON_PATH, "utf-8");
+    return JSON.parse(data);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error("Failed to read contributors data: " + message);
+  }
+}
 
-  async refreshContributors(): Promise<{ succeeded: string[]; failed: string[] }> {
-    const raw = await fs.readFile(CONTRIBUTORS_MD, 'utf-8');
+export async function refreshContributors() {
+  const mdRaw = await fs.readFile(CONTRIBUTORS_MD_PATH, "utf-8");
 
-    // Parse usernames: skip blank lines and HTML comment lines
-    const usernames = raw
-      .split('\n')
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0 && !line.startsWith('<!--') && !line.startsWith('#'));
-
-    const results = await Promise.allSettled(
-      usernames.map(async (login) => {
-        const data = await gh(`/users/${login}`, env.githubToken);
-        return {
-          login: data.login as string,
-          name: (data.name as string | null) ?? null,
-          avatarUrl: data.avatar_url as string,
-          profileUrl: data.html_url as string,
-          bio: (data.bio as string | null) ?? null,
-          company: (data.company as string | null) ?? null,
-        } satisfies Contributor;
-      }),
+  const usernames = mdRaw
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(
+      (line) =>
+        line &&
+        !line.startsWith("<!--") &&
+        !line.startsWith("#") &&
+        !line.includes(" "),
     );
 
-    const contributors: Contributor[] = [];
-    const succeeded: string[] = [];
-    const failed: string[] = [];
+  const results = await Promise.allSettled(
+    usernames.map(async (username) => {
+      const res = await gh(`/users/${username}`);
+      const data = await res.json();
+      return {
+        login: data.login,
+        name: data.name || data.login,
+        avatarUrl: data.avatar_url,
+        profileUrl: data.html_url,
+        bio: data.bio || "",
+        company: data.company || "",
+      } as Contributor;
+    }),
+  );
 
-    results.forEach((result, i) => {
-      if (result.status === 'fulfilled') {
-        contributors.push(result.value);
-        succeeded.push(usernames[i]);
-      } else {
-        failed.push(usernames[i]);
-      }
-    });
+  const contributors: Contributor[] = [];
+  const successful: string[] = [];
+  const failed: Array<{ login: string; error: string }> = [];
 
-    await fs.writeFile(CONTRIBUTORS_JSON, JSON.stringify(contributors, null, 2), 'utf-8');
+  for (let i = 0; i < usernames.length; i++) {
+    const username = usernames[i];
+    const result = results[i];
+    if (result.status === "fulfilled") {
+      contributors.push(result.value);
+      successful.push(username);
+    } else {
+      failed.push({ login: username, error: result.reason.message });
+    }
+  }
 
-    return { succeeded, failed };
-  },
-};
+  await fs.writeFile(
+    CONTRIBUTORS_JSON_PATH,
+    JSON.stringify(contributors, null, 2),
+    "utf-8",
+  );
+
+  return {
+    totalParsed: usernames.length,
+    success: successful.length,
+    failures: failed.length,
+    failedList: failed,
+  };
+}

@@ -2,7 +2,7 @@ import { prisma } from "../config/prisma";
 import { Partner } from "../generated/prisma/client";
 
 async function findAllPartners() {
-  return prisma.partner.findMany();
+  return prisma.partner.findMany({ orderBy: { name: "asc" } });
 }
 
 async function addPartner(

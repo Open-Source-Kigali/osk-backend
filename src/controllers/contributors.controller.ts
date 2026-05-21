@@ -1,23 +1,32 @@
-import { Request, Response } from 'express';
-import { contributorsService } from '../services/contributors.service';
-import { response } from '../utils/response';
+import type { NextFunction, Request, Response } from "express";
+import {
+  readContributors,
+  refreshContributors,
+} from "../services/contributors.service";
+import response from "../utils/response";
 
-const getContributors = async (_req: Request, res: Response) => {
+export async function getContributors(
+  _req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   try {
-    const contributors = await contributorsService.readContributors();
-    return response.success(res, contributors);
+    const contributors = await readContributors();
+    return response.success(res, contributors, 200, "Contributors fetched");
   } catch (err) {
-    return response.failure(res, 'Failed to read contributors', 500);
+    next(err);
   }
-};
+}
 
-const refresh = async (_req: Request, res: Response) => {
+export async function refresh(
+  _req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   try {
-    const summary = await contributorsService.refreshContributors();
-    return response.success(res, summary);
+    const result = await refreshContributors();
+    return response.success(res, result, 200, "Contributors refreshed");
   } catch (err) {
-    return response.failure(res, 'Failed to refresh contributors', 500);
+    next(err);
   }
-};
-
-export const contributorsController = { getContributors, refresh };
+}
