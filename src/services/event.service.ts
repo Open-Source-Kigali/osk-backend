@@ -23,8 +23,9 @@ const eventSafeSelect = {
   updatedAt: true,
 } satisfies Prisma.EventSelect;
 
-async function findAllEvents() {
+async function findAllEvents(featured?: boolean) {
   return prisma.event.findMany({
+    where: featured !== undefined ? { featured } : undefined,
     // Sort events by date ascending (soonest first) for calendar-style listings
     orderBy: { date: "asc" },
     select: eventSafeSelect,
@@ -33,13 +34,7 @@ async function findAllEvents() {
 
 async function findEventByIdSafe(id: string) {
   return prisma.event.findUnique({ where: { id }, select: eventSafeSelect });
-async function findAllEvents(featured?: boolean) {
-  return prisma.event.findMany({
-    where: featured !== undefined ? { featured } : undefined,
-    orderBy: { date: "asc" },
-  });
 }
-
 async function addEvent(
   eventData: Omit<Event, "id" | "createdAt" | "updatedAt">,
 ) {

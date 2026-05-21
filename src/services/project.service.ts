@@ -29,17 +29,13 @@ const projectSafeSelect = {
   updatedAt: true,
 } satisfies Prisma.ProjectSelect;
 
-async function findAllProjects() {
-  return prisma.project.findMany({
-    orderBy: { createdAt: "desc" },
-    select: projectSafeSelect,
 async function findAllProjects(featured?: boolean) {
   return prisma.project.findMany({
     where: featured !== undefined ? { featured } : undefined,
     orderBy: { createdAt: "desc" },
+    select: projectSafeSelect,
   });
 }
-
 async function findProjectById(id: string) {
   return prisma.project.findUnique({ where: { id } });
 }
