@@ -83,7 +83,9 @@ describe("POST /api/members", () => {
     });
 
     expect(res.status).toBe(400);
-    expect(res.body.message).toBe("email is required");
+    expect(res.body.message).toBe(
+      "email: Invalid input: expected string, received undefined",
+    );
   });
 
   // Test case for empty required field
@@ -98,7 +100,7 @@ describe("POST /api/members", () => {
     });
 
     expect(res.status).toBe(400);
-    expect(res.body.message).toBe("name is required");
+    expect(res.body.message).toBe("name: Name is required");
   });
 });
 
