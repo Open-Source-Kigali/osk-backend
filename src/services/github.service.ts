@@ -27,6 +27,13 @@ function headers() {
 async function gh(path: string) {
   const res = await fetch(`${API}${path}`, { headers: headers() });
   if (!res.ok) {
+    // Provide a specific, actionable message when GitHub rate limits us.
+    // This often happens if GITHUB_TOKEN is missing or has limited quota.
+    if (res.status === 403) {
+      throw new Error(
+        "GitHub rate limit exceeded. Set GITHUB_TOKEN to increase your limit.",
+      );
+    }
     throw new Error(`GitHub ${res.status} on ${path}: ${await res.text()}`);
   }
   return res;
