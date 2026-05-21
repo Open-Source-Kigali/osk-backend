@@ -97,6 +97,14 @@ async function addEvent(
     return response.failure(res, "Image file is required", 400);
   }
 
+  // Ensure all required event fields are provided
+  const required = ["title", "description", "category", "location", "date"];
+  for (const field of required) {
+    if (!req.body[field]) {
+      return response.failure(res, `${field} is required`, 400);
+    }
+  }
+
   let publicId: string | undefined;
   try {
     const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
