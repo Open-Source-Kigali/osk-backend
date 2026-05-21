@@ -87,9 +87,6 @@ async function updateMember(
     const existing = await memberService.findMemberById(req.params.id);
     if (!existing) return response.failure(res, "Member not found", 404);
 
-    const existing = await memberService.findMemberById(req.params.id);
-    if (!existing) return response.failure(res, "Member not found", 404);
-
     const updatedMember = await memberService.updateMember(
       req.params.id,
       filtered,
