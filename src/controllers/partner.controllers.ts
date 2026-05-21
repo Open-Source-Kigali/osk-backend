@@ -73,7 +73,9 @@ async function addPartner(req: Request, res: Response, next: NextFunction) {
   let publicId: string | undefined;
   try {
     const data = parseRequestBody(createPartnerSchema, req.body, res);
-    if (!data) return;
+    if (!data) {
+      return;
+    }
 
     const uploaded = await uploadBuffer(
       req.file.buffer,
@@ -102,14 +104,18 @@ async function updatePartner(
   let newPublicId: string | undefined;
   try {
     const existing = await partnerService.findPartnerById(req.params.id);
-    if (!existing) return response.failure(res, "Partner not found", 404);
+    if (!existing) {
+      return response.failure(res, "Partner not found", 404);
+    }
 
     const data = parseRequestBody<UpdatePartnerInput>(
       updatePartnerSchema,
       req.body,
       res,
     );
-    if (!data) return;
+    if (!data) {
+      return;
+    }
 
     const cleanedData: Partial<PartnerBody> = Object.fromEntries(
       Object.entries(data).filter(([, v]) => v !== "" && v !== undefined),
@@ -156,7 +162,9 @@ async function deletePartner(
 ) {
   try {
     const existing = await partnerService.findPartnerById(req.params.id);
-    if (!existing) return response.failure(res, "Partner not found", 404);
+    if (!existing) {
+      return response.failure(res, "Partner not found", 404);
+    }
 
     await partnerService.deletePartner(req.params.id);
     if (existing.logoPublicId) await destroyImage(existing.logoPublicId);
