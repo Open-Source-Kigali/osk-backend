@@ -106,6 +106,18 @@ describe("PUT /api/members/:id", () => {
     expect(res.status).toBe(200);
     expect(res.body.data.name).toBe("Bob");
   });
+
+  it("returns 404 when the member does not exist", async () => {
+    vi.mocked(memberService.findMemberById).mockResolvedValue(null);
+
+    const res = await request(app)
+      .put("/api/members/nonexistent")
+      .set("x-api-key", ADMIN_KEY)
+      .send({ name: "Nobody" });
+
+    expect(res.status).toBe(404);
+    expect(res.body.success).toBe(false);
+  });
 });
 
 describe("DELETE /api/members/:id", () => {
