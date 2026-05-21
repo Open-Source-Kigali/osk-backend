@@ -63,6 +63,9 @@ function buildEventData(
   return data;
 }
 
+/**
+ * Fetches all events from the database.
+ */
 async function findAllEvents(_req: Request, res: Response, next: NextFunction) {
   try {
     const allEvents = await eventService.findAllEvents();
@@ -72,6 +75,9 @@ async function findAllEvents(_req: Request, res: Response, next: NextFunction) {
   }
 }
 
+/**
+ * Fetches a single event by its ID.
+ */
 async function findEventById(
   req: Request<{ id: string }>,
   res: Response,
@@ -88,6 +94,9 @@ async function findEventById(
   }
 }
 
+/**
+ * Adds a new event with optional capacity and registration tracking.
+ */
 async function addEvent(
   req: Request<unknown, unknown, Record<string, unknown>>,
   res: Response,
@@ -95,6 +104,16 @@ async function addEvent(
 ) {
   if (!req.file) {
     return response.failure(res, "Image file is required", 400);
+  }
+
+  // Pre-upload validation: Check capacity constraint before hitting Cloudinary
+  const body = req.body;
+  if (
+    body.capacity != null &&
+    body.registered != null &&
+    Number(body.registered) > Number(body.capacity)
+  ) {
+    return response.failure(res, "registered cannot exceed capacity", 400);
   }
 
   let publicId: string | undefined;
@@ -116,6 +135,9 @@ async function addEvent(
   }
 }
 
+/**
+ * Updates an event and ensures capacity constraints are maintained.
+ */
 async function updateEvent(
   req: Request<{ id: string }, unknown, Record<string, unknown>>,
   res: Response,
@@ -127,6 +149,20 @@ async function updateEvent(
     if (!existing) return response.failure(res, "Event not found", 404);
 
     const data = buildEventData(req.body);
+
+    // Cross-field validation: Compare the new/existing registered count against the new/existing capacity.
+    const finalCapacity =
+      data.capacity !== undefined ? data.capacity : existing.capacity;
+    const finalRegistered =
+      data.registered !== undefined ? data.registered : existing.registered;
+
+    if (
+      finalCapacity != null &&
+      finalRegistered != null &&
+      Number(finalRegistered) > Number(finalCapacity)
+    ) {
+      return response.failure(res, "registered cannot exceed capacity", 400);
+    }
 
     if (req.file) {
       const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
@@ -148,6 +184,9 @@ async function updateEvent(
   }
 }
 
+/**
+ * Deletes an event by its ID.
+ */
 async function deleteEvent(
   req: Request<{ id: string }>,
   res: Response,

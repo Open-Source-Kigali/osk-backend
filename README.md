@@ -82,6 +82,11 @@ To stop the database: `docker compose down` (add `-v` to wipe the data).
 
 Interractive Swagger UI is available at `http://localhost:3000/api/docs` once the server is running. The underlying spec lives at [`docs/openapi.yaml`](./docs/openapi.yaml).
 
+### Input Validation
+
+The API enforces strict validation on several business constraints:
+- **Event Capacity:** When creating or updating events, the `registered` count cannot exceed the `capacity`. This is enforced across both the new input and existing database values.
+
 Admin-only endpoints require an `x-api-key` header matching `ADMIN_API_KEY`.
 
 ## Contributors
