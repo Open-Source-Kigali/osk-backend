@@ -66,7 +66,11 @@ async function findProjectBySlug(
 /**
  * Trims input strings and adds a new project.
  */
-async function addProject(req: Request<unknown, unknown, CreateBody>, res: Response, next: NextFunction) {
+async function addProject(
+  req: Request<unknown, unknown, CreateBody>,
+  res: Response,
+  next: NextFunction,
+) {
   if (!req.file) return response.failure(res, "Image file is required", 400);
 
   let publicId: string | undefined;
