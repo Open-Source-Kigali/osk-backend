@@ -15,7 +15,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "prepare": "husky"
   },
   "repository": {
     "type": "git",
@@ -29,6 +30,12 @@
     "url": "https://github.com/Open-Source-Kigali/oskbackend/issues"
   },
   "homepage": "https://github.com/Open-Source-Kigali/oskbackend#readme",
+  "lint-staged": {
+    "**/*.{ts,js}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
@@ -54,6 +61,8 @@
     "@vitest/ui": "^4.1.6",
     "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "nodemon": "^3.1.14",
     "prettier": "^3.8.3",
     "prisma": "^7.8.0",
