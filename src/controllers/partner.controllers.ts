@@ -3,6 +3,7 @@ import partnerService from "../services/partner.service";
 import response from "../utils/response";
 import { Partner } from "../generated/prisma/client";
 import { destroyImage, uploadBuffer } from "../utils/cloudinary-upload";
+import trimStrings from "../utils/trim-strings";
 import { parseRequestBody } from "../utils/validation";
 import {
   createPartnerSchema,
@@ -51,17 +52,13 @@ async function addPartner(req: Request, res: Response, next: NextFunction) {
     return response.failure(res, "Logo file is required", 400);
   }
 
-  if (req.body.websiteUrl) {
-    try {
-      new URL(req.body.websiteUrl as string);
-    } catch {
-      return response.failure(res, "Invalid websiteUrl format", 400);
-    }
-  }
-
   let publicId: string | undefined;
   try {
-    const data = parseRequestBody(createPartnerSchema, req.body, res);
+    const data = parseRequestBody(
+      createPartnerSchema,
+      trimStrings(req.body as Record<string, unknown>),
+      res,
+    );
     if (!data) return;
 
     const uploaded = await uploadBuffer(
@@ -95,7 +92,7 @@ async function updatePartner(
 
     const data = parseRequestBody<UpdatePartnerInput>(
       updatePartnerSchema,
-      req.body,
+      trimStrings(req.body as Record<string, unknown>),
       res,
     );
     if (!data) return;
@@ -103,14 +100,6 @@ async function updatePartner(
     const cleanedData: Partial<PartnerBody> = Object.fromEntries(
       Object.entries(data).filter(([, v]) => v !== "" && v !== undefined),
     ) as Partial<PartnerBody>;
-
-    if (data.websiteUrl) {
-      try {
-        new URL(data.websiteUrl as string);
-      } catch {
-        return response.failure(res, "Invalid websiteUrl format", 400);
-      }
-    }
 
     if (req.file) {
       const uploaded = await uploadBuffer(
