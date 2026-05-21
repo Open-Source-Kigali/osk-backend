@@ -1,8 +1,11 @@
 import { prisma } from "../config/prisma";
 import { Event, Prisma } from "../generated/prisma/client";
 
-async function findAllEvents() {
-  return prisma.event.findMany();
+async function findAllEvents(featured?: boolean) {
+  return prisma.event.findMany({
+    where: featured !== undefined ? { featured } : undefined,
+    orderBy: { date: "asc" },
+  });
 }
 
 async function addEvent(
