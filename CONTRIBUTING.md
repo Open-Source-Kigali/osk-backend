@@ -86,6 +86,7 @@ Run before pushing:
 npx tsc --noEmit          # typecheck
 npx prettier --check .    # format
 npx eslint .              # lint
+npx vitest run            # run tests
 ```
 
 ## Database changes
