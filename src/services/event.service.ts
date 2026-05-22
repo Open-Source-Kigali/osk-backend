@@ -5,6 +5,7 @@ async function findAllEvents(featured?: boolean) {
   return prisma.event.findMany({
     where: featured !== undefined ? { featured } : undefined,
     orderBy: { date: "asc" },
+    omit: { imagePublicId: true },
   });
 }
 
@@ -15,6 +16,13 @@ async function addEvent(
 }
 
 async function findEventById(id: string) {
+  return prisma.event.findUnique({
+    where: { id },
+    omit: { imagePublicId: true },
+  });
+}
+
+async function findEventByIdInternal(id: string) {
   return prisma.event.findUnique({ where: { id } });
 }
 
@@ -30,6 +38,7 @@ export default {
   findAllEvents,
   addEvent,
   findEventById,
+  findEventByIdInternal,
   updateEvent,
   deleteEvent,
 };
