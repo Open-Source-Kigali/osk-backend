@@ -3,6 +3,7 @@ import projectService from "../services/project.service";
 import response from "../utils/response";
 import { destroyImage, uploadBuffer } from "../utils/cloudinary-upload";
 import { fetchRepoSnapshot } from "../services/github.service";
+import trimStrings from "../utils/trim-strings";
 import { parseRequestBody } from "../utils/validation";
 import {
   createProjectSchema,
@@ -44,7 +45,8 @@ async function findProjectBySlug(
 async function addProject(req: Request, res: Response, next: NextFunction) {
   if (!req.file) return response.failure(res, "Image file is required", 400);
 
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(req.body.slug)) {
+  const trimmedBody = trimStrings(req.body as Record<string, unknown>);
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(trimmedBody.slug as string)) {
     return response.failure(
       res,
       "slug must be lowercase alphanumeric with hyphens only",
@@ -56,7 +58,7 @@ async function addProject(req: Request, res: Response, next: NextFunction) {
   try {
     const data = parseRequestBody<CreateProjectInput>(
       createProjectSchema,
-      req.body,
+      trimmedBody,
       res,
     );
     if (!data) return;
@@ -105,7 +107,7 @@ async function updateProject(
 
     const data = parseRequestBody<UpdateProjectInput>(
       updateProjectSchema,
-      req.body,
+      trimStrings(req.body as Record<string, unknown>),
       res,
     );
     if (!data) return;
