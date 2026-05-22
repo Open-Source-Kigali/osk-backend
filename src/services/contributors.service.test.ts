@@ -1,14 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { mockReset } from "vitest-mock-extended";
-import type { DeepMockProxy } from "vitest-mock-extended";
 import fs from "fs/promises";
 
 vi.mock("fs/promises");
 
 import contributorsService, {
   ContributorProfile,
-  ContributorRefreshResult,
 } from "./contributors.service";
+
 import { gh } from "./github.service";
 
 vi.mock("./github.service");
@@ -22,8 +20,26 @@ const mockContributorProfile: ContributorProfile = {
   company: "OSK",
 };
 
-const fsMock = fs as unknown as DeepMockProxy<typeof fs>;
-const ghMock = gh as unknown as DeepMockProxy<typeof gh>;
+const fsMock = vi.mocked(fs);
+const ghMock = vi.mocked(gh);
+
+type GitHubError = Error & { status?: number };
+
+function createGitHubUserResponse(body: {
+  login: string;
+  name: string | null;
+  avatar_url: string;
+  html_url: string;
+  bio: string | null;
+  company: string | null;
+}) {
+  return new Response(JSON.stringify(body), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+}
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -31,9 +47,7 @@ beforeEach(() => {
 
 describe("contributorsService.readContributors", () => {
   it("returns contributor profiles from contributors.json", async () => {
-    fsMock.readFile.mockResolvedValue(
-      JSON.stringify([mockContributorProfile]),
-    );
+    fsMock.readFile.mockResolvedValue(JSON.stringify([mockContributorProfile]));
 
     const result = await contributorsService.readContributors();
 
@@ -61,11 +75,11 @@ nick-lemy
 another-user
 
 <!-- comments are ignored -->
-`;
+    `;
 
     fsMock.readFile.mockResolvedValueOnce(markdown);
-    ghMock.mockResolvedValue({
-      json: vi.fn().mockResolvedValueOnce({
+    ghMock.mockResolvedValueOnce(
+      createGitHubUserResponse({
         login: "nick-lemy",
         name: "Nick Lemy",
         avatar_url: mockContributorProfile.avatarUrl,
@@ -73,9 +87,9 @@ another-user
         bio: mockContributorProfile.bio,
         company: mockContributorProfile.company,
       }),
-    } as any);
-    ghMock.mockResolvedValue({
-      json: vi.fn().mockResolvedValueOnce({
+    );
+    ghMock.mockResolvedValueOnce(
+      createGitHubUserResponse({
         login: "another-user",
         name: "Another User",
         avatar_url: "https://avatars.githubusercontent.com/u/654321?v=4",
@@ -83,7 +97,7 @@ another-user
         bio: null,
         company: null,
       }),
-    } as any);
+    );
     fsMock.writeFile.mockResolvedValue(undefined);
 
     const result = await contributorsService.refreshContributors();
@@ -124,7 +138,7 @@ nonexistent-user
 `;
 
     fsMock.readFile.mockResolvedValueOnce(markdown);
-    const errorWith404 = new Error("Not found") as any;
+    const errorWith404 = new Error("Not found") as GitHubError;
     errorWith404.status = 404;
     ghMock.mockRejectedValueOnce(errorWith404);
     fsMock.writeFile.mockResolvedValue(undefined);
@@ -139,10 +153,10 @@ nonexistent-user
     const markdown = `# Contributors
 
 some-user
-`;
+    `;
 
     fsMock.readFile.mockResolvedValueOnce(markdown);
-    const networkError = new Error("Network error") as any;
+    const networkError = new Error("Network error");
     ghMock.mockRejectedValueOnce(networkError);
     fsMock.writeFile.mockResolvedValue(undefined);
 
