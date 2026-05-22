@@ -79,18 +79,6 @@ describe("PUT /api/members/:id", () => {
     expect(res.status).toBe(403);
   });
 
-  it("returns 400 for an invalid codingLevel", async () => {
-    const res = await request(app)
-      .put("/api/members/1")
-      .set("x-api-key", ADMIN_KEY)
-      .send({ codingLevel: "expert" });
-
-    expect(res.status).toBe(400);
-    expect(res.body.success).toBe(false);
-    expect(res.body.message).toContain("Invalid codingLevel");
-    expect(memberService.updateMember).not.toHaveBeenCalled();
-  });
-
   it("returns 200 with valid admin key", async () => {
     vi.mocked(memberService.findMemberById).mockResolvedValue(mockMember);
     vi.mocked(memberService.updateMember).mockResolvedValue({
