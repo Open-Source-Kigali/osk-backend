@@ -2,8 +2,11 @@ import { prisma } from "../config/prisma";
 import { Prisma, Project } from "../generated/prisma/client";
 import { RepoSnapshot } from "./github.service";
 
-async function findAllProjects() {
-  return prisma.project.findMany({ orderBy: { createdAt: "desc" } });
+async function findAllProjects(featured?: boolean) {
+  return prisma.project.findMany({
+    where: featured !== undefined ? { featured } : undefined,
+    orderBy: { createdAt: "desc" },
+  });
 }
 
 async function findProjectById(id: string) {
