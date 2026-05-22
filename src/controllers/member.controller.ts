@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import memberService from "../services/member.service";
 import response from "../utils/response";
-import { CodingLevel } from "../generated/prisma/client";
+import trimStrings from "../utils/trim-strings";
 import { parseRequestBody } from "../utils/validation";
 import {
   createMemberSchema,
@@ -9,8 +9,6 @@ import {
   CreateMemberInput,
   UpdateMemberInput,
 } from "../schemas/member.schema";
-
-const allowedCodingLevels = new Set(Object.values(CodingLevel));
 
 async function findAllMembers(
   _req: Request,
@@ -45,7 +43,7 @@ async function addMember(req: Request, res: Response, next: NextFunction) {
   try {
     const data = parseRequestBody<CreateMemberInput>(
       createMemberSchema,
-      req.body,
+      trimStrings(req.body as Record<string, unknown>),
       res,
     );
     if (!data) return;
@@ -65,7 +63,7 @@ async function updateMember(
   try {
     const data = parseRequestBody<UpdateMemberInput>(
       updateMemberSchema,
-      req.body,
+      trimStrings(req.body as Record<string, unknown>),
       res,
     );
     if (!data) return;
@@ -74,16 +72,8 @@ async function updateMember(
       Object.entries(data).filter(([, v]) => v !== "" && v !== undefined),
     ) as UpdateMemberInput;
 
-    if (
-      filtered.codingLevel !== undefined &&
-      !allowedCodingLevels.has(filtered.codingLevel)
-    ) {
-      return response.failure(
-        res,
-        "Invalid codingLevel. Allowed values: beginner, intermediate, advanced",
-        400,
-      );
-    }
+    const existing = await memberService.findMemberById(req.params.id);
+    if (!existing) return response.failure(res, "Member not found", 404);
 
     const updatedMember = await memberService.updateMember(
       req.params.id,
@@ -101,9 +91,6 @@ async function deleteMember(
   next: NextFunction,
 ) {
   try {
-    const existing = await memberService.findMemberById(req.params.id);
-    if (!existing) return response.failure(res, "Member not found", 404);
-
     await memberService.deleteMember(req.params.id);
     // Return 204 No Content (no body) for successful deletion
     response.success(res, null, 204, "Member deleted successfully");
