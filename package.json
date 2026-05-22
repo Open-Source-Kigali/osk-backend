@@ -7,6 +7,7 @@
     "dev": "nodemon --exec ts-node src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
+    "prepare": "husky",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -53,6 +54,8 @@
     "@vitest/ui": "^4.1.6",
     "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "nodemon": "^3.1.14",
     "prettier": "^3.8.3",
     "prisma": "^7.8.0",
@@ -62,5 +65,11 @@
     "typescript-eslint": "^8.59.2",
     "vitest": "^4.1.6",
     "vitest-mock-extended": "^4.0.0"
+  },
+  "lint-staged": {
+    "**/*.{ts,js}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
   }
 }
