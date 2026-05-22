@@ -3,6 +3,7 @@ import reviewService from "../services/review.service";
 import response from "../utils/response";
 import { Review } from "../generated/prisma/client";
 import { destroyImage, uploadBuffer } from "../utils/cloudinary-upload";
+import trimStrings from "../utils/trim-strings";
 
 type ReviewBody = Omit<Review, "id" | "createdAt" | "updatedAt">;
 
@@ -53,7 +54,7 @@ async function create(
     publicId = uploaded.public_id;
 
     const newReview = await reviewService.create({
-      ...req.body,
+      ...trimStrings(req.body),
       profileUrl: uploaded.secure_url,
       profilePublicId: uploaded.public_id,
     });
@@ -80,7 +81,7 @@ async function update(
     if (!existing) return response.failure(res, "Review not found", 404);
 
     const data: Partial<ReviewBody> = Object.fromEntries(
-      Object.entries(req.body).filter(([, v]) => v !== ""),
+      Object.entries(trimStrings(req.body)).filter(([, v]) => v !== ""),
     ) as Partial<ReviewBody>;
 
     if (req.file) {
