@@ -37,6 +37,17 @@ export class GitHubError extends Error {
 export async function gh(path: string) {
   const res = await fetch(`${API}${path}`, { headers: headers() });
   if (!res.ok) {
+    // Handle 403 separately: a 403 usually means the GitHub token has hit the
+    // rate limit. Without this check, callers would receive the same generic
+    // error as a 404, making it very hard to diagnose the real problem.
+    // A clear message here tells the developer exactly what happened and how
+    // to fix it by setting GITHUB_TOKEN.
+    if (res.status === 403) {
+      throw new GitHubError(
+        403,
+        `GitHub rate limit exceeded. Set GITHUB_TOKEN to increase your limit.`,
+      );
+    }
     throw new GitHubError(
       res.status,
       `GitHub ${res.status} on ${path}: ${await res.text()}`,
