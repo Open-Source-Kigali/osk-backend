@@ -7,91 +7,77 @@ const CONTRIBUTORS_MD_PATH = path.join(process.cwd(), "CONTRIBUTORS.md");
 
 export interface Contributor {
   login: string;
-  name: string | null;
+  name: string;
   avatarUrl: string;
   profileUrl: string;
-  bio: string | null;
-  company: string | null;
+  bio: string;
+  company: string;
 }
 
 export async function readContributors(): Promise<Contributor[]> {
   try {
-    const data = await fs.readFile(CONTRIBUTORS_JSON_PATH, "utf8");
-    return JSON.parse(data) as Contributor[];
-  } catch {
-    return [];
+    const data = await fs.readFile(CONTRIBUTORS_JSON_PATH, "utf-8");
+    return JSON.parse(data);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error("Failed to read contributors data: " + message);
   }
 }
 
 export async function refreshContributors() {
-  const mdData = await fs.readFile(CONTRIBUTORS_MD_PATH, "utf8");
-  const lines = mdData.split("\n");
+  const mdRaw = await fs.readFile(CONTRIBUTORS_MD_PATH, "utf-8");
 
-  const usernames: string[] = [];
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-    if (trimmed.startsWith("<!--")) continue;
-    if (trimmed.includes(" ") || trimmed.startsWith("#")) continue; // Skip text blocks, headers, etc.
-    if (/^[a-zA-Z0-9-]+$/.test(trimmed)) {
-      usernames.push(trimmed);
-    }
-  }
+  const usernames = mdRaw
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(
+      (line) =>
+        line &&
+        !line.startsWith("<!--") &&
+        !line.startsWith("#") &&
+        !line.includes(" "),
+    );
 
-  const fetchPromises = usernames.map(async (username) => {
-    try {
+  const results = await Promise.allSettled(
+    usernames.map(async (username) => {
       const res = await gh(`/users/${username}`);
-      const data = (await res.json()) as {
-        login: string;
-        name: string | null;
-        avatar_url: string;
-        html_url: string;
-        bio: string | null;
-        company: string | null;
-      };
-
-      const contributor: Contributor = {
+      const data = await res.json();
+      return {
         login: data.login,
-        name: data.name || null,
+        name: data.name || data.login,
         avatarUrl: data.avatar_url,
         profileUrl: data.html_url,
-        bio: data.bio || null,
-        company: data.company || null,
-      };
-      return contributor;
-    } catch (e: unknown) {
-      if (e instanceof Error && e.message.includes("404")) {
-        throw new Error(`User ${username} not found (404)`);
-      }
-      throw e;
-    }
-  });
-
-  const results = await Promise.allSettled(fetchPromises);
+        bio: data.bio || "",
+        company: data.company || "",
+      } as Contributor;
+    }),
+  );
 
   const contributors: Contributor[] = [];
-  let successCount = 0;
-  let failCount = 0;
+  const successful: string[] = [];
+  const failed: Array<{ login: string; error: string }> = [];
 
-  for (const result of results) {
+  for (let i = 0; i < usernames.length; i++) {
+    const username = usernames[i];
+    const result = results[i];
     if (result.status === "fulfilled") {
       contributors.push(result.value);
-      successCount++;
+      successful.push(username);
     } else {
-      failCount++;
-      console.error(result.reason);
+      failed.push({ login: username, error: result.reason.message });
     }
   }
 
   await fs.writeFile(
     CONTRIBUTORS_JSON_PATH,
     JSON.stringify(contributors, null, 2),
-    "utf8",
+    "utf-8",
   );
 
   return {
-    success: successCount,
-    failed: failCount,
-    total: usernames.length,
+    totalParsed: usernames.length,
+    success: successful.length,
+    failures: failed.length,
+    failedList: failed,
   };
 }
