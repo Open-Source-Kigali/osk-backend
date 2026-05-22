@@ -5,6 +5,14 @@ import { ProjectStatus } from "../generated/prisma/client";
 import { destroyImage, uploadBuffer } from "../utils/cloudinary-upload";
 import { fetchRepoSnapshot } from "../services/github.service";
 import { trimStrings } from "../utils/trim-strings";
+import trimStrings from "../utils/trim-strings";
+import { parseRequestBody } from "../utils/validation";
+import {
+  createProjectSchema,
+  updateProjectSchema,
+  CreateProjectInput,
+  UpdateProjectInput,
+} from "../schemas/project.schema";
 
 const FOLDER = "open-source-kigali/projects";
 
@@ -75,6 +83,24 @@ async function addProject(
 
   let publicId: string | undefined;
   try {
+  const trimmedBody = trimStrings(req.body as Record<string, unknown>);
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(trimmedBody.slug as string)) {
+    return response.failure(
+      res,
+      "slug must be lowercase alphanumeric with hyphens only",
+      400,
+    );
+  }
+
+  let publicId: string | undefined;
+  try {
+    const data = parseRequestBody<CreateProjectInput>(
+      createProjectSchema,
+      trimmedBody,
+      res,
+    );
+    if (!data) return;
+
     const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
     publicId = uploaded.public_id;
 
@@ -138,6 +164,16 @@ async function updateProject(
     if (b.featured !== undefined) data.featured = parseBoolean(b.featured);
     if (b.maintainer !== undefined) data.maintainer = b.maintainer;
     if (b.langColor !== undefined) data.langColor = b.langColor;
+    const data = parseRequestBody<UpdateProjectInput>(
+      updateProjectSchema,
+      trimStrings(req.body as Record<string, unknown>),
+      res,
+    );
+    if (!data) return;
+
+    const cleanedData: Record<string, unknown> = Object.fromEntries(
+      Object.entries(data).filter(([, v]) => v !== "" && v !== undefined),
+    );
 
     if (req.file) {
       const uploaded = await uploadBuffer(req.file.buffer, FOLDER);

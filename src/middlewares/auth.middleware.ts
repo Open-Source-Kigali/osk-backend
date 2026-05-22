@@ -5,7 +5,6 @@ import response from "../utils/response";
 function requireAdmin(req: Request, res: Response, next: NextFunction) {
   const apiKey = req.headers["x-api-key"];
 
-  // Keep the request-time guard so misconfigured environments fail safely.
   if (!env.adminApiKey) {
     return response.failure(res, "Server admin key not configured", 500);
   }

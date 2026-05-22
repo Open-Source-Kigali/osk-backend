@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import memberService from "../services/member.service";
 import response from "../utils/response";
+import trimStrings from "../utils/trim-strings";
 import { parseRequestBody } from "../utils/validation";
 import { trimStrings } from "../utils/trim-strings";
 import {
@@ -10,9 +11,6 @@ import {
   UpdateMemberInput,
 } from "../schemas/member.schema";
 
-/**
- * Fetches all members from the database.
- */
 async function findAllMembers(
   _req: Request,
   res: Response,
@@ -57,6 +55,7 @@ async function addMember(req: Request, res: Response, next: NextFunction) {
     const data = parseRequestBody<CreateMemberInput>(
       createMemberSchema,
       trimmedBody,
+      trimStrings(req.body as Record<string, unknown>),
       res,
     );
     if (!data) return;
@@ -83,6 +82,7 @@ async function updateMember(
     const data = parseRequestBody<UpdateMemberInput>(
       updateMemberSchema,
       trimmedBody,
+      trimStrings(req.body as Record<string, unknown>),
       res,
     );
     if (!data) return;
@@ -113,9 +113,6 @@ async function deleteMember(
   next: NextFunction,
 ) {
   try {
-    const existing = await memberService.findMemberById(req.params.id);
-    if (!existing) return response.failure(res, "Member not found", 404);
-
     await memberService.deleteMember(req.params.id);
     response.success(res, null, 204, "Member deleted successfully");
   } catch (err) {

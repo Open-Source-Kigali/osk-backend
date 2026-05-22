@@ -3,6 +3,7 @@ import partnerService from "../services/partner.service";
 import response from "../utils/response";
 import { Partner } from "../generated/prisma/client";
 import { destroyImage, uploadBuffer } from "../utils/cloudinary-upload";
+import trimStrings from "../utils/trim-strings";
 import { parseRequestBody } from "../utils/validation";
 import { trimStrings } from "../utils/trim-strings";
 import {
@@ -71,6 +72,9 @@ async function addPartner(req: Request, res: Response, next: NextFunction) {
     const data = parseRequestBody<CreatePartnerInput>(
       createPartnerSchema,
       trimmedBody,
+    const data = parseRequestBody(
+      createPartnerSchema,
+      trimStrings(req.body as Record<string, unknown>),
       res,
     );
     if (!data) return;
@@ -113,6 +117,7 @@ async function updatePartner(
     const data = parseRequestBody<UpdatePartnerInput>(
       updatePartnerSchema,
       trimmedBody,
+      trimStrings(req.body as Record<string, unknown>),
       res,
     );
     if (!data) return;
