@@ -125,7 +125,22 @@ export const updateEventSchema = eventBaseSchema
           .map((s) => s.trim())
           .filter(Boolean);
       }),
-  });
+  })
+  .refine(
+    (data) => {
+      if (
+        typeof data.capacity === "number" &&
+        typeof data.registered === "number"
+      ) {
+        return data.capacity >= data.registered;
+      }
+      return true;
+    },
+    {
+      message: "Registered count cannot exceed capacity",
+      path: ["registered"],
+    },
+  );
 
 export type CreateEventInput = z.infer<typeof createEventSchema>;
 export type UpdateEventInput = z.infer<typeof updateEventSchema>;

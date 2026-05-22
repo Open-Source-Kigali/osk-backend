@@ -3,6 +3,13 @@ import request from "supertest";
 import app from "../app";
 
 vi.mock("../services/event.service");
+vi.mock("../utils/cloudinary-upload");
+vi.mock("../middlewares/auth.middleware", () => ({
+  default: {
+    requireAdmin: (_req: unknown, _res: unknown, next: () => void) => next(),
+  },
+}));
+
 import eventService from "../services/event.service";
 
 const mockEvent = {
@@ -51,5 +58,64 @@ describe("GET /api/events", () => {
     expect(vi.mocked(eventService.findAllEvents)).toHaveBeenCalledWith(
       undefined,
     );
+  });
+});
+
+describe("PUT /api/events/:id - capacity/registered validation", () => {
+  it("returns 400 when registered exceeds capacity in update payload", async () => {
+    vi.mocked(eventService.findEventByIdInternal).mockResolvedValue(mockEvent);
+
+    const res = await request(app).put("/api/events/1").send({
+      capacity: "50",
+      registered: "60",
+    });
+
+    expect(res.status).toBe(400);
+    expect(res.body.success).toBe(false);
+  });
+
+  it("returns 400 when updated registered exceeds existing capacity", async () => {
+    vi.mocked(eventService.findEventByIdInternal).mockResolvedValue({
+      ...mockEvent,
+      capacity: 50,
+      registered: 10,
+    });
+
+    const res = await request(app).put("/api/events/1").send({
+      registered: "60",
+    });
+
+    expect(res.status).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toContain("registered cannot exceed capacity");
+  });
+
+  it("returns 400 when updated capacity is less than existing registered", async () => {
+    vi.mocked(eventService.findEventByIdInternal).mockResolvedValue({
+      ...mockEvent,
+      capacity: 100,
+      registered: 80,
+    });
+
+    const res = await request(app).put("/api/events/1").send({
+      capacity: "50",
+    });
+
+    expect(res.status).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toContain("registered cannot exceed capacity");
+  });
+
+  it("allows update when registered does not exceed capacity", async () => {
+    vi.mocked(eventService.findEventByIdInternal).mockResolvedValue(mockEvent);
+    vi.mocked(eventService.updateEvent).mockResolvedValue(mockEvent);
+
+    const res = await request(app).put("/api/events/1").send({
+      capacity: "100",
+      registered: "50",
+    });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
   });
 });
