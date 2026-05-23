@@ -1,20 +1,16 @@
 import { Router } from "express";
 import reviewController from "../controllers/review.controller";
-import auth from "../middlewares/auth.middleware";
+import authMiddleware from "../middlewares/auth.middleware";
 import { upload } from "../middlewares/upload.middleware";
 
-const router = Router();
+const route = Router();
 
-router.get("/", reviewController.findAll);
-router.get("/:id", reviewController.findById);
+route.get("/", reviewController.findAllReviews);
+route.get("/:id", reviewController.findReviewById);
+route.post("/", upload.single("file"), reviewController.addReview);
 
-router.post("/", upload.single("file"), reviewController.create);
-router.put(
-  "/:id",
-  auth.requireAdmin,
-  upload.single("file"),
-  reviewController.update,
-);
-router.delete("/:id", auth.requireAdmin, reviewController.delete);
+route.use(authMiddleware.requireAdmin);
+route.put("/:id", upload.single("file"), reviewController.updateReview);
+route.delete("/:id", reviewController.deleteReview);
 
-export default router;
+export default route;
