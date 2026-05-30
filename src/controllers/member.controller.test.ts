@@ -70,6 +70,38 @@ describe("POST /api/members", () => {
     expect(res.status).toBe(201);
     expect(res.body.success).toBe(true);
   });
+
+  // Test case for missing required field
+  it("returns 400 when a required field is missing", async () => {
+    const res = await request(app).post("/api/members").send({
+      name: "Alice",
+      // email is missing
+      githubUsername: "alice",
+      orgName: "OSK",
+      joinReason: "Love OSS",
+      codingLevel: "intermediate",
+    });
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe(
+      "email: Invalid input: expected string, received undefined",
+    );
+  });
+
+  // Test case for empty required field
+  it("returns 400 when a required field is an empty string", async () => {
+    const res = await request(app).post("/api/members").send({
+      name: "  ", // empty string after trim
+      email: "alice@example.com",
+      githubUsername: "alice",
+      orgName: "OSK",
+      joinReason: "Love OSS",
+      codingLevel: "intermediate",
+    });
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe("name: Name is required");
+  });
 });
 
 describe("PUT /api/members/:id", () => {
