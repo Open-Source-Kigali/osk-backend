@@ -3,7 +3,6 @@ import projectService from "../services/project.service";
 import response from "../utils/response";
 import { destroyImage, uploadBuffer } from "../utils/cloudinary-upload";
 import { fetchRepoSnapshot } from "../services/github.service";
-import stripPublicIds from "../utils/strip-public-ids";
 import trimStrings from "../utils/trim-strings";
 import { parseRequestBody } from "../utils/validation";
 import {
@@ -23,12 +22,7 @@ async function findAllProjects(
   try {
     const featured = _req.query.featured === "true" ? true : undefined;
     const projects = await projectService.findAllProjects(featured);
-    response.success(
-      res,
-      stripPublicIds(projects),
-      200,
-      "Projects retrieved successfully",
-    );
+    response.success(res, projects, 200, "Projects retrieved successfully");
   } catch (err) {
     next(err);
   }
@@ -42,12 +36,7 @@ async function findProjectBySlug(
   try {
     const project = await projectService.findProjectBySlug(req.params.slug);
     if (!project) return response.failure(res, "Project not found", 404);
-    response.success(
-      res,
-      stripPublicIds(project),
-      200,
-      "Project retrieved successfully",
-    );
+    response.success(res, project, 200, "Project retrieved successfully");
   } catch (err) {
     next(err);
   }
