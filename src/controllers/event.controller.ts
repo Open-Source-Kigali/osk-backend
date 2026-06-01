@@ -3,6 +3,7 @@ import eventService from "../services/event.service";
 import response from "../utils/response";
 import { Event, Prisma } from "../generated/prisma/client";
 import { destroyImage, uploadBuffer } from "../utils/cloudinary-upload";
+import stripPublicIds from "../utils/strip-public-ids";
 import { parseRequestBody } from "../utils/validation";
 import {
   createEventSchema,
@@ -19,7 +20,12 @@ async function findAllEvents(_req: Request, res: Response, next: NextFunction) {
   try {
     const featured = _req.query.featured === "true" ? true : undefined;
     const allEvents = await eventService.findAllEvents(featured);
-    response.success(res, allEvents, 200, "Events retrieved successfully");
+    response.success(
+      res,
+      stripPublicIds(allEvents),
+      200,
+      "Events retrieved successfully",
+    );
   } catch (err) {
     next(err);
   }
@@ -35,7 +41,12 @@ async function findEventById(
     if (!event) {
       return response.failure(res, "Event not found", 404);
     }
-    return response.success(res, event, 200, "Event retrieved successfully");
+    return response.success(
+      res,
+      stripPublicIds(event),
+      200,
+      "Event retrieved successfully",
+    );
   } catch (err) {
     next(err);
   }

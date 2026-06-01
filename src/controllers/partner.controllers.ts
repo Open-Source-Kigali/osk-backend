@@ -3,6 +3,7 @@ import partnerService from "../services/partner.service";
 import response from "../utils/response";
 import { Partner } from "../generated/prisma/client";
 import { destroyImage, uploadBuffer } from "../utils/cloudinary-upload";
+import stripPublicIds from "../utils/strip-public-ids";
 import trimStrings from "../utils/trim-strings";
 import { parseRequestBody } from "../utils/validation";
 import {
@@ -20,7 +21,12 @@ async function findAllPartners(
 ) {
   try {
     const allPartners = await partnerService.findAllPartners();
-    response.success(res, allPartners, 200, "Partners retrieved successfully");
+    response.success(
+      res,
+      stripPublicIds(allPartners),
+      200,
+      "Partners retrieved successfully",
+    );
   } catch (err) {
     next(err);
   }
@@ -38,7 +44,7 @@ async function findPartnerById(
     }
     return response.success(
       res,
-      partner,
+      stripPublicIds(partner),
       200,
       "Partner retrieved successfully",
     );

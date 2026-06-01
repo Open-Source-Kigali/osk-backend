@@ -44,6 +44,7 @@ describe("GET /api/projects", () => {
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.data).toHaveLength(1);
+    expect(res.body.data[0]).not.toHaveProperty("imagePublicId");
     expect(vi.mocked(projectService.findAllProjects)).toHaveBeenCalledWith(
       true,
     );
