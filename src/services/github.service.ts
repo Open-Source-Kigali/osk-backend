@@ -37,9 +37,22 @@ export class GitHubError extends Error {
 export async function gh(path: string) {
   const res = await fetch(`${API}${path}`, { headers: headers() });
   if (!res.ok) {
+    const body = await res.text();
+    if (res.status === 403) {
+      const remaining = res.headers.get("x-ratelimit-remaining");
+      const rateLimitMessage =
+        remaining === "0"
+          ? "GitHub rate limit exceeded. Set GITHUB_TOKEN to increase your limit."
+          : "GitHub request forbidden. Check GITHUB_TOKEN permissions or rate limits.";
+      throw new GitHubError(
+        res.status,
+        `${rateLimitMessage} GitHub 403 on ${path}: ${body}`,
+      );
+    }
+
     throw new GitHubError(
       res.status,
-      `GitHub ${res.status} on ${path}: ${await res.text()}`,
+      `GitHub ${res.status} on ${path}: ${body}`,
     );
   }
   return res;
