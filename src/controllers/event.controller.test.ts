@@ -5,6 +5,8 @@ import app from "../app";
 vi.mock("../services/event.service");
 import eventService from "../services/event.service";
 
+const ADMIN_KEY = "test-admin-key";
+
 const mockEvent = {
   id: "1",
   title: "OSK Meetup",
@@ -51,5 +53,23 @@ describe("GET /api/events", () => {
     expect(vi.mocked(eventService.findAllEvents)).toHaveBeenCalledWith(
       undefined,
     );
+  });
+});
+
+describe("PUT /api/events/:id", () => {
+  it("returns 400 when registered would exceed capacity", async () => {
+    vi.mocked(eventService.findEventById).mockResolvedValue(mockEvent);
+
+    const res = await request(app)
+      .put("/api/events/1")
+      .set("x-api-key", ADMIN_KEY)
+      .send({
+        registered: 101,
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe("Registered count cannot exceed capacity");
+    expect(vi.mocked(eventService.updateEvent)).not.toHaveBeenCalled();
   });
 });
