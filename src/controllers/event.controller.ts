@@ -86,9 +86,6 @@ async function addEvent(req: Request, res: Response, next: NextFunction) {
   }
 }
 
-/**
- * Updates an event and ensures capacity constraints are maintained.
- */
 async function updateEvent(
   req: Request<{ id: string }>,
   res: Response,
