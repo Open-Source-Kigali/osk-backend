@@ -15,12 +15,12 @@ import {
 const FOLDER = "open-source-kigali/projects";
 
 async function findAllProjects(
-  _req: Request,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) {
   try {
-    const featured = _req.query.featured === "true" ? true : undefined;
+    const featured = req.query.featured === "true" ? true : undefined;
     const projects = await projectService.findAllProjects(featured);
     response.success(res, projects, 200, "Projects retrieved successfully");
   } catch (err) {
