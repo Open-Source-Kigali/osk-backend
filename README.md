@@ -46,6 +46,8 @@ See `.env.example` for the full list.
 | `CLOUDINARY_API_SECRET` | for uploads          | Cloudinary API secret                                           |
 | `GITHUB_TOKEN`          | for projects refresh | Fine-grained PAT with public repo read                          |
 
+If you hit a GitHub rate limit (HTTP 403), the API will now throw a specific error message suggesting you set or update your `GITHUB_TOKEN`.
+
 ## Project structure
 
 ```
