@@ -1,8 +1,12 @@
 import { prisma } from "../config/prisma";
 import { Event, Prisma } from "../generated/prisma/client";
 
-async function findAllEvents() {
-  return prisma.event.findMany();
+async function findAllEvents(featured?: boolean) {
+  return prisma.event.findMany({
+    where: featured !== undefined ? { featured } : undefined,
+    orderBy: { date: "asc" },
+    omit: { imagePublicId: true },
+  });
 }
 
 async function addEvent(
@@ -12,6 +16,13 @@ async function addEvent(
 }
 
 async function findEventById(id: string) {
+  return prisma.event.findUnique({
+    where: { id },
+    omit: { imagePublicId: true },
+  });
+}
+
+async function findEventByIdInternal(id: string) {
   return prisma.event.findUnique({ where: { id } });
 }
 
@@ -27,6 +38,7 @@ export default {
   findAllEvents,
   addEvent,
   findEventById,
+  findEventByIdInternal,
   updateEvent,
   deleteEvent,
 };

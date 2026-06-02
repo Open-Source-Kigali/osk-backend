@@ -24,10 +24,28 @@ function headers() {
   return h;
 }
 
+export class GitHubError extends Error {
+  constructor(
+    public status: number,
+    message: string,
+  ) {
+    super(message);
+    this.name = "GitHubError";
+  }
+}
+
 export async function gh(path: string) {
   const res = await fetch(`${API}${path}`, { headers: headers() });
   if (!res.ok) {
-    throw new Error(`GitHub ${res.status} on ${path}: ${await res.text()}`);
+    if (res.status === 403) {
+      throw new Error(
+        `GitHub rate limit exceeded. Set GITHUB_TOKEN to increase your limit.`,
+      );
+    }
+    throw new GitHubError(
+      res.status,
+      `GitHub ${res.status} on ${path}: ${await res.text()}`,
+    );
   }
   return res;
 }
