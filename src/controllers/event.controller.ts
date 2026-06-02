@@ -93,7 +93,7 @@ async function updateEvent(
 ) {
   let newPublicId: string | undefined;
   try {
-    const existing = await eventService.findEventById(req.params.id);
+    const existing = await eventService.findEventByIdInternal(req.params.id);
     if (!existing) return response.failure(res, "Event not found", 404);
 
     const data = parseRequestBody<UpdateEventInput>(
@@ -136,7 +136,7 @@ async function deleteEvent(
   next: NextFunction,
 ) {
   try {
-    const existing = await eventService.findEventById(req.params.id);
+    const existing = await eventService.findEventByIdInternal(req.params.id);
     if (!existing) return response.failure(res, "Event not found", 404);
 
     await eventService.deleteEvent(req.params.id);
