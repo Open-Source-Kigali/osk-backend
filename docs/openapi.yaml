@@ -20,6 +20,7 @@ tags:
   - name: Contributors
   - name: Reviews
   - name: Users
+  - name: Stats
 
 paths:
   /health:
@@ -687,6 +688,32 @@ paths:
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
+  /stats:
+    get:
+      tags: [Stats]
+      summary: Fetch community stats
+      responses:
+        "200":
+          description: Stats fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          contributors: { type: number }
+                          members: { type: number }
+                          projects: { type: number }
+                          events: { type: number }
+                          partners: { type: number }
+                          reviews: { type: number }
+                          pullRequests: { type: number }
         "500": { $ref: "#/components/responses/InternalError" }
 
 components:
