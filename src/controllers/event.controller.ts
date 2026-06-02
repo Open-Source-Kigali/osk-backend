@@ -25,9 +25,6 @@ async function findAllEvents(_req: Request, res: Response, next: NextFunction) {
   }
 }
 
-/**
- * Fetches a single event by its ID.
- */
 async function findEventById(
   req: Request<{ id: string }>,
   res: Response,
