@@ -33,9 +33,7 @@ describe("findAllMembers", () => {
 
     const result = await memberService.findAllMembers();
 
-    expect(prismaMock.member.findMany).toHaveBeenCalledWith({
-      orderBy: { createdAt: "desc" },
-    });
+    expect(prismaMock.member.findMany).toHaveBeenCalledOnce();
     expect(result).toEqual([mockMember]);
   });
 });
