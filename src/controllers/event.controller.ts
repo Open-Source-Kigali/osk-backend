@@ -107,7 +107,6 @@ async function updateEvent(
       Object.entries(data).filter(([, v]) => v !== "" && v !== undefined),
     ) as Prisma.EventUpdateInput;
 
-    // Cross-field validation: Compare the new/existing registered count against the new/existing capacity.
     const finalCapacity =
       data.capacity !== undefined ? data.capacity : existing.capacity;
     const finalRegistered =
