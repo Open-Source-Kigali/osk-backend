@@ -2,7 +2,10 @@ import { prisma } from "../config/prisma";
 import { Partner } from "../generated/prisma/client";
 
 async function findAllPartners() {
-  return prisma.partner.findMany();
+  return prisma.partner.findMany({
+    orderBy: { name: "asc" },
+    omit: { logoPublicId: true },
+  });
 }
 
 async function addPartner(
@@ -12,6 +15,13 @@ async function addPartner(
 }
 
 async function findPartnerById(id: string) {
+  return prisma.partner.findUnique({
+    where: { id },
+    omit: { logoPublicId: true },
+  });
+}
+
+async function findPartnerByIdInternal(id: string) {
   return prisma.partner.findUnique({ where: { id } });
 }
 
@@ -30,6 +40,7 @@ export default {
   findAllPartners,
   addPartner,
   findPartnerById,
+  findPartnerByIdInternal,
   updatePartner,
   deletePartner,
 };
