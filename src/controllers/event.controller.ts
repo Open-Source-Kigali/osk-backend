@@ -143,9 +143,6 @@ async function updateEvent(
   }
 }
 
-/**
- * Deletes an event by its ID.
- */
 async function deleteEvent(
   req: Request<{ id: string }>,
   res: Response,
