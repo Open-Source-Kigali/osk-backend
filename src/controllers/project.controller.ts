@@ -47,6 +47,12 @@ async function findProjectById(
   res: Response,
   next: NextFunction,
 ) {
+  const isUuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(req.params.id);
+
+  if (!isUuid) {
+    return next();
+  }
+
   try {
     const project = await projectService.findProjectById(req.params.id);
     if (!project) return response.failure(res, "Project not found", 404);
