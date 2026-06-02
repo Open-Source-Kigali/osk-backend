@@ -107,6 +107,19 @@ async function updateEvent(
       Object.entries(data).filter(([, v]) => v !== "" && v !== undefined),
     ) as Prisma.EventUpdateInput;
 
+    const finalCapacity =
+      data.capacity !== undefined ? data.capacity : existing.capacity;
+    const finalRegistered =
+      data.registered !== undefined ? data.registered : existing.registered;
+
+    if (
+      finalCapacity != null &&
+      finalRegistered != null &&
+      Number(finalRegistered) > Number(finalCapacity)
+    ) {
+      return response.failure(res, "registered cannot exceed capacity", 400);
+    }
+
     if (req.file) {
       const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
       newPublicId = uploaded.public_id;
