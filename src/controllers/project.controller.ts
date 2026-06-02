@@ -72,9 +72,6 @@ async function addProject(
 ) {
   if (!req.file) return response.failure(res, "Image file is required", 400);
 
-  if (req.body.repoName !== undefined && req.body.repoName.trim() === "") {
-    return response.failure(res, "repoName cannot be empty", 400);
-  }
   const trimmedBody = trimStrings(req.body as Record<string, unknown>);
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(trimmedBody.slug as string)) {
     return response.failure(
@@ -135,21 +132,6 @@ async function updateProject(
     const existing = await projectService.findProjectById(req.params.id);
     if (!existing) return response.failure(res, "Project not found", 404);
 
-    const data: Record<string, unknown> = {};
-    const b = req.body;
-    if (b.slug) data.slug = b.slug;
-    if (b.repoOwner) data.repoOwner = b.repoOwner;
-    if (b.repoName !== undefined) {
-      if (b.repoName.trim() === "")
-        return response.failure(res, "repoName cannot be empty", 400);
-      data.repoName = b.repoName;
-    }
-    if (b.tagline) data.tagline = b.tagline;
-    if (b.category) data.category = b.category;
-    if (b.status) data.status = b.status;
-    if (b.featured !== undefined) data.featured = parseBoolean(b.featured);
-    if (b.maintainer !== undefined) data.maintainer = b.maintainer;
-    if (b.langColor !== undefined) data.langColor = b.langColor;
     const data = parseRequestBody<UpdateProjectInput>(
       updateProjectSchema,
       trimStrings(req.body as Record<string, unknown>),
