@@ -21,7 +21,7 @@ export function uploadBuffer(
 export async function destroyImage(publicId: string) {
   try {
     await cloudinary.uploader.destroy(publicId);
-  } catch {
-    // best-effort cleanup; ignore failures
+  } catch (err) {
+    console.error("Failed to destroy Cloudinary image", publicId, err);
   }
 }

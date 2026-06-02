@@ -104,8 +104,6 @@ docs/
 
 ## API Documentation
 Admin-only endpoints require an `x-api-key` header matching `ADMIN_API_KEY`.
-If `ADMIN_API_KEY` is missing at startup, the server logs a warning and admin endpoints will continue to return `500` until the key is configured.
-Delete endpoints return `204 No Content` with an empty response body to stay compliant with the HTTP spec.
 
 [![Launch Swagger UI](https://img.shields.io/badge/Swagger%20UI-Launch%20API%20Docs-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)](http://localhost:3000/api/docs)
 
