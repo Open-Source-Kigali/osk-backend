@@ -87,9 +87,20 @@ model Partner {
   logoPublicId     String
   description      String
   email            String   @unique
-  partershipReason String
+  partnershipReason String
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+}
+
+model Review {
+  id              String   @id @default(uuid())
+  name            String
+  profileUrl      String
+  profilePublicId String
+  role            String
+  message         String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 model Project {

@@ -2,7 +2,7 @@ import { prisma } from "../config/prisma";
 import { Member } from "../generated/prisma/client";
 
 async function findAllMembers() {
-  return prisma.member.findMany();
+  return prisma.member.findMany({ orderBy: { name: "asc" } });
 }
 
 async function addMember(
