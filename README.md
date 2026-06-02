@@ -103,6 +103,7 @@ docs/
 </details>
 
 ## API Documentation
+
 Admin-only endpoints require an `x-api-key` header matching `ADMIN_API_KEY`.
 
 [![Launch Swagger UI](https://img.shields.io/badge/Swagger%20UI-Launch%20API%20Docs-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)](http://localhost:3000/api/docs)
