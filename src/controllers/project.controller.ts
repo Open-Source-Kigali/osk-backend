@@ -1,31 +1,18 @@
 import { Request, Response, NextFunction } from "express";
 import projectService from "../services/project.service";
 import response from "../utils/response";
-import { ProjectStatus } from "../generated/prisma/client";
 import { destroyImage, uploadBuffer } from "../utils/cloudinary-upload";
 import { fetchRepoSnapshot } from "../services/github.service";
+import trimStrings from "../utils/trim-strings";
+import { parseRequestBody } from "../utils/validation";
+import {
+  createProjectSchema,
+  updateProjectSchema,
+  CreateProjectInput,
+  UpdateProjectInput,
+} from "../schemas/project.schema";
 
 const FOLDER = "open-source-kigali/projects";
-
-type CreateBody = {
-  slug: string;
-  repoOwner: string;
-  repoName: string;
-  tagline: string;
-  category: string;
-  status?: ProjectStatus;
-  featured?: string | boolean;
-  maintainer?: string;
-  langColor?: string;
-};
-
-type UpdateBody = Partial<CreateBody>;
-
-function parseBoolean(value: unknown) {
-  if (typeof value === "boolean") return value;
-  if (typeof value === "string") return value === "true" || value === "1";
-  return undefined;
-}
 
 async function findAllProjects(
   _req: Request,
@@ -33,7 +20,8 @@ async function findAllProjects(
   next: NextFunction,
 ) {
   try {
-    const projects = await projectService.findAllProjects();
+    const featured = _req.query.featured === "true" ? true : undefined;
+    const projects = await projectService.findAllProjects(featured);
     response.success(res, projects, 200, "Projects retrieved successfully");
   } catch (err) {
     next(err);
@@ -54,8 +42,22 @@ async function findProjectBySlug(
   }
 }
 
+async function findProjectById(
+  req: Request<{ id: string }>,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const project = await projectService.findProjectById(req.params.id);
+    if (!project) return response.failure(res, "Project not found", 404);
+    response.success(res, project, 200, "Project retrieved successfully");
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function addProject(
-  req: Request<unknown, unknown, CreateBody>,
+  req: Request<unknown, unknown, CreateProjectInput>,
   res: Response,
   next: NextFunction,
 ) {
@@ -64,23 +66,37 @@ async function addProject(
   if (req.body.repoName !== undefined && req.body.repoName.trim() === "") {
     return response.failure(res, "repoName cannot be empty", 400);
   }
+  const trimmedBody = trimStrings(req.body as Record<string, unknown>);
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(trimmedBody.slug as string)) {
+    return response.failure(
+      res,
+      "slug must be lowercase alphanumeric with hyphens only",
+      400,
+    );
+  }
 
   let publicId: string | undefined;
   try {
+    const data = parseRequestBody<CreateProjectInput>(
+      createProjectSchema,
+      trimmedBody,
+      res,
+    );
+    if (!data) return;
+
     const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
     publicId = uploaded.public_id;
 
-    const featured = parseBoolean(req.body.featured) ?? false;
     const created = await projectService.addProject({
-      slug: req.body.slug,
-      repoOwner: req.body.repoOwner,
-      repoName: req.body.repoName,
-      tagline: req.body.tagline,
-      category: req.body.category,
-      status: req.body.status ?? "active",
-      featured,
-      maintainer: req.body.maintainer ?? null,
-      langColor: req.body.langColor ?? null,
+      slug: data.slug,
+      repoOwner: data.repoOwner,
+      repoName: data.repoName,
+      tagline: data.tagline,
+      category: data.category,
+      status: data.status,
+      featured: data.featured,
+      maintainer: data.maintainer ?? null,
+      langColor: data.langColor ?? null,
       imageUrl: uploaded.secure_url,
       imagePublicId: uploaded.public_id,
     });
@@ -101,7 +117,7 @@ async function addProject(
 }
 
 async function updateProject(
-  req: Request<{ id: string }, unknown, UpdateBody>,
+  req: Request<{ id: string }>,
   res: Response,
   next: NextFunction,
 ) {
@@ -125,15 +141,28 @@ async function updateProject(
     if (b.featured !== undefined) data.featured = parseBoolean(b.featured);
     if (b.maintainer !== undefined) data.maintainer = b.maintainer;
     if (b.langColor !== undefined) data.langColor = b.langColor;
+    const data = parseRequestBody<UpdateProjectInput>(
+      updateProjectSchema,
+      trimStrings(req.body as Record<string, unknown>),
+      res,
+    );
+    if (!data) return;
+
+    const cleanedData: Record<string, unknown> = Object.fromEntries(
+      Object.entries(data).filter(([, v]) => v !== "" && v !== undefined),
+    );
 
     if (req.file) {
       const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
       newPublicId = uploaded.public_id;
-      data.imageUrl = uploaded.secure_url;
-      data.imagePublicId = uploaded.public_id;
+      cleanedData.imageUrl = uploaded.secure_url;
+      cleanedData.imagePublicId = uploaded.public_id;
     }
 
-    const updated = await projectService.updateProject(req.params.id, data);
+    const updated = await projectService.updateProject(
+      req.params.id,
+      cleanedData,
+    );
 
     if (req.file && existing.imagePublicId) {
       await destroyImage(existing.imagePublicId);
@@ -197,6 +226,7 @@ async function refreshAll(_req: Request, res: Response, next: NextFunction) {
 export default {
   findAllProjects,
   findProjectBySlug,
+  findProjectById,
   addProject,
   updateProject,
   deleteProject,
