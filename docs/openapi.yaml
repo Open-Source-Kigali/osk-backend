@@ -796,7 +796,12 @@ components:
         imagePublicId: { type: string }
         description: { type: string }
         category: { type: string }
-        mode: { type: string, example: "in-person" }
+        mode:
+          {
+            type: string,
+            enum: [in_person, virtual, hybrid],
+            example: "in_person",
+          }
         featured: { type: boolean }
         capacity: { type: integer, nullable: true }
         registered: { type: integer, nullable: true }
@@ -820,7 +825,12 @@ components:
         file: { type: string, format: binary, description: "Event image" }
         description: { type: string }
         category: { type: string }
-        mode: { type: string, example: "in-person" }
+        mode:
+          {
+            type: string,
+            enum: [in_person, virtual, hybrid],
+            example: "in_person",
+          }
         featured: { type: boolean }
         capacity: { type: integer }
         registered: { type: integer }
@@ -847,7 +857,7 @@ components:
           }
         description: { type: string }
         category: { type: string }
-        mode: { type: string }
+        mode: { type: string, enum: [in_person, virtual, hybrid] }
         featured: { type: boolean }
         capacity: { type: integer }
         registered: { type: integer }

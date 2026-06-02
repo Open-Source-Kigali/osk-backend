@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import request from "supertest";
 import app from "../app";
 
+import { EventMode } from "../generated/prisma/client";
+
 vi.mock("../services/event.service");
 import eventService from "../services/event.service";
 
@@ -13,7 +15,7 @@ const mockEvent = {
   imagePublicId: "abc123",
   description: "An open-source meetup",
   category: "community",
-  mode: "in-person",
+  mode: EventMode.in_person,
   featured: true,
   capacity: 100,
   registered: 30,

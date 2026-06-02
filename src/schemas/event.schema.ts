@@ -1,13 +1,12 @@
 import { z } from "zod";
+import { EventMode } from "../generated/prisma/client";
 
 const eventBaseSchema = z.object({
   title: z.string().min(1, "Title is required").trim(),
   tagline: z.string().trim().optional().nullable(),
   description: z.string().min(1, "Description is required").trim(),
   category: z.string().min(1, "Category is required").trim(),
-  mode: z
-    .enum(["in-person", "virtual", "hybrid"] as const)
-    .default("in-person"),
+  mode: z.nativeEnum(EventMode).default(EventMode.in_person),
   featured: z
     .union([z.boolean(), z.string().transform((v) => v === "true")])
     .default(false),
@@ -95,7 +94,7 @@ export const updateEventSchema = eventBaseSchema
   .omit({ mode: true, featured: true, speakers: true })
   .partial()
   .extend({
-    mode: z.enum(["in-person", "virtual", "hybrid"] as const).optional(),
+    mode: z.nativeEnum(EventMode).optional(),
     featured: z
       .union([z.boolean(), z.string().transform((v) => v === "true")])
       .optional(),
