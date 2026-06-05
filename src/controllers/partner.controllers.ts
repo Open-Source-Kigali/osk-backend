@@ -87,7 +87,9 @@ async function updatePartner(
 ) {
   let newPublicId: string | undefined;
   try {
-    const existing = await partnerService.findPartnerById(req.params.id);
+    const existing = await partnerService.findPartnerByIdInternal(
+      req.params.id,
+    );
     if (!existing) return response.failure(res, "Partner not found", 404);
 
     const data = parseRequestBody<UpdatePartnerInput>(
@@ -133,7 +135,9 @@ async function deletePartner(
   next: NextFunction,
 ) {
   try {
-    const existing = await partnerService.findPartnerById(req.params.id);
+    const existing = await partnerService.findPartnerByIdInternal(
+      req.params.id,
+    );
     if (!existing) return response.failure(res, "Partner not found", 404);
 
     await partnerService.deletePartner(req.params.id);
