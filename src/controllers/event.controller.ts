@@ -93,7 +93,7 @@ async function updateEvent(
 ) {
   let newPublicId: string | undefined;
   try {
-    const existing = await eventService.findEventById(req.params.id);
+    const existing = await eventService.findEventByIdInternal(req.params.id);
     if (!existing) return response.failure(res, "Event not found", 404);
 
     const data = parseRequestBody<UpdateEventInput>(
@@ -106,6 +106,19 @@ async function updateEvent(
     const filteredData: Prisma.EventUpdateInput = Object.fromEntries(
       Object.entries(data).filter(([, v]) => v !== "" && v !== undefined),
     ) as Prisma.EventUpdateInput;
+
+    const finalCapacity =
+      data.capacity !== undefined ? data.capacity : existing.capacity;
+    const finalRegistered =
+      data.registered !== undefined ? data.registered : existing.registered;
+
+    if (
+      finalCapacity != null &&
+      finalRegistered != null &&
+      Number(finalRegistered) > Number(finalCapacity)
+    ) {
+      return response.failure(res, "registered cannot exceed capacity", 400);
+    }
 
     if (req.file) {
       const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
@@ -136,7 +149,7 @@ async function deleteEvent(
   next: NextFunction,
 ) {
   try {
-    const existing = await eventService.findEventById(req.params.id);
+    const existing = await eventService.findEventByIdInternal(req.params.id);
     if (!existing) return response.failure(res, "Event not found", 404);
 
     await eventService.deleteEvent(req.params.id);

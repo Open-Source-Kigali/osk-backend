@@ -6,6 +6,7 @@ import eventRoutes from "./event.routes";
 import projectRoutes from "./project.routes";
 import reviewRoutes from "./review.routes";
 import contributorsRoutes from "./contributors.routes";
+import statsRoutes from "./stats.routes";
 
 const router = Router();
 
@@ -16,5 +17,6 @@ router.use("/events", eventRoutes);
 router.use("/projects", projectRoutes);
 router.use("/reviews", reviewRoutes);
 router.use("/contributors", contributorsRoutes);
+router.use("/stats", statsRoutes);
 
 export default router;
