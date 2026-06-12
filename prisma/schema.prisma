@@ -29,6 +29,12 @@ enum ProjectStatus {
   paused
 }
 
+enum EventMode {
+  in_person
+  virtual
+  hybrid
+}
+
 model User {
   id        String   @id @default(uuid())
   name      String
@@ -47,7 +53,7 @@ model Event {
   imagePublicId String
   description   String
   category      String
-  mode          String   @default("in-person")
+  mode          EventMode @default(in_person)
   featured      Boolean  @default(false)
   capacity      Int?
   registered    Int?

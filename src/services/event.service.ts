@@ -1,5 +1,5 @@
 import { prisma } from "../config/prisma";
-import { Event, Prisma } from "../generated/prisma/client";
+import { Prisma } from "../generated/prisma/client";
 
 async function findAllEvents(featured?: boolean) {
   return prisma.event.findMany({
@@ -9,9 +9,7 @@ async function findAllEvents(featured?: boolean) {
   });
 }
 
-async function addEvent(
-  eventData: Omit<Event, "id" | "createdAt" | "updatedAt">,
-) {
+async function addEvent(eventData: Prisma.EventCreateInput) {
   return prisma.event.create({ data: eventData });
 }
 
