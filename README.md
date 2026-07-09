@@ -14,7 +14,7 @@ Backend for the official website of [Open Source Kigali](https://github.com/Open
 - **Database:** PostgreSQL via Prisma
 - **Image storage:** Cloudinary
 - **API docs:** OpenAPI served through Swagger UI -->
-  
+
 ## Table of Contents
 
 - Getting Started
@@ -204,11 +204,7 @@ curl -X GET http://localhost:3000/api/projects \
       "langColor": "#3178C6",
       "ghDescription": "Backend powering the OSK website",
       "ghLanguage": "TypeScript",
-      "ghTopics": [
-        "express",
-        "typescript",
-        "prisma"
-      ],
+      "ghTopics": ["express", "typescript", "prisma"],
       "ghStars": 42,
       "ghForks": 15,
       "ghOpenIssues": 7,
