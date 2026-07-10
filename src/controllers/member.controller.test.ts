@@ -125,4 +125,15 @@ describe("DELETE /api/members/:id", () => {
 
     expect(res.status).toBe(204);
   });
+
+  it("returns 404 when the member does not exist", async () => {
+    vi.mocked(memberService.findMemberById).mockResolvedValue(null);
+
+    const res = await request(app)
+      .delete("/api/members/nonexistent")
+      .set("x-api-key", ADMIN_KEY);
+
+    expect(res.status).toBe(404);
+    expect(res.body.success).toBe(false);
+  });
 });
