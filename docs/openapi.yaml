@@ -16,6 +16,7 @@ tags:
   - name: Members
   - name: Events
   - name: Partners
+  - name: Partner Applications
   - name: Projects
   - name: Contributors
   - name: Reviews
@@ -368,6 +369,127 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ApiSuccess" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
+  /partner-applications:
+    post:
+      tags: [Partner Applications]
+      summary: Submit a partner application (with logo upload)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema: { $ref: "#/components/schemas/PartnerApplicationInput" }
+      responses:
+        "201":
+          description: Partner application submitted successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/PartnerApplication" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "500": { $ref: "#/components/responses/InternalError" }
+    get:
+      tags: [Partner Applications]
+      summary: List all partner applications (admin only)
+      security:
+        - adminApiKey: []
+      responses:
+        "200":
+          description: Partner applications retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          { $ref: "#/components/schemas/PartnerApplication" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
+  /partner-applications/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [Partner Applications]
+      summary: Get a partner application by id (admin only)
+      security:
+        - adminApiKey: []
+      responses:
+        "200":
+          description: Partner application retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/PartnerApplication" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/InternalError" }
+    delete:
+      tags: [Partner Applications]
+      summary: Delete a partner application (admin only)
+      security:
+        - adminApiKey: []
+      responses:
+        "204":
+          description: Partner application deleted successfully
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiSuccess" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
+  /partner-applications/{id}/status:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string, format: uuid }
+    patch:
+      tags: [Partner Applications]
+      summary: Update a partner application status (admin only)
+      security:
+        - adminApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              { $ref: "#/components/schemas/PartnerApplicationStatusInput" }
+      responses:
+        "200":
+          description: Partner application status updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/PartnerApplication" }
+        "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
@@ -925,6 +1047,112 @@ components:
         description: { type: string }
         email: { type: string, format: email }
         partnershipReason: { type: string }
+
+    PartnerApplication:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        organisationName: { type: string }
+        organisationLogoUrl: { type: string }
+        organisationType:
+          type: string
+          enum:
+            [
+              University / School,
+              Tech Company,
+              Government Body,
+              NGO / Community Hub,
+              Other,
+            ]
+        website: { type: string }
+        organisationSize:
+          type: string
+          enum:
+            [
+              "1–10 people",
+              "11–50 people",
+              "51–200 people",
+              "201–500 people",
+              "500+ people",
+            ]
+        country: { type: string }
+        description: { type: string, maxLength: 300 }
+        partnershipTier:
+          type: string
+          enum: [Gold Partner, Silver Partner, Community Partner, Not Sure Yet]
+        organisationOffer: { type: string, maxLength: 600 }
+        projectIdea: { type: string, nullable: true }
+        fullName: { type: string }
+        jobTitle: { type: string }
+        workEmail: { type: string, format: email }
+        agreedToTerms: { type: boolean }
+        status:
+          type: string
+          enum: [Pending, Contacted, Approved, Rejected]
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    PartnerApplicationInput:
+      type: object
+      required:
+        [
+          organisationName,
+          file,
+          organisationType,
+          website,
+          organisationSize,
+          country,
+          description,
+          partnershipTier,
+          organisationOffer,
+          fullName,
+          jobTitle,
+          workEmail,
+          agreedToTerms,
+        ]
+      properties:
+        organisationName: { type: string }
+        file: { type: string, format: binary, description: "Organisation logo" }
+        organisationType:
+          type: string
+          enum:
+            [
+              University / School,
+              Tech Company,
+              Government Body,
+              NGO / Community Hub,
+              Other,
+            ]
+        website: { type: string }
+        organisationSize:
+          type: string
+          enum:
+            [
+              "1–10 people",
+              "11–50 people",
+              "51–200 people",
+              "201–500 people",
+              "500+ people",
+            ]
+        country: { type: string }
+        description: { type: string, maxLength: 300 }
+        partnershipTier:
+          type: string
+          enum: [Gold Partner, Silver Partner, Community Partner, Not Sure Yet]
+        organisationOffer: { type: string, maxLength: 600 }
+        projectIdea: { type: string }
+        fullName: { type: string }
+        jobTitle: { type: string }
+        workEmail: { type: string, format: email }
+        agreedToTerms: { type: boolean }
+
+    PartnerApplicationStatusInput:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [Pending, Contacted, Approved, Rejected]
 
     Project:
       type: object

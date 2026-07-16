@@ -29,6 +29,13 @@ enum ProjectStatus {
   paused
 }
 
+enum ApplicationStatus {
+  Pending
+  Contacted
+  Approved
+  Rejected
+}
+
 model User {
   id        String   @id @default(uuid())
   name      String
@@ -40,15 +47,15 @@ model User {
 }
 
 model Event {
-  id            String   @id @default(uuid())
+  id            String    @id @default(uuid())
   title         String
   tagline       String?
   imageUrl      String
   imagePublicId String
   description   String
   category      String
-  mode          String   @default("in-person")
-  featured      Boolean  @default(false)
+  mode          String    @default("in-person")
+  featured      Boolean   @default(false)
   capacity      Int?
   registered    Int?
   date          DateTime
@@ -57,8 +64,8 @@ model Event {
   location      String
   speakers      String[]
   registerUrl   String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
 
 model Member {
@@ -74,16 +81,38 @@ model Member {
 }
 
 model Partner {
-  id               String   @id @default(uuid())
-  name             String
-  websiteUrl       String
-  logoUrl          String
-  logoPublicId     String
-  description      String
-  email            String   @unique
+  id                String   @id @default(uuid())
+  name              String
+  websiteUrl        String
+  logoUrl           String
+  logoPublicId      String
+  description       String
+  email             String   @unique
   partnershipReason String
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model PartnerApplication {
+  id                       String            @id @default(uuid())
+  organisationName         String
+  organisationLogoUrl      String
+  organisationLogoPublicId String
+  organisationType         String
+  website                  String
+  organisationSize         String
+  country                  String
+  description              String
+  partnershipTier          String
+  organisationOffer        String
+  projectIdea              String?
+  fullName                 String
+  jobTitle                 String
+  workEmail                String
+  agreedToTerms            Boolean
+  status                   ApplicationStatus @default(Pending)
+  createdAt                DateTime          @default(now())
+  updatedAt                DateTime          @updatedAt
 }
 
 model Review {

@@ -12,4 +12,4 @@ jobs:
       - name: Ping health endpoint
         run: |
           curl --fail --silent --show-error --max-time 300 \
-            https://osk-backend.onrender.com/api/health/
+            https://api.oskigali.org/api/health/
