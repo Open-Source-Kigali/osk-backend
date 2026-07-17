@@ -1,3 +1,4 @@
+import { Prisma } from "../generated/prisma/client";
 import { Request, Response, NextFunction } from "express";
 import memberService from "../services/member.service";
 import response from "../utils/response";
@@ -94,6 +95,12 @@ async function deleteMember(
     await memberService.deleteMember(req.params.id);
     response.success(res, null, 204, "Member deleted successfully");
   } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2025"
+    ) {
+      return response.failure(res, "Member not found", 404);
+    }
     next(err);
   }
 }
