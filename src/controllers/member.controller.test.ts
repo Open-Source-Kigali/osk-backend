@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import request from "supertest";
 import app from "../app";
-import { CodingLevel } from "../generated/prisma/client";
+import { CodingLevel, Prisma } from "../generated/prisma/client";
 
 vi.mock("../services/member.service");
 import memberService from "../services/member.service";
@@ -127,7 +127,12 @@ describe("DELETE /api/members/:id", () => {
   });
 
   it("returns 404 when the member does not exist", async () => {
-    vi.mocked(memberService.findMemberById).mockResolvedValue(null);
+    const error: Prisma.PrismaClientKnownRequestError =
+      new Prisma.PrismaClientKnownRequestError("Record not found", {
+        code: "P2025",
+        clientVersion: "5.0.0",
+      });
+    vi.mocked(memberService.deleteMember).mockRejectedValue(error);
 
     const res = await request(app)
       .delete("/api/members/nonexistent")
