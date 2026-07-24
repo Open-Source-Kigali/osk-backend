@@ -7,7 +7,7 @@ const route = Router();
 
 route.get("/", projectController.findAllProjects);
 route.get("/:id", projectController.findProjectById);
-route.get("/:slug", projectController.findProjectBySlug);
+route.get("/slug/:slug", projectController.findProjectBySlug);
 
 route.use(authMiddleware.requireAdmin);
 route.post("/refresh", projectController.refreshAll);
