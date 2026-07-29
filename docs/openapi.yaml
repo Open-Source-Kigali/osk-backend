@@ -896,6 +896,7 @@ components:
         profilePublicId: { type: string }
         role: { type: string }
         message: { type: string }
+        featured: { type: boolean }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
 
