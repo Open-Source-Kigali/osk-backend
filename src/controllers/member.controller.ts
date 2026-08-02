@@ -10,13 +10,11 @@ import {
   UpdateMemberInput,
 } from "../schemas/member.schema";
 
-async function findAllMembers(
-  _req: Request,
-  res: Response,
-  next: NextFunction,
-) {
+async function findAllMembers(req: Request, res: Response, next: NextFunction) {
   try {
-    const members = await memberService.findAllMembers();
+    const search =
+      typeof req.query.search === "string" ? req.query.search : undefined;
+    const members = await memberService.findAllMembers(search);
     response.success(res, members, 200, "Members retrieved successfully");
   } catch (err) {
     next(err);

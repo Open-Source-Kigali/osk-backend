@@ -1,9 +1,14 @@
 import { prisma } from "../config/prisma";
 import { Partner } from "../generated/prisma/client";
 
-async function findAllPartners() {
+async function findAllPartners(search?: string) {
   return prisma.partner.findMany({
-    orderBy: { name: "asc" },
+    where: search
+      ? { name: { contains: search, mode: "insensitive" } }
+      : undefined,
+    orderBy: {
+      name: "asc",
+    },
   });
 }
 

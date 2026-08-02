@@ -1,8 +1,13 @@
 import { prisma } from "../config/prisma";
 import { Member } from "../generated/prisma/client";
 
-async function findAllMembers() {
-  return prisma.member.findMany({ orderBy: { name: "asc" } });
+async function findAllMembers(search?: string) {
+  return prisma.member.findMany({
+    where: search
+      ? { name: { contains: search, mode: "insensitive" } }
+      : undefined,
+    orderBy: { name: "asc" },
+  });
 }
 
 async function addMember(
