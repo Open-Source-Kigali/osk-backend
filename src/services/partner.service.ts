@@ -1,11 +1,13 @@
 import { prisma } from "../config/prisma";
-import { Partner } from "../generated/prisma/client";
+import { Partner, Prisma } from "../generated/prisma/client";
+import buildSearchFilter from "../utils/Search";
 
 async function findAllPartners(search?: string) {
   return prisma.partner.findMany({
-    where: search
-      ? { name: { contains: search, mode: "insensitive" } }
-      : undefined,
+    where: buildSearchFilter<Prisma.PartnerWhereInput>(search, [
+      "name",
+      "description",
+    ]),
     orderBy: {
       name: "asc",
     },

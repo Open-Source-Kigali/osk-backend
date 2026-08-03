@@ -1,11 +1,13 @@
 import { prisma } from "../config/prisma";
-import { Member } from "../generated/prisma/client";
+import { Member, Prisma } from "../generated/prisma/client";
+import buildSearchFilter from "../utils/Search";
 
 async function findAllMembers(search?: string) {
   return prisma.member.findMany({
-    where: search
-      ? { name: { contains: search, mode: "insensitive" } }
-      : undefined,
+    where: buildSearchFilter<Prisma.MemberWhereInput>(search, [
+      "name",
+      "email",
+    ]),
     orderBy: { name: "asc" },
   });
 }

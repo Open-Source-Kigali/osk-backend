@@ -10,7 +10,7 @@ type ReviewBody = Omit<Review, "id" | "createdAt" | "updatedAt">;
 async function findAllReviews(req: Request, res: Response, next: NextFunction) {
   try {
     const search =
-      typeof req.query.search == "string" ? req.query.search : undefined;
+      typeof req.query.search == "string" ? req.query.search.trim() : undefined;
     const reviews = await reviewService.findAllReviews(search);
     response.success(res, reviews, 200, "Reviews retrieved successfully");
   } catch (err) {

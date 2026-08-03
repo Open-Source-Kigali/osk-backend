@@ -20,7 +20,9 @@ async function findAllPartners(
 ) {
   try {
     const search =
-      typeof req.query.search === "string" ? req.query.search : undefined;
+      typeof req.query.search === "string"
+        ? req.query.search.trim()
+        : undefined;
     const allPartners = await partnerService.findAllPartners(search);
     response.success(res, allPartners, 200, "Partners retrieved successfully");
   } catch (err) {
