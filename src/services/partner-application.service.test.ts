@@ -78,3 +78,21 @@ describe("find partner by id", () => {
     expect(partnerApplicationID).toEqual(mockPartner);
   });
 });
+
+describe("update partner application status", () => {
+  it("updates the application status", async () => {
+    prismaMock.partnerApplication.update.mockResolvedValue(mockPartner);
+    const updatedData =
+      await partnerApplicationService.updatePartnerApplicationStatus(
+        "545",
+        ApplicationStatus.Contacted,
+      );
+
+    expect(prismaMock.partnerApplication.update).toHaveBeenNthCalledWith(1, {
+      where: { id: "545" },
+      data: { status: ApplicationStatus.Contacted },
+      omit: { organisationLogoPublicId: true },
+    });
+    expect(updatedData).toEqual(mockPartner);
+  });
+});
