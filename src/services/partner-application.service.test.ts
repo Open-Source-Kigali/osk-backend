@@ -1,7 +1,7 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApplicationStatus, PrismaClient } from "../generated/prisma/client";
 import { prisma } from "../config/prisma";
-import { DeepMockProxy } from "vitest-mock-extended";
+import { DeepMockProxy, mockReset } from "vitest-mock-extended";
 import partnerApplicationService from "./partner-application.service";
 
 vi.mock(import("../config/prisma"), async () => {
@@ -33,6 +33,7 @@ const mockPartner = {
   createdAt: new Date(),
   updatedAt: new Date(),
 };
+beforeEach(() => mockReset(prismaMock));
 
 describe("find all partners application", () => {
   it("gets all partners applications", async () => {
@@ -41,5 +42,16 @@ describe("find all partners application", () => {
       await partnerApplicationService.findAllPartnerApplications();
 
     expect(applications).toEqual([mockPartner]);
+  });
+});
+
+describe("create parterners application", () => {
+  it("creates a new partners application", async () => {
+    prismaMock.partnerApplication.create.mockResolvedValue(mockPartner);
+    const applicationCreation =
+      await partnerApplicationService.addPartnerApplication(mockPartner);
+
+    expect(prismaMock.partnerApplication.create).toHaveBeenCalledOnce();
+    expect(applicationCreation).toEqual(mockPartner);
   });
 });
