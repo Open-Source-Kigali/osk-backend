@@ -96,3 +96,16 @@ describe("update partner application status", () => {
     expect(updatedData).toEqual(mockPartner);
   });
 });
+
+describe("delete partner application", () => {
+  it("deletes the partner appliacation", async () => {
+    prismaMock.partnerApplication.delete.mockResolvedValue(mockPartner);
+    const updatedData =
+      await partnerApplicationService.deletePartnerApplication("545");
+
+    expect(prismaMock.partnerApplication.delete).toHaveBeenNthCalledWith(1, {
+      where: { id: "545" },
+    });
+    expect(updatedData).toEqual(mockPartner);
+  });
+});
