@@ -130,6 +130,15 @@ describe("find partner by id", () => {
     });
     expect(partnerApplicationID).toEqual(mockPartner);
   });
+
+  it("returns null for not found applications", async () => {
+    prismaMock.partnerApplication.findUnique.mockResolvedValue(null);
+    const result =
+      await partnerApplicationService.findPartnerApplicationById(
+        "nonexistenceid",
+      );
+    expect(result).toBeNull();
+  });
 });
 
 describe("update partner application status", () => {
