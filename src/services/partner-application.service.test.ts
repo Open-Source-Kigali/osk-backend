@@ -55,3 +55,26 @@ describe("create parterners application", () => {
     expect(applicationCreation).toEqual(mockPartner);
   });
 });
+
+describe("find partner by id", () => {
+  it("returns partner with a given application id", async () => {
+    prismaMock.partnerApplication.findUnique.mockResolvedValue(mockPartner);
+    const partnerApplicationID =
+      await partnerApplicationService.findPartnerApplicationById("545");
+
+    expect(prismaMock.partnerApplication.findUnique).toHaveBeenCalledWith({
+      where: { id: "545" },
+      omit: { organisationLogoPublicId: true },
+    });
+    expect(partnerApplicationID).toStrictEqual(mockPartner);
+  });
+
+  it("finds and return application by internal id", async () => {
+    prismaMock.partnerApplication.findUnique.mockResolvedValue(mockPartner);
+    const partnerApplicationID =
+      await partnerApplicationService.findPartnerApplicationById("545");
+
+    expect(prismaMock.partnerApplication.findUnique).toHaveBeenCalledOnce();
+    expect(partnerApplicationID).toEqual(mockPartner);
+  });
+});
