@@ -123,7 +123,7 @@ describe("find partner by id", () => {
   it("finds and return application by internal id", async () => {
     prismaMock.partnerApplication.findUnique.mockResolvedValue(mockPartner);
     const partnerApplicationID =
-      await partnerApplicationService.findPartnerApplicationById("545");
+      await partnerApplicationService.findPartnerApplicationByIdInternal("545");
 
     expect(prismaMock.partnerApplication.findUnique).toHaveBeenCalledWith({
       where: { id: "545" },
