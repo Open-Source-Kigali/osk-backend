@@ -150,7 +150,7 @@ describe("update partner application status", () => {
         ApplicationStatus.Contacted,
       );
 
-    expect(prismaMock.partnerApplication.update).toHaveBeenNthCalledWith(1, {
+    expect(prismaMock.partnerApplication.update).toHaveBeenCalledWith({
       where: { id: "545" },
       data: { status: ApplicationStatus.Contacted },
       omit: { organisationLogoPublicId: true },
