@@ -4,7 +4,7 @@ import { prisma } from "../config/prisma";
 import { DeepMockProxy, mockReset } from "vitest-mock-extended";
 import partnerApplicationService from "./partner-application.service";
 
-vi.mock(import("../config/prisma"), async () => {
+vi.mock("../config/prisma", async () => {
   const { mockDeep } = await import("vitest-mock-extended");
   return { prisma: mockDeep<PrismaClient>() };
 });
@@ -47,18 +47,69 @@ describe("find all partners application", () => {
 
 describe("create parterners application", () => {
   it("creates a new partners application", async () => {
-    prismaMock.partnerApplication.create.mockResolvedValue(mockPartner);
+    const mockPartnerInput = {
+      organisationName: "oneMillion coders",
+      organisationLogoUrl: "https://img.log/45",
+      organisationLogoPublicId: "34",
+      organisationType: "NGO",
+      website: "https://web.com",
+      organisationSize: "medium",
+      country: "Rwanda",
+      description: "lorem ipsum lorem ipsum",
+      partnershipTier: "unkown",
+      organisationOffer: "investement",
+      projectIdea: "osk",
+      fullName: "open source kernel",
+      jobTitle: "CEO",
+      workEmail: "osk@info.com",
+      agreedToTerms: true,
+      email: "partner@info.com",
+      partnershipReason: "some reasons",
+    };
+    const mockCreatedPartner = {
+      ...mockPartnerInput,
+      id: "545",
+      status: ApplicationStatus.Approved,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    prismaMock.partnerApplication.create.mockResolvedValue(mockCreatedPartner);
     const applicationCreation =
-      await partnerApplicationService.addPartnerApplication(mockPartner);
+      await partnerApplicationService.addPartnerApplication(mockPartnerInput);
 
     expect(prismaMock.partnerApplication.create).toHaveBeenCalledOnce();
-    expect(applicationCreation).toEqual(mockPartner);
+    expect(applicationCreation).toEqual(mockCreatedPartner);
   });
 });
 
 describe("find partner by id", () => {
+  const mockPartnerUpdate = {
+    id: "545",
+    organisationName: "oneMillion coders",
+    organisationLogoUrl: "https://img.log/45",
+    organisationLogoPublicId: "34",
+    organisationType: "NGO",
+    website: "https://web.com",
+    organisationSize: "medium",
+    country: "Rwanda",
+    description: "lorem ipsum lorem ipsum",
+    partnershipTier: "unkown",
+    organisationOffer: "investement",
+    projectIdea: "osk",
+    fullName: "open source kernel",
+    jobTitle: "CEO",
+    workEmail: "osk@info.com",
+    agreedToTerms: true,
+    status: ApplicationStatus.Approved,
+    email: "partner@info.com",
+    partnershipReason: "some reasons",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
   it("returns partner with a given application id", async () => {
-    prismaMock.partnerApplication.findUnique.mockResolvedValue(mockPartner);
+    prismaMock.partnerApplication.findUnique.mockResolvedValue(
+      mockPartnerUpdate,
+    );
     const partnerApplicationID =
       await partnerApplicationService.findPartnerApplicationById("545");
 
@@ -66,7 +117,7 @@ describe("find partner by id", () => {
       where: { id: "545" },
       omit: { organisationLogoPublicId: true },
     });
-    expect(partnerApplicationID).toStrictEqual(mockPartner);
+    expect(partnerApplicationID).toEqual(mockPartnerUpdate);
   });
 
   it("finds and return application by internal id", async () => {
@@ -74,7 +125,9 @@ describe("find partner by id", () => {
     const partnerApplicationID =
       await partnerApplicationService.findPartnerApplicationById("545");
 
-    expect(prismaMock.partnerApplication.findUnique).toHaveBeenCalledOnce();
+    expect(prismaMock.partnerApplication.findUnique).toHaveBeenCalledWith({
+      where: { id: "545" },
+    });
     expect(partnerApplicationID).toEqual(mockPartner);
   });
 });
