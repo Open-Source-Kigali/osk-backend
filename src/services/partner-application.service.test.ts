@@ -37,7 +37,7 @@ const mockPartner = {
 };
 beforeEach(() => mockReset(prismaMock));
 
-describe("find all partners application", () => {
+describe("find all partner application", () => {
   it("gets all partners applications", async () => {
     prismaMock.partnerApplication.findMany.mockResolvedValue([mockPartner]);
     const applications =
@@ -47,8 +47,8 @@ describe("find all partners application", () => {
   });
 });
 
-describe("create parterners application", () => {
-  it("creates a new partners application", async () => {
+describe("create parterner application", () => {
+  it("creates a new partner application", async () => {
     const mockPartnerInput = {
       organisationName: "oneMillion coders",
       organisationLogoUrl: "https://img.log/45",
@@ -133,7 +133,7 @@ describe("find partner by id", () => {
     expect(partnerApplicationID).toEqual(mockPartner);
   });
 
-  it("returns null for not found applications", async () => {
+  it("returns null for not found application", async () => {
     prismaMock.partnerApplication.findUnique.mockResolvedValue(null);
     const result =
       await partnerApplicationService.findPartnerApplicationById(
