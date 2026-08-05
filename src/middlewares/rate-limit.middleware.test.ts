@@ -11,7 +11,7 @@ vi.mock("../config/env", () => ({
 }));
 
 import authMiddleware from "./auth.middleware";
-import { createRateLimiter } from "./rate-limit.middleware";
+import { adminKeyGenerator, createRateLimiter } from "./rate-limit.middleware";
 
 describe("rate limiting middleware", () => {
   it("returns 429 when the public limit is exceeded and includes legacy headers", async () => {
@@ -54,5 +54,26 @@ describe("rate limiting middleware", () => {
     expect(responses.slice(0, 5).every((res) => res.status === 403)).toBe(true);
     expect(responses[5].status).toBe(429);
     expect(responses[5].headers["x-ratelimit-limit"]).toBe("5");
+  });
+
+  it("keys the admin limiter by x-api-key", async () => {
+    const app = express();
+    const limiter = createRateLimiter({
+      limit: 1,
+      prefix: "test-admin",
+      keyGenerator: adminKeyGenerator,
+    });
+
+    app.get("/admin", limiter, (_req, res) => {
+      res.json({ ok: true });
+    });
+
+    const first = await request(app).get("/admin").set("x-api-key", "key-a");
+    const second = await request(app).get("/admin").set("x-api-key", "key-b");
+    const third = await request(app).get("/admin").set("x-api-key", "key-a");
+
+    expect(first.status).toBe(200);
+    expect(second.status).toBe(200);
+    expect(third.status).toBe(429);
   });
 });

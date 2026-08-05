@@ -1,5 +1,5 @@
 import type { Request, RequestHandler, Response } from "express";
-import rateLimit, { ipKeyGenerator } from "express-rate-limit";
+import rateLimit from "express-rate-limit";
 import { createClient, type RedisClientType } from "redis";
 import { RedisStore } from "rate-limit-redis";
 
@@ -12,6 +12,14 @@ let redisClientPromise: Promise<RedisClientType> | undefined;
 
 function getRequestIp(req: Request) {
   return req.ip ?? req.socket.remoteAddress ?? "127.0.0.1";
+}
+
+export function publicKeyGenerator(req: Request) {
+  return getRequestIp(req);
+}
+
+export function adminKeyGenerator(req: Request) {
+  return String(req.header("x-api-key") ?? getRequestIp(req));
 }
 
 async function getRedisClient() {
@@ -112,20 +120,19 @@ export function runLimiter(
 export const publicRateLimit = createRateLimiter({
   limit: 100,
   prefix: "public",
-  keyGenerator: (req) => ipKeyGenerator(getRequestIp(req)),
+  keyGenerator: publicKeyGenerator,
 });
 
 export const adminRateLimit = createRateLimiter({
   limit: 1000,
   prefix: "admin",
-  keyGenerator: (req) =>
-    String(req.header("x-api-key") || ipKeyGenerator(getRequestIp(req))),
+  keyGenerator: adminKeyGenerator,
 });
 
 export const authAttemptRateLimit = createRateLimiter({
   limit: 5,
   prefix: "auth",
-  keyGenerator: (req) => ipKeyGenerator(getRequestIp(req)),
+  keyGenerator: publicKeyGenerator,
 });
 
 export { createRateLimiter };

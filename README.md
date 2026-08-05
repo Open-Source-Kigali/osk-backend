@@ -17,6 +17,8 @@ Backend for the official website of [Open Source Kigali](https://github.com/Open
 
 ## Getting started
 
+Requires Node.js 20 or newer.
+
 > **TL;DR** — clone the repo and get dependencies, setup your `.env` file, and you're up! Read more below for database setup, environment variables, project structure, and scripts. Here are quick commands to get started.
 
 ```bash
@@ -41,6 +43,7 @@ See `.env.example` for the full list.
 | `NODE_ENV`              | no                   | `development` or `production`                                   |
 | `DATABASE_URL`          | yes                  | PostgreSQL connection string                                    |
 | `ADMIN_API_KEY`         | yes                  | Shared key for admin-only endpoints; sent as `x-api-key` header |
+| `REDIS_URL`             | in production        | Redis connection string used by rate limiting                   |
 | `CORS_ORIGINS`          | yes                  | Comma-separated list of allowed origins                         |
 | `CLOUDINARY_CLOUD_NAME` | for uploads          | Cloudinary cloud name                                           |
 | `CLOUDINARY_API_KEY`    | for uploads          | Cloudinary API key                                              |
