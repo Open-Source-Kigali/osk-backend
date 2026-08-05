@@ -1,13 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApplicationStatus, PrismaClient } from "../generated/prisma/client";
-import { prisma } from "../config/prisma";
 import { DeepMockProxy, mockReset } from "vitest-mock-extended";
-import partnerApplicationService from "./partner-application.service";
 
 vi.mock("../config/prisma", async () => {
   const { mockDeep } = await import("vitest-mock-extended");
   return { prisma: mockDeep<PrismaClient>() };
 });
+
+import { prisma } from "../config/prisma";
+import partnerApplicationService from "./partner-application.service";
+
 const prismaMock = prisma as DeepMockProxy<PrismaClient>;
 
 const mockPartner = {
