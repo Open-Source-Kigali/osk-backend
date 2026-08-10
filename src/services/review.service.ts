@@ -4,7 +4,7 @@ import { Review } from "../generated/prisma/client";
 async function findAllReviews(featuredReviews?: boolean): Promise<Review[]> {
   return prisma.review.findMany({
     where: { featured: featuredReviews },
-    orderBy: { createdAt: "asc" },
+    orderBy: { createdAt: "desc" },
   });
 }
 

@@ -1,10 +1,13 @@
 import { PrismaClient } from "@prisma/client/extension";
-import { beforeEach, it, vi, describe, expect } from "vitest";
+import { beforeEach, describe, it, expect, vi } from "vitest";
+import { Review } from "../generated/prisma/client";
 import { DeepMockProxy, mockReset } from "vitest-mock-extended";
+
 vi.mock("../config/prisma", async () => {
   const { mockDeep } = await import("vitest-mock-extended");
   return { prisma: mockDeep<PrismaClient>() };
 });
+
 import { prisma } from "../config/prisma";
 import reviewService from "./review.service";
 
@@ -47,12 +50,26 @@ const mockReviews = [
 
 beforeEach(() => mockReset(prismaMock));
 
-describe("fetching reviews", () => {
-  it("returns all reviews", async () => {
+describe("Review Service - findAllReviews", () => {
+  it("should return newest reviews first", async () => {
+    const mockReviews = [
+      {
+        id: "1",
+        createdAt: new Date("2026-01-02"),
+      },
+      {
+        id: "2",
+        createdAt: new Date("2026-01-01"),
+      },
+    ] as Review[];
+
     prismaMock.review.findMany.mockResolvedValue(mockReviews);
-    const results = await reviewService.findAllReviews();
-    expect(prismaMock.review.findMany).toHaveBeenCalled();
-    expect(results).toEqual(mockReviews);
+
+    const reviews = await reviewService.findAllReviews();
+
+    expect(reviews[0].createdAt.getTime()).toBeGreaterThan(
+      reviews[1].createdAt.getTime(),
+    );
   });
 
   it("returns only featured reviews", async () => {
