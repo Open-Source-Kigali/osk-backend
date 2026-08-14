@@ -8,7 +8,7 @@ async function findAllReviews(search?: string): Promise<Review[]> {
       "name",
       "message",
     ]),
-    orderBy: { createdAt: "asc" },
+    orderBy: { createdAt: "desc" },
   });
 }
 
