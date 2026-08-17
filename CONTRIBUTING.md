@@ -18,7 +18,7 @@ By participating, you agree to follow our [Code of Conduct](./CODE_OF_CONDUCT.md
 ### Setup
 
 ```bash
-git clone https://github.com/Open-Source-Kigali/oskbackend.git
+git clone https://github.com/Open-Source-Kigali/osk-backend.git
 cd oskbackend
 npm install
 cp .env.example .env
@@ -36,6 +36,7 @@ See `.env.example` for the full list. The required ones for local dev are:
 - `DATABASE_URL` - Postgres connection string
 - `ADMIN_API_KEY` - any long string; pass it as the `x-api-key` header to call admin-only endpoints
 - `CORS_ORIGINS` - comma-separated list of allowed origins
+- `REDIS_URL` - required in production when Redis-backed rate limiting is enabled
 
 Cloudinary and GitHub variables are only needed if you're touching uploads or project refresh.
 
@@ -115,8 +116,8 @@ If you add or change a route:
 
 Use the issue templates:
 
-- [Bug report](.github/ISSUE_TEMPLATE/bug_report.yml)
-- [Feature request](.github/ISSUE_TEMPLATE/feature_request.yml)
+- [Bug report](.github/ISSUE_TEMPLATE/bug_report.md)
+- [Feature request](.github/ISSUE_TEMPLATE/feature_request.md)
 
 Search existing issues first to avoid duplicates.
 
