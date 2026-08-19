@@ -735,6 +735,11 @@ paths:
         "500": { $ref: "#/components/responses/InternalError" }
 
   /reviews:
+    parameters:
+        - in: path
+          name: featured
+          schema: { type: boolean}
+          description: "Filter reviews by featured status. Provide true or false; omit to return all."
     get:
       tags: [Reviews]
       summary: List all reviews
@@ -896,6 +901,7 @@ components:
         profilePublicId: { type: string }
         role: { type: string }
         message: { type: string }
+        featured: { type: boolean }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
 
