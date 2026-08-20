@@ -11,7 +11,7 @@ const route = Router();
 
 route.get("/", publicRateLimit, projectController.findAllProjects);
 route.get("/:id", publicRateLimit, projectController.findProjectById);
-route.get("/:slug", publicRateLimit, projectController.findProjectBySlug);
+route.get("/slug/:slug", publicRateLimit, projectController.findProjectBySlug);
 
 route.use(authMiddleware.requireAdmin, adminRateLimit);
 route.post("/refresh", projectController.refreshAll);
