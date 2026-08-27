@@ -7,13 +7,11 @@ import trimStrings from "../utils/trim-strings";
 
 type ReviewBody = Omit<Review, "id" | "createdAt" | "updatedAt">;
 
-async function findAllReviews(
-  _req: Request,
-  res: Response,
-  next: NextFunction,
-) {
+async function findAllReviews(req: Request, res: Response, next: NextFunction) {
   try {
-    const reviews = await reviewService.findAllReviews();
+    const search =
+      typeof req.query.search == "string" ? req.query.search.trim() : undefined;
+    const reviews = await reviewService.findAllReviews(search);
     response.success(res, reviews, 200, "Reviews retrieved successfully");
   } catch (err) {
     next(err);

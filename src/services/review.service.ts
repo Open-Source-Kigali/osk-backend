@@ -1,8 +1,15 @@
 import { prisma } from "../config/prisma";
-import { Review } from "../generated/prisma/client";
+import { Review, Prisma } from "../generated/prisma/client";
+import buildSearchFilter from "../utils/Search";
 
-async function findAllReviews(): Promise<Review[]> {
-  return prisma.review.findMany({ orderBy: { createdAt: "desc" } });
+async function findAllReviews(search?: string): Promise<Review[]> {
+  return prisma.review.findMany({
+    where: buildSearchFilter<Prisma.ReviewWhereInput>(search, [
+      "name",
+      "message",
+    ]),
+    orderBy: { createdAt: "desc" },
+  });
 }
 
 async function findReviewById(id: string): Promise<Review | null> {
