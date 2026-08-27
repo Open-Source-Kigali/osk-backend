@@ -18,7 +18,9 @@ type EventBody = Omit<Event, "id" | "createdAt" | "updatedAt">;
 async function findAllEvents(_req: Request, res: Response, next: NextFunction) {
   try {
     const featured = _req.query.featured === "true" ? true : undefined;
-    const allEvents = await eventService.findAllEvents(featured);
+    const category =
+      typeof _req.query.category === "string" ? _req.query.category : undefined;
+    const allEvents = await eventService.findAllEvents(featured, category);
     response.success(res, allEvents, 200, "Events retrieved successfully");
   } catch (err) {
     next(err);
