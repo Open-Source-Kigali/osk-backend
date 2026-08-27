@@ -7,6 +7,7 @@ export const env = {
   nodeEnv: process.env.NODE_ENV || "development",
   databaseUrl: process.env.DATABASE_URL || "postgresql://localhost:5432/mydb",
   adminApiKey: process.env.ADMIN_API_KEY || "",
+  redisUrl: process.env.REDIS_URL || "",
   corsOrigins: (process.env.CORS_ORIGINS || "http://localhost:5173")
     .split(",")
     .map((origin) => origin.trim()),
