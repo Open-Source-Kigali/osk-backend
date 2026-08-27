@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "dist/server.js",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "postinstall": "prisma generate",
     "dev": "nodemon --exec ts-node src/server.ts",
@@ -21,16 +24,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Open-Source-Kigali/oskbackend.git"
+    "url": "git+https://github.com/Open-Source-Kigali/osk-backend.git"
   },
   "keywords": [],
   "author": "",
   "license": "MIT",
   "type": "commonjs",
   "bugs": {
-    "url": "https://github.com/Open-Source-Kigali/oskbackend/issues"
+    "url": "https://github.com/Open-Source-Kigali/osk-backend/issues"
   },
-  "homepage": "https://github.com/Open-Source-Kigali/oskbackend#readme",
+  "homepage": "https://github.com/Open-Source-Kigali/osk-backend#readme",
   "lint-staged": {
     "**/*.{ts,js}": [
       "eslint --fix",
@@ -44,8 +47,11 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.6.1",
     "multer": "^2.1.1",
     "pg": "^8.20.0",
+    "rate-limit-redis": "^6.0.0",
+    "redis": "^6.2.0",
     "swagger-ui-express": "^5.0.1",
     "yaml": "^2.8.3",
     "zod": "^4.4.3"

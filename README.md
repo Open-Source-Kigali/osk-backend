@@ -17,6 +17,8 @@ Backend for the official website of [Open Source Kigali](https://github.com/Open
 
 ## Getting started
 
+Requires Node.js 20 or newer.
+
 > **TL;DR** — clone the repo and get dependencies, setup your `.env` file, and you're up! Read more below for database setup, environment variables, project structure, and scripts. Here are quick commands to get started.
 
 ```bash
@@ -41,6 +43,7 @@ See `.env.example` for the full list.
 | `NODE_ENV`              | no                   | `development` or `production`                                   |
 | `DATABASE_URL`          | yes                  | PostgreSQL connection string                                    |
 | `ADMIN_API_KEY`         | yes                  | Shared key for admin-only endpoints; sent as `x-api-key` header |
+| `REDIS_URL`             | in production        | Redis connection string used by rate limiting                   |
 | `CORS_ORIGINS`          | yes                  | Comma-separated list of allowed origins                         |
 | `CLOUDINARY_CLOUD_NAME` | for uploads          | Cloudinary cloud name                                           |
 | `CLOUDINARY_API_KEY`    | for uploads          | Cloudinary API key                                              |
@@ -109,6 +112,116 @@ Admin-only endpoints require an `x-api-key` header matching `ADMIN_API_KEY`.
 [![Launch Swagger UI](https://img.shields.io/badge/Swagger%20UI-Launch%20API%20Docs-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)](http://localhost:3000/api/docs)
 
 The interactive Swagger UI should be available at `http://localhost:3000/api/docs` once the server is running. The underlying spec lives at [`docs/openapi.yaml`](./docs/openapi.yaml). Admin-only endpoints require an `x-api-key` header matching `ADMIN_API_KEY`.
+
+### Quick examples
+
+All endpoints are prefixed with `/api` and return a consistent envelope:
+`{ "success": boolean, "message": string, "data": ... }`. Errors return
+`{ "success": false, "message": "...", "data": null }`.
+
+**`GET /api/events`** — list events (public, supports `?featured=true`)
+
+```json
+{
+  "success": true,
+  "message": "Events retrieved successfully",
+  "data": [
+    {
+      "id": "6f1c9d2e-8a4b-4c3d-9e2f-1a2b3c4d5e6f",
+      "title": "OSK Monthly Meetup",
+      "tagline": "Open source, together",
+      "imageUrl": "https://res.cloudinary.com/.../events/meetup.jpg",
+      "description": "Talks, demos, and networking for open source enthusiasts.",
+      "category": "meetup",
+      "mode": "in-person",
+      "featured": true,
+      "capacity": 100,
+      "registered": 42,
+      "date": "2026-09-12T17:00:00.000Z",
+      "endDate": null,
+      "timeLabel": "5:00 PM - 8:00 PM",
+      "location": "Norrsken House Kigali",
+      "speakers": ["Jane Doe"],
+      "registerUrl": "https://example.com/register",
+      "createdAt": "2026-08-01T09:00:00.000Z",
+      "updatedAt": "2026-08-01T09:00:00.000Z"
+    }
+  ]
+}
+```
+
+**`GET /api/projects`** — list projects (public)
+
+```json
+{
+  "success": true,
+  "message": "Projects retrieved successfully",
+  "data": [
+    {
+      "id": "0a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d",
+      "slug": "osk-backend",
+      "repoOwner": "Open-Source-Kigali",
+      "repoName": "osk-backend",
+      "imageUrl": "https://res.cloudinary.com/.../projects/osk-backend.png",
+      "tagline": "Backend for the OSK website",
+      "category": "web",
+      "status": "active",
+      "featured": true,
+      "maintainer": "Open Source Kigali",
+      "langColor": "#3178c6",
+      "ghDescription": "Backend for the official OSK website",
+      "ghLanguage": "TypeScript",
+      "ghTopics": ["nodejs", "express", "prisma"],
+      "ghStars": 12,
+      "ghForks": 34,
+      "ghOpenIssues": 5,
+      "ghContributors": 8,
+      "ghPullRequests": 3,
+      "ghPushedAt": "2026-08-05T14:30:00.000Z",
+      "lastFetchedAt": "2026-08-06T00:00:00.000Z",
+      "createdAt": "2026-07-01T10:00:00.000Z",
+      "updatedAt": "2026-08-06T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+**`POST /api/members`** — join as a member (public)
+
+Request:
+
+```json
+{
+  "name": "Jane Doe",
+  "email": "jane@example.com",
+  "githubUsername": "janedoe",
+  "orgName": "ALU",
+  "joinReason": "I want to contribute to open source projects in Kigali.",
+  "codingLevel": "intermediate"
+}
+```
+
+Response (`201 Created`):
+
+```json
+{
+  "success": true,
+  "message": "Member created successfully",
+  "data": {
+    "id": "9b8a7c6d-5e4f-3a2b-1c0d-9e8f7a6b5c4d",
+    "name": "Jane Doe",
+    "email": "jane@example.com",
+    "githubUsername": "janedoe",
+    "orgName": "ALU",
+    "joinReason": "I want to contribute to open source projects in Kigali.",
+    "codingLevel": "intermediate",
+    "createdAt": "2026-08-08T21:45:00.000Z",
+    "updatedAt": "2026-08-08T21:45:00.000Z"
+  }
+}
+```
+
+For the full list of endpoints, schemas, and admin operations, see the Swagger UI or [`docs/openapi.yaml`](./docs/openapi.yaml).
 
 ## Contributing
 

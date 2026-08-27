@@ -7,6 +7,7 @@ async function findAllEvents(featured?: boolean, category?: string) {
       ...(featured !== undefined && { featured }),
       ...(category !== undefined && { category }),
     },
+    where: featured !== undefined ? { featured } : undefined,
     orderBy: { date: "asc" },
     omit: { imagePublicId: true },
   });
