@@ -1,9 +1,12 @@
 import { prisma } from "../config/prisma";
 import { Event, Prisma } from "../generated/prisma/client";
 
-async function findAllEvents(featured?: boolean) {
+async function findAllEvents(featured?: boolean, category?: string) {
   return prisma.event.findMany({
-    where: featured !== undefined ? { featured } : undefined,
+    where: {
+      ...(featured !== undefined && { featured }),
+      ...(category !== undefined && { category }),
+    },
     orderBy: { date: "desc" },
     omit: { imagePublicId: true },
   });
