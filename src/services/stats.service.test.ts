@@ -89,6 +89,25 @@ describe("getStats contributors count", () => {
 
     expect(stats.contributors).toBe(0);
   });
+
+  it("excludes bot accounts ending with [bot]", async () => {
+    mockTransaction();
+
+    ghMock
+      .mockResolvedValueOnce(
+        contributorsResponse(["alice", "github-actions[bot]", "bob"]),
+      )
+      .mockResolvedValueOnce(contributorsResponse(["dependabot[bot]"]))
+      .mockResolvedValueOnce(contributorsResponse(["alice"]))
+      .mockResolvedValueOnce(contributorsResponse([]))
+      .mockResolvedValueOnce(contributorsResponse(["renovate[bot]"]))
+      .mockResolvedValueOnce(contributorsResponse(["carol"]))
+      .mockResolvedValueOnce(contributorsResponse(["alice"]));
+
+    const stats = await statsService.getStats();
+
+    expect(stats.contributors).toBe(3);
+  });
 });
 
 describe("getStats database stats", () => {

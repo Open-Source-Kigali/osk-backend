@@ -13,6 +13,8 @@ const OSK_REPOS = [
 
 const MEMBERS_OFFSET = 150;
 
+const BOT_SUFFIX = "[bot]";
+
 async function getContributorsCount(): Promise<number> {
   const results = await Promise.allSettled(
     OSK_REPOS.map((repo) =>
@@ -25,7 +27,9 @@ async function getContributorsCount(): Promise<number> {
   const logins = new Set<string>();
   for (const result of results) {
     if (result.status === "fulfilled" && Array.isArray(result.value)) {
-      result.value.forEach((c) => logins.add(c.login));
+      result.value.forEach((c) => {
+        if (!c.login.endsWith(BOT_SUFFIX)) logins.add(c.login);
+      });
     }
   }
   return logins.size;
