@@ -38,7 +38,10 @@ describe("GET /api/events", () => {
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.data).toHaveLength(1);
-    expect(vi.mocked(eventService.findAllEvents)).toHaveBeenCalledWith(true);
+    expect(vi.mocked(eventService.findAllEvents)).toHaveBeenCalledWith(
+      true,
+      undefined,
+    );
   });
 
   it("returns 200 and fetches all events when featured is not provided", async () => {
@@ -50,6 +53,46 @@ describe("GET /api/events", () => {
     expect(res.body.success).toBe(true);
     expect(vi.mocked(eventService.findAllEvents)).toHaveBeenCalledWith(
       undefined,
+      undefined,
+    );
+  });
+  it("returns 200 and filters events by category when category query param is provided", async () => {
+    vi.mocked(eventService.findAllEvents).mockResolvedValue([mockEvent]);
+    const res = await request(app).get("/api/events?category=community");
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toHaveLength(1);
+    expect(vi.mocked(eventService.findAllEvents)).toHaveBeenCalledWith(
+      undefined,
+      "community",
+    );
+  });
+  it("returns 200 and filters events by category when category query parameter is provided", async () => {
+    vi.mocked(eventService.findAllEvents).mockResolvedValue([mockEvent]);
+
+    const res = await request(app).get("/api/events?category=workshop");
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toHaveLength(1);
+    expect(vi.mocked(eventService.findAllEvents)).toHaveBeenCalledWith(
+      undefined,
+      "workshop",
+    );
+  });
+  it("returns 200 and filters by both featured and category when both parameters are provided", async () => {
+    vi.mocked(eventService.findAllEvents).mockResolvedValue([mockEvent]);
+
+    const res = await request(app).get(
+      "/api/events?featured=true&category=workshop",
+    );
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toHaveLength(1);
+    expect(vi.mocked(eventService.findAllEvents)).toHaveBeenCalledWith(
+      true,
+      "workshop",
     );
   });
 });
