@@ -35,11 +35,13 @@ const mockEvent = {
   updatedAt: new Date(),
 };
 
+const { imagePublicId: _imagePublicId, ...mockPublicEvent } = mockEvent;
+
 beforeEach(() => mockReset(prismaMock));
 
 describe("findAllEvents", () => {
   it("returns all events when no featured filter is given", async () => {
-    prismaMock.event.findMany.mockResolvedValue([mockEvent]);
+    prismaMock.event.findMany.mockResolvedValue([mockPublicEvent] as never);
 
     const result = await eventService.findAllEvents();
 
@@ -48,11 +50,11 @@ describe("findAllEvents", () => {
       orderBy: { date: "asc" },
       omit: { imagePublicId: true },
     });
-    expect(result).toEqual([mockEvent]);
+    expect(result).toEqual([mockPublicEvent]);
   });
 
   it("returns only featured events when featured is true", async () => {
-    prismaMock.event.findMany.mockResolvedValue([mockEvent]);
+    prismaMock.event.findMany.mockResolvedValue([mockPublicEvent] as never);
 
     const result = await eventService.findAllEvents(true);
 
@@ -61,7 +63,7 @@ describe("findAllEvents", () => {
       orderBy: { date: "asc" },
       omit: { imagePublicId: true },
     });
-    expect(result).toEqual([mockEvent]);
+    expect(result).toEqual([mockPublicEvent]);
   });
 
   it("returns an empty list when no events match", async () => {
@@ -80,7 +82,7 @@ describe("findAllEvents", () => {
 
 describe("findEventById", () => {
   it("returns the event when found, omitting imagePublicId", async () => {
-    prismaMock.event.findUnique.mockResolvedValue(mockEvent);
+    prismaMock.event.findUnique.mockResolvedValue(mockPublicEvent as never);
 
     const result = await eventService.findEventById("1");
 
@@ -88,7 +90,7 @@ describe("findEventById", () => {
       where: { id: "1" },
       omit: { imagePublicId: true },
     });
-    expect(result).toEqual(mockEvent);
+    expect(result).toEqual(mockPublicEvent);
   });
 
   it("returns null when not found", async () => {
