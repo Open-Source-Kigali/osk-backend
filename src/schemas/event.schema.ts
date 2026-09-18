@@ -1,5 +1,23 @@
 import { z } from "zod";
 
+const validateDateRange = (data: {
+  date?: Date | null;
+  endDate?: Date | null;
+}) => {
+  if (!data.date || !data.endDate) {
+    return true;
+  }
+  if (isNaN(data.date.getTime()) || isNaN(data.endDate.getTime())) {
+    return true;
+  }
+  return data.endDate.getTime() >= data.date.getTime();
+};
+
+const dateRangeRefine = {
+  message: "End date must be on or after the start date",
+  path: ["endDate"],
+};
+
 const eventBaseSchema = z.object({
   title: z.string().min(1, "Title is required").trim(),
   tagline: z.string().trim().optional().nullable(),
@@ -75,21 +93,23 @@ const eventBaseSchema = z.object({
   registerUrl: z.string().trim().optional().nullable(),
 });
 
-export const createEventSchema = eventBaseSchema.refine(
-  (data) => {
-    if (
-      typeof data.capacity === "number" &&
-      typeof data.registered === "number"
-    ) {
-      return data.capacity >= data.registered;
-    }
-    return true;
-  },
-  {
-    message: "Registered count cannot exceed capacity",
-    path: ["registered"],
-  },
-);
+export const createEventSchema = eventBaseSchema
+  .refine(
+    (data) => {
+      if (
+        typeof data.capacity === "number" &&
+        typeof data.registered === "number"
+      ) {
+        return data.capacity >= data.registered;
+      }
+      return true;
+    },
+    {
+      message: "Registered count cannot exceed capacity",
+      path: ["registered"],
+    },
+  )
+  .refine(validateDateRange, dateRangeRefine);
 
 export const updateEventSchema = eventBaseSchema
   .omit({ mode: true, featured: true, speakers: true })
@@ -123,7 +143,8 @@ export const updateEventSchema = eventBaseSchema
           .map((s) => s.trim())
           .filter(Boolean);
       }),
-  });
+  })
+  .refine(validateDateRange, dateRangeRefine);
 
 export type CreateEventInput = z.infer<typeof createEventSchema>;
 export type UpdateEventInput = z.infer<typeof updateEventSchema>;
