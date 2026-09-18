@@ -14,12 +14,16 @@ import {
 type PartnerBody = Omit<Partner, "id" | "createdAt" | "updatedAt">;
 
 async function findAllPartners(
-  _req: Request,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) {
   try {
-    const allPartners = await partnerService.findAllPartners();
+    const search =
+      typeof req.query.search === "string"
+        ? req.query.search.trim()
+        : undefined;
+    const allPartners = await partnerService.findAllPartners(search);
     response.success(res, allPartners, 200, "Partners retrieved successfully");
   } catch (err) {
     next(err);
