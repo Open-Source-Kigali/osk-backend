@@ -28,7 +28,7 @@ async function getContributorsCount(): Promise<number> {
       result.value.forEach((c) => logins.add(c.login));
     }
   }
-  return results.length;
+  return logins.size;
 }
 
 async function getStats() {

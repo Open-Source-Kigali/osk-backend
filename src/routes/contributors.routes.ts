@@ -4,10 +4,14 @@ import {
   refresh,
 } from "../controllers/contributors.controller";
 import auth from "../middlewares/auth.middleware";
+import {
+  adminRateLimit,
+  publicRateLimit,
+} from "../middlewares/rate-limit.middleware";
 
 const router = Router();
 
-router.get("/", getContributors);
-router.post("/refresh", auth.requireAdmin, refresh);
+router.get("/", publicRateLimit, getContributors);
+router.post("/refresh", auth.requireAdmin, adminRateLimit, refresh);
 
 export default router;

@@ -588,7 +588,7 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "500": { $ref: "#/components/responses/InternalError" }
 
-  /projects/{slug}:
+  /projects/slug/{slug}:
     parameters:
       - in: path
         name: slug

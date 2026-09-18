@@ -10,6 +10,7 @@ import {
   CreateEventInput,
   UpdateEventInput,
 } from "../schemas/event.schema";
+import { prisma } from "../config/prisma";
 
 const FOLDER = "open-source-kigali/events";
 
@@ -18,7 +19,24 @@ type EventBody = Omit<Event, "id" | "createdAt" | "updatedAt">;
 async function findAllEvents(_req: Request, res: Response, next: NextFunction) {
   try {
     const featured = _req.query.featured === "true" ? true : undefined;
-    const allEvents = await eventService.findAllEvents(featured);
+    const category =
+      typeof _req.query.category === "string" ? _req.query.category : undefined;
+
+    if (category) {
+      const existingCategory = await prisma.event.findFirst({
+        where: { category },
+        select: { category: true },
+      });
+
+      if (!existingCategory) {
+        return response.failure(
+          res,
+          `Invalid Category: '${category}'. No events found under this Category.`,
+          400,
+        );
+      }
+    }
+    const allEvents = await eventService.findAllEvents(featured, category);
     response.success(res, allEvents, 200, "Events retrieved successfully");
   } catch (err) {
     next(err);

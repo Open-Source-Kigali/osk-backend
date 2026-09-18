@@ -5,7 +5,6 @@ export default defineConfig({
     include: ["src/**/*.test.ts"],
     globals: true,
     environment: "node",
-    include: ["src/**/*.test.ts"],
     setupFiles: ["./vitest.setup.ts"],
     exclude: ["dist/**", "node_modules/**"],
     coverage: {
@@ -13,6 +12,5 @@ export default defineConfig({
       reporter: ["text", "lcov"],
       exclude: ["src/generated/**", "dist/**", "vitest.setup.ts"],
     },
-    exclude: ["dist/**"],
   },
 });
