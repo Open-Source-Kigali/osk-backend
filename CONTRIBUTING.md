@@ -54,7 +54,7 @@ We use a three-branch flow: `dev` → `staging` → `main`.
   - `refactor/<short-description>` for internal restructuring
   - `chore/<short-description>` for tooling, deps, infra
 
-## Commit messages
+## Comit messages
 
 We use [Conventional Commits](https://www.conventionalcommits.org/). The first line should be:
 
@@ -72,7 +72,7 @@ Examples from this repo:
 
 Keep the summary under 72 characters. Add a longer body if the change needs context.
 
-## Code style
+## Code styles
 
 - TypeScript strict mode is on; please keep it that way.
 - Controllers export named functions in a default object (see `src/controllers/event.controller.ts` for the pattern). Prefer clarity over cleverness.
