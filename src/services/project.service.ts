@@ -3,8 +3,8 @@ import { Prisma, Project } from "../generated/prisma/client";
 import { RepoSnapshot } from "./github.service";
 
 async function findAllProjects(
-  limit: number,
-  page: number,
+  limit: number = 10,
+  page: number = 1,
   featured?: boolean,
   category?: string,
 ) {

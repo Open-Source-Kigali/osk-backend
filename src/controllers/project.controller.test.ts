@@ -45,6 +45,8 @@ describe("GET /api/projects", () => {
     expect(res.body.success).toBe(true);
     expect(res.body.data).toHaveLength(1);
     expect(vi.mocked(projectService.findAllProjects)).toHaveBeenCalledWith(
+      10,
+      1,
       true,
       undefined,
     );
@@ -63,6 +65,8 @@ describe("GET /api/projects", () => {
       category: mockProject.category,
     });
     expect(vi.mocked(projectService.findAllProjects)).toHaveBeenCalledWith(
+      10,
+      1,
       undefined,
       undefined,
     );
@@ -81,6 +85,8 @@ describe("GET /api/projects", () => {
       category: mockProject.category,
     });
     expect(vi.mocked(projectService.findAllProjects)).toHaveBeenCalledWith(
+      10,
+      1,
       undefined,
       "education",
     );

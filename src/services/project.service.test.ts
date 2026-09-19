@@ -53,6 +53,8 @@ describe("findAllProjects", () => {
     expect(prismaMock.project.findMany).toHaveBeenCalledWith({
       where: undefined,
       orderBy: { createdAt: "desc" },
+      skip: 0,
+      take: 10,
       omit: { imagePublicId: true },
     });
     expect(result).toEqual([mockProject]);
@@ -66,6 +68,8 @@ describe("findAllProjects", () => {
     expect(prismaMock.project.findMany).toHaveBeenCalledWith({
       where: { featured: true },
       orderBy: { createdAt: "desc" },
+      skip: 0,
+      take: 10,
       omit: { imagePublicId: true },
     });
   });
@@ -78,6 +82,8 @@ describe("findAllProjects", () => {
     expect(prismaMock.project.findMany).toHaveBeenCalledWith({
       where: { category: { equals: "backend" } },
       orderBy: { createdAt: "desc" },
+      skip: 0,
+      take: 10,
       omit: { imagePublicId: true },
     });
   });
@@ -90,6 +96,8 @@ describe("findAllProjects", () => {
     expect(prismaMock.project.findMany).toHaveBeenCalledWith({
       where: { featured: true, category: { equals: "backend" } },
       orderBy: { createdAt: "desc" },
+      skip: 0,
+      take: 10,
       omit: { imagePublicId: true },
     });
   });
