@@ -2,7 +2,12 @@ import { prisma } from "../config/prisma";
 import { Prisma, Project } from "../generated/prisma/client";
 import { RepoSnapshot } from "./github.service";
 
-async function findAllProjects(featured?: boolean, category?: string) {
+async function findAllProjects(
+  limit: number,
+  page: number,
+  featured?: boolean,
+  category?: string,
+) {
   const where: Prisma.ProjectWhereInput = {};
 
   if (featured !== undefined) {
@@ -13,9 +18,13 @@ async function findAllProjects(featured?: boolean, category?: string) {
     where.category = { equals: category };
   }
 
+  const skip = (page - 1) * limit;
+
   return prisma.project.findMany({
     where: Object.keys(where).length > 0 ? where : undefined,
     orderBy: { createdAt: "desc" },
+    skip,
+    take: limit,
     omit: { imagePublicId: true },
   });
 }
