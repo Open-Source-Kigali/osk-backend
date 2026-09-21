@@ -231,7 +231,7 @@ Contributions are welcome. Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for 
 
 [![](https://contrib.rocks/image?repo=Open-Source-Kigali/osk-backend)](https://github.com/Open-Source-Kigali/osk-backend/graphs/contributors)
 
-Everyone who contributes to this repo gets listed on the OSK website. To add yourself, open a pull request that adds your GitHub username to [`CONTRIBUTORS.md`](./CONTRIBUTORS.md). The `GET /api/contributors` endpoint reads that file, fetches each person's public GitHub profile, and returns the data the frontend uses to render the contributors section.
+Everyone who contributes to this repo is listed on the OSK website. The contributors list is sourced directly from the GitHub API — the `GET /api/contributors` endpoint returns each contributor's public GitHub profile, and administrators can refresh the cached data with `POST /api/contributors/refresh`.
 
 ## License
 
