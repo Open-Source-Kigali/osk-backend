@@ -75,6 +75,7 @@
     "prisma": "^7.8.0",
     "supertest": "^7.2.2",
     "ts-node": "^10.9.2",
+    "tsx": "^4.23.15",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.59.2",
     "vitest": "^4.1.6",
