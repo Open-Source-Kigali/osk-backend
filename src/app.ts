@@ -28,5 +28,6 @@ app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(openapiSpec));
 
 app.use(notFound);
 app.use(errorHandler);
+app.set("Etag", false);
 
 export default app;
