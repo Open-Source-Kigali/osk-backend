@@ -10,6 +10,13 @@ export function errorHandler(
 ) {
   console.error(err);
 
+  // express.json() raises this when the request body is not valid JSON.
+  // It is a client mistake, so answer with 400 instead of 500.
+  const bodyParserError = err as Error & { type?: string; status?: number };
+  if (bodyParserError.type === "entity.parse.failed") {
+    return response.failure(res, "Malformed JSON body", 400);
+  }
+
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
     if (err.code === "P2002") {
       const rawField =
