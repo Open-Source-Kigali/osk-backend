@@ -47,6 +47,18 @@ describe("middleware tests", () => {
     expect(failureSpy).toHaveBeenCalledWith(res, "Record not found", 404);
   });
 
+  it("returns 400 for a malformed JSON body", () => {
+    const failureSpy = vi.spyOn(response, "failure");
+    const errorObject = Object.assign(new SyntaxError("Unexpected token"), {
+      type: "entity.parse.failed",
+      status: 400,
+    });
+
+    errorHandler(errorObject, req, res, next);
+
+    expect(failureSpy).toHaveBeenCalledWith(res, "Malformed JSON body", 400);
+  });
+
   it("returns 500 for all other errors", () => {
     const failureSpy = vi.spyOn(response, "failure");
     const errorObject = new Error("some other errors");
