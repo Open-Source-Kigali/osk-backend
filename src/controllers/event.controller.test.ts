@@ -53,3 +53,33 @@ describe("GET /api/events", () => {
     );
   });
 });
+
+describe("POST /api/events", () => {
+  it("preserves the image-file validation", async () => {
+    const res = await request(app)
+      .post("/api/events")
+      .set("x-api-key", "test-admin-key")
+      .field("title", "OSK Meetup");
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe("Image file is required");
+  });
+
+  it("validates missing required fields with the event schema", async () => {
+    const res = await request(app)
+      .post("/api/events")
+      .set("x-api-key", "test-admin-key")
+      .field("description", "An open-source meetup")
+      .field("category", "community")
+      .field("location", "Kigali")
+      .field("date", "2026-06-01T10:00:00.000Z")
+      .attach("file", Buffer.from("image"), {
+        filename: "event.png",
+        contentType: "image/png",
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toContain("title:");
+    expect(res.body.message).not.toContain("Missing required field");
+  });
+});
