@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import projectService from "../services/project.service";
 import response from "../utils/response";
-import { destroyImage, uploadBuffer } from "../utils/cloudinary-upload";
+import cloudinaryService from "../services/cloudinary.service";
 import { fetchRepoSnapshot } from "../services/github.service";
 import trimStrings from "../utils/trim-strings";
 import { parseRequestBody } from "../utils/validation";
@@ -110,7 +110,10 @@ async function addProject(
     );
     if (!data) return;
 
-    const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
+    const uploaded = await cloudinaryService.uploadBuffer(
+      req.file.buffer,
+      FOLDER,
+    );
     publicId = uploaded.public_id;
 
     const created = await projectService.addProject({
@@ -137,7 +140,7 @@ async function addProject(
 
     response.success(res, project, 201, "Project created successfully");
   } catch (err) {
-    if (publicId) await destroyImage(publicId);
+    if (publicId) await cloudinaryService.destroyImage(publicId);
     next(err);
   }
 }
@@ -164,7 +167,10 @@ async function updateProject(
     );
 
     if (req.file) {
-      const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
+      const uploaded = await cloudinaryService.uploadBuffer(
+        req.file.buffer,
+        FOLDER,
+      );
       newPublicId = uploaded.public_id;
       cleanedData.imageUrl = uploaded.secure_url;
       cleanedData.imagePublicId = uploaded.public_id;
@@ -176,12 +182,12 @@ async function updateProject(
     );
 
     if (req.file && existing.imagePublicId) {
-      await destroyImage(existing.imagePublicId);
+      await cloudinaryService.destroyImage(existing.imagePublicId);
     }
 
     response.success(res, updated, 200, "Project updated successfully");
   } catch (err) {
-    if (newPublicId) await destroyImage(newPublicId);
+    if (newPublicId) await cloudinaryService.destroyImage(newPublicId);
     next(err);
   }
 }
@@ -196,7 +202,8 @@ async function deleteProject(
     if (!existing) return response.failure(res, "Project not found", 404);
 
     await projectService.deleteProject(req.params.id);
-    if (existing.imagePublicId) await destroyImage(existing.imagePublicId);
+    if (existing.imagePublicId)
+      await cloudinaryService.destroyImage(existing.imagePublicId);
 
     response.success(res, null, 204, "Project deleted successfully");
   } catch (err) {

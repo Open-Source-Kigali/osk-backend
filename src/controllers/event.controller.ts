@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import eventService from "../services/event.service";
 import response from "../utils/response";
 import { Event, Prisma } from "../generated/prisma/client";
-import { destroyImage, uploadBuffer } from "../utils/cloudinary-upload";
+import cloudinaryService from "../services/cloudinary.service";
 import { parseRequestBody } from "../utils/validation";
 import {
   createEventSchema,
@@ -68,7 +68,10 @@ async function addEvent(req: Request, res: Response, next: NextFunction) {
     );
     if (!data) return;
 
-    const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
+    const uploaded = await cloudinaryService.uploadBuffer(
+      req.file.buffer,
+      FOLDER,
+    );
 
     const dataToSave: EventBody = {
       ...data,
@@ -81,7 +84,7 @@ async function addEvent(req: Request, res: Response, next: NextFunction) {
 
     response.success(res, newEvent, 201, "Event created successfully");
   } catch (err) {
-    if (publicId) await destroyImage(publicId);
+    if (publicId) await cloudinaryService.destroyImage(publicId);
     next(err);
   }
 }
@@ -121,7 +124,10 @@ async function updateEvent(
     }
 
     if (req.file) {
-      const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
+      const uploaded = await cloudinaryService.uploadBuffer(
+        req.file.buffer,
+        FOLDER,
+      );
       newPublicId = uploaded.public_id;
       filteredData.imageUrl = uploaded.secure_url;
       filteredData.imagePublicId = uploaded.public_id;
@@ -133,12 +139,12 @@ async function updateEvent(
     );
 
     if (req.file && existing.imagePublicId) {
-      await destroyImage(existing.imagePublicId);
+      await cloudinaryService.destroyImage(existing.imagePublicId);
     }
 
     response.success(res, updatedEvent, 200, "Event updated successfully");
   } catch (err) {
-    if (newPublicId) await destroyImage(newPublicId);
+    if (newPublicId) await cloudinaryService.destroyImage(newPublicId);
     next(err);
   }
 }
@@ -153,7 +159,8 @@ async function deleteEvent(
     if (!existing) return response.failure(res, "Event not found", 404);
 
     await eventService.deleteEvent(req.params.id);
-    if (existing.imagePublicId) await destroyImage(existing.imagePublicId);
+    if (existing.imagePublicId)
+      await cloudinaryService.destroyImage(existing.imagePublicId);
 
     response.success(res, null, 204, "Event deleted successfully");
   } catch (err) {

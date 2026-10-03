@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import partnerApplicationService from "../services/partner-application.service";
 import response from "../utils/response";
 import { ApplicationStatus } from "../generated/prisma/client";
-import { destroyImage, uploadBuffer } from "../utils/cloudinary-upload";
+import cloudinaryService from "../services/cloudinary.service";
 import trimStrings from "../utils/trim-strings";
 import { parseRequestBody } from "../utils/validation";
 import {
@@ -72,7 +72,10 @@ async function addPartnerApplication(
     );
     if (!data) return;
 
-    const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
+    const uploaded = await cloudinaryService.uploadBuffer(
+      req.file.buffer,
+      FOLDER,
+    );
     publicId = uploaded.public_id;
 
     const newApplication =
@@ -101,7 +104,7 @@ async function addPartnerApplication(
       "Partner application submitted successfully",
     );
   } catch (err) {
-    if (publicId) await destroyImage(publicId);
+    if (publicId) await cloudinaryService.destroyImage(publicId);
     next(err);
   }
 }
@@ -160,7 +163,7 @@ async function deletePartnerApplication(
 
     await partnerApplicationService.deletePartnerApplication(req.params.id);
     if (existing.organisationLogoPublicId) {
-      await destroyImage(existing.organisationLogoPublicId);
+      await cloudinaryService.destroyImage(existing.organisationLogoPublicId);
     }
 
     response.success(
