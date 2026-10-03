@@ -16,6 +16,7 @@ vi.mock("./github.service", async (importOriginal) => {
 import { prisma } from "../config/prisma";
 import statsService from "./stats.service";
 import { gh } from "./github.service";
+import { env } from "../config/env";
 
 const prismaMock = prisma as DeepMockProxy<PrismaClient>;
 const ghMock = vi.mocked(gh);
@@ -39,6 +40,7 @@ const mockTransaction = () =>
 beforeEach(() => {
   mockReset(prismaMock);
   ghMock.mockReset();
+  env.statsMembersOffset = 0;
 });
 
 describe("getStats contributors count", () => {
@@ -111,7 +113,9 @@ describe("getStats contributors count", () => {
 });
 
 describe("getStats database stats", () => {
-  it("returns members, projects, events, partners, reviews and pull requests from the transaction", async () => {
+  it("uses the configured members offset", async () => {
+    env.statsMembersOffset = 25;
+
     prismaMock.$transaction.mockResolvedValue([
       150,
       7,
@@ -125,7 +129,8 @@ describe("getStats database stats", () => {
 
     const stats = await statsService.getStats();
 
-    expect(stats.members).toBe(300);
+
+    expect(stats.members).toBe(175);
     expect(stats.projects).toBe(7);
     expect(stats.events).toBe(3);
     expect(stats.partners).toBe(2);

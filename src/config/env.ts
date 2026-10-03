@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+import {env} from "../config/env";
 
 dotenv.config();
 
@@ -15,4 +16,5 @@ export const env = {
   cloudinaryApiKey: process.env.CLOUDINARY_API_KEY || "",
   cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET || "",
   githubToken: process.env.GITHUB_TOKEN || "",
+  statsMembersOffset: Number(process.env.STATS_MEMBERS_OFFSET) || 0
 };
