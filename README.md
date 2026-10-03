@@ -48,7 +48,8 @@ See `.env.example` for the full list.
 | `CLOUDINARY_CLOUD_NAME` | for uploads          | Cloudinary cloud name                                           |
 | `CLOUDINARY_API_KEY`    | for uploads          | Cloudinary API key                                              |
 | `CLOUDINARY_API_SECRET` | for uploads          | Cloudinary API secret                                           |
-| `GITHUB_TOKEN`          | for projects refresh | Fine-grained PAT with public repo read                          |
+| `GITHUB_TOKEN`          |                      |                                                                 |
+| 'STATS_MEMBERS_OFFSET'  | Number of members who joined before the API existed | 150                              |
 
 </details>
 
