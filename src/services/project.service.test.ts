@@ -76,7 +76,7 @@ describe("findAllProjects", () => {
     await projectService.findAllProjects(undefined, "backend");
 
     expect(prismaMock.project.findMany).toHaveBeenCalledWith({
-      where: { category: { equals: "backend" } },
+      where: { category: { equals: "backend", mode: "insensitive" } },
       orderBy: { createdAt: "desc" },
       omit: { imagePublicId: true },
     });
@@ -88,7 +88,10 @@ describe("findAllProjects", () => {
     await projectService.findAllProjects(true, "backend");
 
     expect(prismaMock.project.findMany).toHaveBeenCalledWith({
-      where: { featured: true, category: { equals: "backend" } },
+      where: {
+        featured: true,
+        category: { equals: "backend", mode: "insensitive" },
+      },
       orderBy: { createdAt: "desc" },
       omit: { imagePublicId: true },
     });
