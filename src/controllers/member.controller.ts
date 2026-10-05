@@ -10,6 +10,8 @@ import {
   UpdateMemberInput,
 } from "../schemas/member.schema";
 
+let membersUid = crypto.randomUUID();
+
 async function findAllMembers(
   _req: Request,
   res: Response,
@@ -17,6 +19,12 @@ async function findAllMembers(
 ) {
   try {
     const members = await memberService.findAllMembers();
+    if (_req.headers["if-non-match"] === membersUid) {
+      return res.status(304);
+    }
+
+    membersUid = crypto.randomUUID();
+    res.set("etag", membersUid);
     response.success(res, members, 200, "Members retrieved successfully");
   } catch (err) {
     next(err);
@@ -33,6 +41,13 @@ async function findMemberById(
     if (!member) {
       return response.failure(res, "Member not found", 404);
     }
+    const memberUpdatedAtTimeStamp = member.updatedAt.getTime().toString();
+
+    if (req.headers["if-none-match"] === memberUpdatedAtTimeStamp) {
+      return res.status(304);
+    }
+
+    res.set("etag", memberUpdatedAtTimeStamp);
     response.success(res, member, 200, "Member retrieved successfully");
   } catch (err) {
     next(err);
