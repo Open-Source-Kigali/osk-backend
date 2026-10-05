@@ -14,11 +14,18 @@ import {
 const FOLDER = "open-source-kigali/events";
 
 type EventBody = Omit<Event, "id" | "createdAt" | "updatedAt">;
+let eventsETagUUid = crypto.randomUUID();
 
 async function findAllEvents(_req: Request, res: Response, next: NextFunction) {
   try {
     const featured = _req.query.featured === "true" ? true : undefined;
     const allEvents = await eventService.findAllEvents(featured);
+    if (_req.headers["if-non-match"] === eventsETagUUid) {
+      return res.status(304);
+    }
+
+    eventsETagUUid = crypto.randomUUID();
+    res.set("etag", eventsETagUUid);
     response.success(res, allEvents, 200, "Events retrieved successfully");
   } catch (err) {
     next(err);
@@ -35,6 +42,14 @@ async function findEventById(
     if (!event) {
       return response.failure(res, "Event not found", 404);
     }
+
+    const eventUpdatedAtTimeStamp = event.updatedAt.getTime().toString();
+
+    if (req.headers["if-none-match"] === eventUpdatedAtTimeStamp) {
+      return res.status(304);
+    }
+
+    res.set("etag", eventUpdatedAtTimeStamp);
     return response.success(res, event, 200, "Event retrieved successfully");
   } catch (err) {
     next(err);
