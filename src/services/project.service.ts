@@ -15,7 +15,7 @@ async function findAllProjects(
   }
 
   if (category) {
-    where.category = { equals: category };
+    where.category = { equals: category, mode: "insensitive" };
   }
 
   const skip = (page - 1) * limit;
