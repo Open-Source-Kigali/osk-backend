@@ -23,6 +23,12 @@ async function findAllProjects(
     const featured = req.query.featured === "true" ? true : undefined;
     const categoryQuery = req.query.category;
 
+    const limit = Number.parseInt(req.query.limit as string, 10);
+    const page = Number.parseInt(req.query.page as string, 10);
+
+    const finalLimit = Number.isInteger(limit) && limit > 0 ? limit : 10;
+    const finalPage = Number.isInteger(page) && page >= 0 ? page : 1;
+
     let category: string | undefined;
     if (categoryQuery !== undefined) {
       if (typeof categoryQuery !== "string") {
@@ -41,7 +47,12 @@ async function findAllProjects(
       category = trimmedCategory;
     }
 
-    const projects = await projectService.findAllProjects(featured, category);
+    const projects = await projectService.findAllProjects(
+      finalLimit,
+      finalPage,
+      featured,
+      category,
+    );
     response.success(res, projects, 200, "Projects retrieved successfully");
   } catch (err) {
     next(err);

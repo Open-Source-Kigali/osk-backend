@@ -48,11 +48,13 @@ describe("findAllProjects", () => {
   it("queries with no filter when neither argument is given", async () => {
     prismaMock.project.findMany.mockResolvedValue([mockProject]);
 
-    const result = await projectService.findAllProjects();
+    const result = await projectService.findAllProjects(10, 1);
 
     expect(prismaMock.project.findMany).toHaveBeenCalledWith({
       where: undefined,
       orderBy: { createdAt: "desc" },
+      skip: 0,
+      take: 10,
       omit: { imagePublicId: true },
     });
     expect(result).toEqual([mockProject]);
@@ -61,11 +63,13 @@ describe("findAllProjects", () => {
   it("filters by featured only", async () => {
     prismaMock.project.findMany.mockResolvedValue([mockProject]);
 
-    await projectService.findAllProjects(true);
+    await projectService.findAllProjects(10, 1, true);
 
     expect(prismaMock.project.findMany).toHaveBeenCalledWith({
       where: { featured: true },
       orderBy: { createdAt: "desc" },
+      skip: 0,
+      take: 10,
       omit: { imagePublicId: true },
     });
   });
@@ -73,11 +77,13 @@ describe("findAllProjects", () => {
   it("filters by category only", async () => {
     prismaMock.project.findMany.mockResolvedValue([mockProject]);
 
-    await projectService.findAllProjects(undefined, "backend");
+    await projectService.findAllProjects(10, 1, undefined, "backend");
 
     expect(prismaMock.project.findMany).toHaveBeenCalledWith({
       where: { category: { equals: "backend" } },
       orderBy: { createdAt: "desc" },
+      skip: 0,
+      take: 10,
       omit: { imagePublicId: true },
     });
   });
@@ -85,11 +91,13 @@ describe("findAllProjects", () => {
   it("filters by both featured and category", async () => {
     prismaMock.project.findMany.mockResolvedValue([mockProject]);
 
-    await projectService.findAllProjects(true, "backend");
+    await projectService.findAllProjects(10, 1, true, "backend");
 
     expect(prismaMock.project.findMany).toHaveBeenCalledWith({
       where: { featured: true, category: { equals: "backend" } },
       orderBy: { createdAt: "desc" },
+      skip: 0,
+      take: 10,
       omit: { imagePublicId: true },
     });
   });
