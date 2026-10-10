@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import reviewService from "../services/review.service";
 import response from "../utils/response";
 import { Review } from "../generated/prisma/client";
-import { destroyImage, uploadBuffer } from "../utils/cloudinary-upload";
+import cloudinaryService from "../services/cloudinary.service";
 import trimStrings from "../utils/trim-strings";
 
 type ReviewBody = Omit<Review, "id" | "createdAt" | "updatedAt">;
@@ -51,7 +51,7 @@ async function addReview(
 
   let publicId: string | undefined;
   try {
-    const uploaded = await uploadBuffer(
+    const uploaded = await cloudinaryService.uploadBuffer(
       req.file.buffer,
       "open-source-kigali/reviews",
     );
@@ -65,7 +65,7 @@ async function addReview(
 
     response.success(res, newReview, 201, "Review created successfully");
   } catch (err) {
-    if (publicId) await destroyImage(publicId);
+    if (publicId) await cloudinaryService.destroyImage(publicId);
     next(err);
   }
 }
@@ -89,7 +89,7 @@ async function updateReview(
     ) as Partial<ReviewBody>;
 
     if (req.file) {
-      const uploaded = await uploadBuffer(
+      const uploaded = await cloudinaryService.uploadBuffer(
         req.file.buffer,
         "open-source-kigali/reviews",
       );
@@ -101,12 +101,12 @@ async function updateReview(
     const updatedReview = await reviewService.updateReview(req.params.id, data);
 
     if (req.file && existing.profilePublicId) {
-      await destroyImage(existing.profilePublicId);
+      await cloudinaryService.destroyImage(existing.profilePublicId);
     }
 
     response.success(res, updatedReview, 200, "Review updated successfully");
   } catch (err) {
-    if (newPublicId) await destroyImage(newPublicId);
+    if (newPublicId) await cloudinaryService.destroyImage(newPublicId);
     next(err);
   }
 }
@@ -121,7 +121,8 @@ async function deleteReview(
     if (!existing) return response.failure(res, "Review not found", 404);
 
     await reviewService.deleteReview(req.params.id);
-    if (existing.profilePublicId) await destroyImage(existing.profilePublicId);
+    if (existing.profilePublicId)
+      await cloudinaryService.destroyImage(existing.profilePublicId);
     response.success(res, null, 204, "Review deleted successfully");
   } catch (err) {
     next(err);

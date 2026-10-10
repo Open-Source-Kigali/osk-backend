@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import partnerService from "../services/partner.service";
 import response from "../utils/response";
 import { Partner } from "../generated/prisma/client";
-import { destroyImage, uploadBuffer } from "../utils/cloudinary-upload";
+import cloudinaryService from "../services/cloudinary.service";
 import trimStrings from "../utils/trim-strings";
 import { parseRequestBody } from "../utils/validation";
 import {
@@ -61,7 +61,7 @@ async function addPartner(req: Request, res: Response, next: NextFunction) {
     );
     if (!data) return;
 
-    const uploaded = await uploadBuffer(
+    const uploaded = await cloudinaryService.uploadBuffer(
       req.file.buffer,
       "open-source-kigali/partners",
     );
@@ -75,7 +75,7 @@ async function addPartner(req: Request, res: Response, next: NextFunction) {
 
     response.success(res, newPartner, 201, "Partner created successfully");
   } catch (err) {
-    if (publicId) await destroyImage(publicId);
+    if (publicId) await cloudinaryService.destroyImage(publicId);
     next(err);
   }
 }
@@ -104,7 +104,7 @@ async function updatePartner(
     ) as Partial<PartnerBody>;
 
     if (req.file) {
-      const uploaded = await uploadBuffer(
+      const uploaded = await cloudinaryService.uploadBuffer(
         req.file.buffer,
         "open-source-kigali/partners",
       );
@@ -119,12 +119,12 @@ async function updatePartner(
     );
 
     if (req.file && existing.logoPublicId) {
-      await destroyImage(existing.logoPublicId);
+      await cloudinaryService.destroyImage(existing.logoPublicId);
     }
 
     response.success(res, updatedPartner, 200, "Partner updated successfully");
   } catch (err) {
-    if (newPublicId) await destroyImage(newPublicId);
+    if (newPublicId) await cloudinaryService.destroyImage(newPublicId);
     next(err);
   }
 }
@@ -141,7 +141,8 @@ async function deletePartner(
     if (!existing) return response.failure(res, "Partner not found", 404);
 
     await partnerService.deletePartner(req.params.id);
-    if (existing.logoPublicId) await destroyImage(existing.logoPublicId);
+    if (existing.logoPublicId)
+      await cloudinaryService.destroyImage(existing.logoPublicId);
 
     response.success(res, null, 204, "Partner deleted successfully");
   } catch (err) {
