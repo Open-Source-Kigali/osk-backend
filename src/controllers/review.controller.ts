@@ -2,9 +2,13 @@ import { Request, Response, NextFunction } from "express";
 import reviewService from "../services/review.service";
 import response from "../utils/response";
 import { Review } from "../generated/prisma/client";
+import {
+  createReviewSchema,
+  updateReviewSchema,
+} from "../schemas/review.schema";
 import { destroyImage, uploadBuffer } from "../utils/cloudinary-upload";
 import trimStrings from "../utils/trim-strings";
-
+import { parseRequestBody } from "../utils/validation";
 type ReviewBody = Omit<Review, "id" | "createdAt" | "updatedAt">;
 
 async function findAllReviews(
@@ -51,6 +55,11 @@ async function addReview(
 
   let publicId: string | undefined;
   try {
+    const trimmedBody = trimStrings(req.body);
+    const validateData = parseRequestBody(createReviewSchema, trimmedBody, res);
+    if (!validateData) {
+      return;
+    }
     const uploaded = await uploadBuffer(
       req.file.buffer,
       "open-source-kigali/reviews",
@@ -58,7 +67,7 @@ async function addReview(
     publicId = uploaded.public_id;
 
     const newReview = await reviewService.addReview({
-      ...trimStrings(req.body),
+      ...validateData,
       profileUrl: uploaded.secure_url,
       profilePublicId: uploaded.public_id,
     });
@@ -84,6 +93,11 @@ async function updateReview(
     const existing = await reviewService.findReviewById(req.params.id);
     if (!existing) return response.failure(res, "Review not found", 404);
 
+    const trimmedBody = trimStrings(req.body);
+    const validateData = parseRequestBody(updateReviewSchema, trimmedBody, res);
+    if (!validateData) {
+      return;
+    }
     const data: Partial<ReviewBody> = Object.fromEntries(
       Object.entries(trimStrings(req.body)).filter(([, v]) => v !== ""),
     ) as Partial<ReviewBody>;
