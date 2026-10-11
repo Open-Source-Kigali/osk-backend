@@ -1,3 +1,4 @@
+import { env } from "../config/env";
 import { prisma } from "../config/prisma";
 import { gh } from "./github.service";
 
@@ -11,7 +12,7 @@ const OSK_REPOS = [
   "HeathTech",
 ];
 
-const MEMBERS_OFFSET = 150;
+
 
 const BOT_SUFFIX = "[bot]";
 
@@ -50,7 +51,7 @@ async function getStats() {
 
   return {
     contributors,
-    members: members + MEMBERS_OFFSET,
+    members: members + env.statsMembersOffset,
     projects,
     events,
     partners,
