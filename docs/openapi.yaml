@@ -841,6 +841,7 @@ paths:
     get:
       tags: [Stats]
       summary: Fetch community stats
+      description: Shares the public limit of 100 requests per 15 minutes per IP.
       responses:
         "200":
           description: Stats fetched successfully
@@ -861,6 +862,19 @@ paths:
                           partners: { type: number }
                           reviews: { type: number }
                           pullRequests: { type: number }
+        "429":
+          description: Public rate limit exceeded
+          headers:
+            Retry-After:
+              description: Seconds until the rate limit resets
+              schema: { type: integer }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiError" }
+              example:
+                success: false
+                message: Too many requests. Please try again later.
+                data: null
         "500": { $ref: "#/components/responses/InternalError" }
 
 components:
