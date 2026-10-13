@@ -166,6 +166,14 @@ paths:
     get:
       tags: [Events]
       summary: List all events
+      parameters:
+        - name: featured
+          in: query
+          required: false
+          schema:
+            type: boolean
+            example: true
+          description: Filter events by featured status. When true, only featured events are returned.
       responses:
         "200":
           description: Events retrieved successfully
@@ -507,6 +515,13 @@ paths:
             type: string
             example: education
           description: Filter projects by category. When provided, only projects in the selected category are returned.
+        - name: featured
+          in: query
+          required: false
+          schema:
+            type: boolean
+            example: true
+          description: Filter projects by featured status. When true, only featured projects are returned.
       responses:
         "200":
           description: Projects retrieved successfully
