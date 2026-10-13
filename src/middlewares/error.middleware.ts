@@ -10,6 +10,11 @@ export function errorHandler(
 ) {
   console.error(err);
 
+  const bodyParserError = err as Error & { type?: string; status?: number };
+  if (bodyParserError.type === "entity.parse.failed") {
+    return response.failure(res, "Malformed JSON body", 400);
+  }
+
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
     if (err.code === "P2002") {
       const rawField =
