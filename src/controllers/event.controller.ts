@@ -46,19 +46,6 @@ async function addEvent(req: Request, res: Response, next: NextFunction) {
     return response.failure(res, "Image file is required", 400);
   }
 
-  const requiredFields = [
-    "title",
-    "description",
-    "category",
-    "location",
-    "date",
-  ];
-  for (const field of requiredFields) {
-    if (!req.body[field]) {
-      return response.failure(res, `Missing required field: ${field}`, 400);
-    }
-  }
-
   let publicId: string | undefined;
   try {
     const data = parseRequestBody<CreateEventInput>(
