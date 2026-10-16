@@ -1,8 +1,15 @@
 import { prisma } from "../config/prisma";
-import { Member } from "../generated/prisma/client";
+import { Member, Prisma } from "../generated/prisma/client";
+import buildSearchFilter from "../utils/Search";
 
-async function findAllMembers() {
-  return prisma.member.findMany({ orderBy: { name: "asc" } });
+async function findAllMembers(search?: string) {
+  return prisma.member.findMany({
+    where: buildSearchFilter<Prisma.MemberWhereInput>(search, [
+      "name",
+      "email",
+    ]),
+    orderBy: { name: "asc" },
+  });
 }
 
 async function addMember(
