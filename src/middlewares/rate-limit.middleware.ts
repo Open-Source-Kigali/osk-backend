@@ -135,4 +135,17 @@ export const authAttemptRateLimit = createRateLimiter({
   keyGenerator: publicKeyGenerator,
 });
 
+/** Failed password logins only; keyed by IP + email so it does not share budget with API-key checks. */
+export function loginFailureKeyGenerator(req: Request) {
+  const email =
+    typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
+  return `${getRequestIp(req)}:${email}`;
+}
+
+export const loginFailureRateLimit = createRateLimiter({
+  limit: 5,
+  prefix: "login-fail",
+  keyGenerator: loginFailureKeyGenerator,
+});
+
 export { createRateLimiter };

@@ -3,3 +3,7 @@ process.env.DATABASE_URL =
   "postgresql://osk:osk@localhost:3003/oskbackend?schema=public";
 process.env.CORS_ORIGINS = "http://localhost:5173";
 process.env.PORT = "3000";
+process.env.NODE_ENV = "test";
+process.env.SESSION_TTL_SECONDS = "3600";
+process.env.SESSION_COOKIE_SAMESITE = "lax";
+process.env.SESSION_COOKIE_SECURE = "false";

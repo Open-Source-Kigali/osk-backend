@@ -37,13 +37,31 @@ enum ApplicationStatus {
 }
 
 model User {
-  id        String   @id @default(uuid())
+  id        String         @id @default(uuid())
   name      String
-  email     String   @unique
+  email     String         @unique
   password  String
-  role      UserRole @default(USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  role      UserRole       @default(USER)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  sessions  AdminSession[]
+}
+
+/// Server-side administrator session. The browser holds only an opaque cookie;
+/// this table stores a hash of that token and a hash of the CSRF secret.
+model AdminSession {
+  id            String    @id @default(uuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash     String    @unique
+  csrfTokenHash String
+  expiresAt     DateTime
+  revokedAt     DateTime?
+  createdAt     DateTime  @default(now())
+  lastSeenAt    DateTime?
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model Event {

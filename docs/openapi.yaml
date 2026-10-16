@@ -16,11 +16,25 @@ info:
     The maximum size is 5 MB (5242880 bytes).
     An unsupported or mismatched file returns 400. A larger file returns 413.
     Both use the failure envelope and do not include internal error details.
+
+    ## Admin session authentication (Phase 2)
+
+    Cookie-backed administrator login is available under `/auth`.
+    Existing admin write routes still use the shared `x-api-key` header in this phase.
+    Session cookies are HttpOnly. The session token is never returned in JSON.
+    Cross-origin browsers must call these endpoints with credentials included.
+    CSRF: after login, send the `csrfToken` from the login (or `GET /auth/csrf`)
+    response in the `X-CSRF-Token` header on state-changing cookie-authenticated
+    requests such as `POST /auth/logout`. Phase 3 will apply the same CSRF check
+    to admin CRUD routes when they move from API-key to session auth.
+    Login and logout also require a trusted `Origin` (or Referer origin) that
+    matches `CORS_ORIGINS`.
 servers:
   - url: /api
 
 tags:
   - name: Health
+  - name: Auth
   - name: Members
   - name: Events
   - name: Partners
@@ -67,6 +81,138 @@ paths:
                   db:
                     type: string
                     example: unreachable
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Administrator login
+      description: |
+        Validates administrator credentials, creates a server-side session, and
+        sets the HttpOnly `osk_session` cookie. The session token is never
+        returned in the JSON body. Requires a trusted Origin. Failed attempts
+        are rate limited.
+      parameters:
+        - in: header
+          name: Origin
+          required: true
+          schema: { type: string }
+          description: Must match an entry in CORS_ORIGINS
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LoginInput" }
+      responses:
+        "200":
+          description: Logged in successfully
+          headers:
+            Set-Cookie:
+              description: HttpOnly session cookie named `osk_session`
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/AuthSessionPayload" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Current administrator session
+      description: Returns the authenticated admin identity from the session cookie.
+      parameters:
+        - in: cookie
+          name: osk_session
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Session retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/AuthMePayload" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
+  /auth/csrf:
+    get:
+      tags: [Auth]
+      summary: Issue a session-bound CSRF token
+      description: |
+        Returns a CSRF token bound to the current admin session. Send it as the
+        `X-CSRF-Token` header on cookie-authenticated state-changing requests.
+        This token is not the session cookie value.
+      parameters:
+        - in: cookie
+          name: osk_session
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: CSRF token issued successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        required: [csrfToken]
+                        properties:
+                          csrfToken: { type: string }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Administrator logout
+      description: |
+        Revokes the current server-side session and clears the session cookie.
+        Requires a trusted Origin and a valid `X-CSRF-Token` header.
+      parameters:
+        - in: header
+          name: Origin
+          required: true
+          schema: { type: string }
+        - in: header
+          name: X-CSRF-Token
+          required: true
+          schema: { type: string }
+        - in: cookie
+          name: osk_session
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Logged out successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data: { type: object, nullable: true, example: null }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
   /members:
     get:
       tags: [Members]
@@ -890,8 +1036,47 @@ components:
       type: apiKey
       in: header
       name: x-api-key
+      description: Shared admin API key used by existing write routes (unchanged in Phase 2).
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: osk_session
+      description: HttpOnly admin session cookie issued by POST /auth/login.
 
   schemas:
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, format: password }
+
+    AuthUserPublic:
+      type: object
+      required: [id, name, email, role]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        email: { type: string, format: email }
+        role: { type: string, enum: [ADMIN] }
+
+    AuthSessionPayload:
+      type: object
+      required: [user, expiresAt, csrfToken]
+      properties:
+        user: { $ref: "#/components/schemas/AuthUserPublic" }
+        expiresAt: { type: string, format: date-time }
+        csrfToken:
+          type: string
+          description: Session-bound CSRF token for X-CSRF-Token header; not the session cookie.
+
+    AuthMePayload:
+      type: object
+      required: [user, expiresAt]
+      properties:
+        user: { $ref: "#/components/schemas/AuthUserPublic" }
+        expiresAt: { type: string, format: date-time }
+
     ApiSuccess:
       type: object
       properties:
@@ -1295,6 +1480,11 @@ components:
           schema: { $ref: "#/components/schemas/ApiError" }
     PayloadTooLarge:
       description: Uploaded image exceeds the 5 MB limit
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
+    TooManyRequests:
+      description: Rate limit exceeded
       content:
         application/json:
           schema: { $ref: "#/components/schemas/ApiError" }

@@ -34,11 +34,33 @@ The server runs at `http://localhost:3000`. Swagger UI is at `http://localhost:3
 See `.env.example` for the full list. The required ones for local dev are:
 
 - `DATABASE_URL` - Postgres connection string
-- `ADMIN_API_KEY` - any long string; pass it as the `x-api-key` header to call admin-only endpoints
-- `CORS_ORIGINS` - comma-separated list of allowed origins
+- `ADMIN_API_KEY` - any long string; pass it as the `x-api-key` header to call admin-only endpoints (still required in Phase 2)
+- `CORS_ORIGINS` - comma-separated list of allowed origins (never `*` when using credentialed cookies)
 - `REDIS_URL` - required in production when Redis-backed rate limiting is enabled
+- `SESSION_TTL_SECONDS` - optional; admin session lifetime (default 28800 / 8 hours)
+- `SESSION_COOKIE_SAMESITE` - optional; `lax` (default), `strict`, or `none` (`none` requires Secure cookies)
+- `SESSION_COOKIE_SECURE` - optional in development; production always forces Secure cookies
 
 Cloudinary and GitHub variables are only needed if you're touching uploads or project refresh.
+
+### Administrator login (Phase 2)
+
+Cookie-backed admin auth is available at `/api/auth/login`, `/api/auth/me`, `/api/auth/csrf`, and `/api/auth/logout`. Existing admin write routes still require `x-api-key` until Phase 3.
+
+Provision an admin account (do not invent public registration):
+
+```bash
+ADMIN_EMAIL=you@example.com \
+ADMIN_PASSWORD='choose-a-long-unique-password' \
+ADMIN_NAME='Your Name' \
+npm run provision:admin
+```
+
+The script stores a bcrypt hash only. It never prints the password or hash. Legacy plaintext values in `User.password` cannot log in; re-run the provisioning script to set a real hash.
+
+Local browser calls must send credentials and a trusted `Origin` from `CORS_ORIGINS`. After login, send the returned `csrfToken` (or refresh via `GET /api/auth/csrf`) as `X-CSRF-Token` on `POST /api/auth/logout`. Phase 3 will reuse that CSRF header for admin mutations once they leave the API-key model.
+
+Production requirements: HTTPS, `CORS_ORIGINS` limited to real frontend origins, Secure session cookies (forced when `NODE_ENV=production`), and no wildcard CORS with credentials.
 
 ## Branching
 
