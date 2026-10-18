@@ -1,9 +1,11 @@
 import { Request, Response, NextFunction } from "express";
+import { updateEventSchema } from "../schemas/event.schema";
 import reviewService from "../services/review.service";
 import response from "../utils/response";
 import { Review } from "../generated/prisma/client";
 import { destroyImage, uploadBuffer } from "../utils/cloudinary-upload";
 import trimStrings from "../utils/trim-strings";
+import { parseRequestBody } from "../utils/validation";
 
 type ReviewBody = Omit<Review, "id" | "createdAt" | "updatedAt">;
 
@@ -83,9 +85,10 @@ async function updateReview(
   try {
     const existing = await reviewService.findReviewById(req.params.id);
     if (!existing) return response.failure(res, "Review not found", 404);
-
+    const validatedBody = parseRequestBody(updateEventSchema, req.body, res);
+    if (!validatedBody) return;
     const data: Partial<ReviewBody> = Object.fromEntries(
-      Object.entries(trimStrings(req.body)).filter(([, v]) => v !== ""),
+      Object.entries(trimStrings(validatedBody)).filter(([, v]) => v !== ""),
     ) as Partial<ReviewBody>;
 
     if (req.file) {
