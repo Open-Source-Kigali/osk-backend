@@ -6,7 +6,7 @@ vi.mock("../config/env", () => ({
   env: {
     nodeEnv: "test",
     redisUrl: "",
-    adminApiKey: "expected-admin-key",
+    adminApiKeys: ["expected-admin-key"],
   },
 }));
 

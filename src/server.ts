@@ -1,7 +1,7 @@
 import app from "./app";
 import { env } from "./config/env";
 
-if (!env.adminApiKey) {
+if (env.adminApiKeys.length === 0) {
   console.warn(
     "WARNING: ADMIN_API_KEY is not set. All admin endpoints will return 500.",
   );
