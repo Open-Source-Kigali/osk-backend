@@ -3,7 +3,9 @@ import path from "path";
 import { gh } from "./github.service";
 
 const CONTRIBUTORS_JSON_PATH = path.join(process.cwd(), "contributors.json");
-const CONTRIBUTORS_MD_PATH = path.join(process.cwd(), "CONTRIBUTORS.md");
+
+const OSK_OWNER = "Open-Source-Kigali";
+const OSK_REPO = "osk-backend";
 
 export interface Contributor {
   login: string;
@@ -24,19 +26,19 @@ export async function readContributors(): Promise<Contributor[]> {
   }
 }
 
-export async function refreshContributors() {
-  const mdRaw = await fs.readFile(CONTRIBUTORS_MD_PATH, "utf-8");
+async function fetchContributorLogins(): Promise<string[]> {
+  const res = await gh(
+    `/repos/${OSK_OWNER}/${OSK_REPO}/contributors?per_page=100`,
+  );
+  const data = (await res.json()) as { login?: string }[];
+  const logins = data
+    .map((c) => c.login)
+    .filter((login): login is string => Boolean(login));
+  return [...new Set(logins)];
+}
 
-  const usernames = mdRaw
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(
-      (line) =>
-        line &&
-        !line.startsWith("<!--") &&
-        !line.startsWith("#") &&
-        !line.includes(" "),
-    );
+export async function refreshContributors() {
+  const usernames = await fetchContributorLogins();
 
   const results = await Promise.allSettled(
     usernames.map(async (username) => {

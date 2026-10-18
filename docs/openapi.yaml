@@ -704,7 +704,7 @@ paths:
   /contributors/refresh:
     post:
       tags: [Contributors]
-      summary: Parse CONTRIBUTORS.md, fetch all GitHub profiles, overwrite contributors.json
+      summary: Fetch repository contributors from GitHub and overwrite contributors.json
       security:
         - adminApiKey: []
       responses:
