@@ -42,7 +42,10 @@ See `.env.example` for the full list.
 | `PORT`                  | no                   | Server port (default `3000`)                                    |
 | `NODE_ENV`              | no                   | `development` or `production`                                   |
 | `DATABASE_URL`          | yes                  | PostgreSQL connection string                                    |
-| `ADMIN_API_KEY`         | yes                  | Shared key for admin-only endpoints; sent as `x-api-key` header |
+| `ADMIN_API_KEY`         | no (legacy)          | Unused by HTTP admin routes after Phase 3 session auth          |
+| `SESSION_TTL_SECONDS`   | no                   | Admin session lifetime in seconds (default `28800`)             |
+| `SESSION_COOKIE_SAMESITE` | no                 | `lax` (default), `strict`, or `none`                            |
+| `SESSION_COOKIE_SECURE` | no                   | Forced `true` in production; optional override in development   |
 | `REDIS_URL`             | in production        | Redis connection string used by rate limiting                   |
 | `CORS_ORIGINS`          | yes                  | Comma-separated list of allowed origins                         |
 | `CLOUDINARY_CLOUD_NAME` | for uploads          | Cloudinary cloud name                                           |
@@ -107,11 +110,11 @@ docs/
 
 ## API Documentation
 
-Admin-only endpoints require an `x-api-key` header matching `ADMIN_API_KEY`.
+Admin-only endpoints require a cookie session from `POST /api/auth/login`. State-changing admin requests also need the `X-CSRF-Token` header and a trusted `Origin`.
 
 [![Launch Swagger UI](https://img.shields.io/badge/Swagger%20UI-Launch%20API%20Docs-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)](http://localhost:3000/api/docs)
 
-The interactive Swagger UI should be available at `http://localhost:3000/api/docs` once the server is running. The underlying spec lives at [`docs/openapi.yaml`](./docs/openapi.yaml). Admin-only endpoints require an `x-api-key` header matching `ADMIN_API_KEY`.
+The interactive Swagger UI should be available at `http://localhost:3000/api/docs` once the server is running. The underlying spec lives at [`docs/openapi.yaml`](./docs/openapi.yaml).
 
 ### Quick examples
 

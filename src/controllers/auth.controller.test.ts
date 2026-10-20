@@ -232,10 +232,14 @@ describe("POST /api/auth/logout", () => {
   });
 });
 
-describe("Phase 2 compatibility with API-key admin auth", () => {
-  it("still rejects admin mutations without x-api-key", async () => {
-    const res = await request(app).delete("/api/members/1");
-    expect(res.status).toBe(403);
-    expect(res.body.message).toBe("Admin access required");
+describe("Phase 3 session auth on admin routes", () => {
+  it("rejects admin mutations without a session even when x-api-key is sent", async () => {
+    const res = await request(app)
+      .delete("/api/members/1")
+      .set("Origin", "http://localhost:5173")
+      .set("x-api-key", "test-admin-key");
+
+    expect(res.status).toBe(401);
+    expect(res.body.message).toBe("Authentication required");
   });
 });

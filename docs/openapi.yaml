@@ -20,15 +20,16 @@ info:
     ## Admin session authentication (Phase 2)
 
     Cookie-backed administrator login is available under `/auth`.
-    Existing admin write routes still use the shared `x-api-key` header in this phase.
-    Session cookies are HttpOnly. The session token is never returned in JSON.
-    Cross-origin browsers must call these endpoints with credentials included.
+    All admin mutations and admin-only reads require an authenticated ADMIN session
+    cookie (`osk_session`). The shared `x-api-key` header is no longer accepted
+    for those routes. Session cookies are HttpOnly; the session token is never
+    returned in JSON. Cross-origin browsers must send credentials.
     CSRF: after login, send the `csrfToken` from the login (or `GET /auth/csrf`)
-    response in the `X-CSRF-Token` header on state-changing cookie-authenticated
-    requests such as `POST /auth/logout`. Phase 3 will apply the same CSRF check
-    to admin CRUD routes when they move from API-key to session auth.
-    Login and logout also require a trusted `Origin` (or Referer origin) that
-    matches `CORS_ORIGINS`.
+    response in the `X-CSRF-Token` header on every state-changing cookie-authenticated
+    request (admin CRUD/refresh and `POST /auth/logout`). Admin GET endpoints that
+    expose non-public data require the session cookie but not a CSRF token.
+    Login, logout, and admin writes also require a trusted `Origin` (or Referer
+    origin) that matches `CORS_ORIGINS`.
 servers:
   - url: /api
 
@@ -279,7 +280,8 @@ paths:
       tags: [Members]
       summary: Update a member (admin only)
       security:
-        - adminApiKey: []
+        - sessionCookie: []
+          csrfHeader: []
       requestBody:
         required: true
         content:
@@ -304,7 +306,8 @@ paths:
       tags: [Members]
       summary: Delete a member (admin only)
       security:
-        - adminApiKey: []
+        - sessionCookie: []
+          csrfHeader: []
       responses:
         "204":
           description: Member deleted successfully
@@ -338,7 +341,8 @@ paths:
       tags: [Events]
       summary: Create an event (admin only)
       security:
-        - adminApiKey: []
+        - sessionCookie: []
+          csrfHeader: []
       requestBody:
         required: true
         content:
@@ -387,7 +391,8 @@ paths:
       tags: [Events]
       summary: Update an event (admin only)
       security:
-        - adminApiKey: []
+        - sessionCookie: []
+          csrfHeader: []
       requestBody:
         required: true
         content:
@@ -414,7 +419,8 @@ paths:
       tags: [Events]
       summary: Delete an event (admin only)
       security:
-        - adminApiKey: []
+        - sessionCookie: []
+          csrfHeader: []
       responses:
         "204":
           description: Event deleted successfully
@@ -495,7 +501,8 @@ paths:
       tags: [Partners]
       summary: Update a partner (admin only)
       security:
-        - adminApiKey: []
+        - sessionCookie: []
+          csrfHeader: []
       requestBody:
         required: true
         content:
@@ -522,7 +529,8 @@ paths:
       tags: [Partners]
       summary: Delete a partner (admin only)
       security:
-        - adminApiKey: []
+        - sessionCookie: []
+          csrfHeader: []
       responses:
         "204":
           description: Partner deleted successfully
@@ -561,7 +569,7 @@ paths:
       tags: [Partner Applications]
       summary: List all partner applications (admin only)
       security:
-        - adminApiKey: []
+        - sessionCookie: []
       responses:
         "200":
           description: Partner applications retrieved successfully
@@ -590,7 +598,7 @@ paths:
       tags: [Partner Applications]
       summary: Get a partner application by id (admin only)
       security:
-        - adminApiKey: []
+        - sessionCookie: []
       responses:
         "200":
           description: Partner application retrieved successfully
@@ -610,7 +618,8 @@ paths:
       tags: [Partner Applications]
       summary: Delete a partner application (admin only)
       security:
-        - adminApiKey: []
+        - sessionCookie: []
+          csrfHeader: []
       responses:
         "204":
           description: Partner application deleted successfully
@@ -632,7 +641,8 @@ paths:
       tags: [Partner Applications]
       summary: Update a partner application status (admin only)
       security:
-        - adminApiKey: []
+        - sessionCookie: []
+          csrfHeader: []
       requestBody:
         required: true
         content:
@@ -703,7 +713,8 @@ paths:
       tags: [Projects]
       summary: Create a project (admin only)
       security:
-        - adminApiKey: []
+        - sessionCookie: []
+          csrfHeader: []
       requestBody:
         required: true
         content:
@@ -731,7 +742,8 @@ paths:
       tags: [Projects]
       summary: Refresh GitHub-cached filds for all projects (admin only)
       security:
-        - adminApiKey: []
+        - sessionCookie: []
+          csrfHeader: []
       responses:
         "200":
           description: Refresh completed
@@ -799,7 +811,8 @@ paths:
       tags: [Projects]
       summary: Update a project (admin only)
       security:
-        - adminApiKey: []
+        - sessionCookie: []
+          csrfHeader: []
       requestBody:
         required: true
         content:
@@ -826,7 +839,8 @@ paths:
       tags: [Projects]
       summary: Delete a project (admin only)
       security:
-        - adminApiKey: []
+        - sessionCookie: []
+          csrfHeader: []
       responses:
         "204":
           description: Project deleted successfully
@@ -870,7 +884,8 @@ paths:
       tags: [Contributors]
       summary: Parse CONTRIBUTORS.md, fetch all GitHub profiles, overwrite contributors.json
       security:
-        - adminApiKey: []
+        - sessionCookie: []
+          csrfHeader: []
       responses:
         "200":
           description: Contributors refreshed successfully
@@ -965,7 +980,8 @@ paths:
       tags: [Reviews]
       summary: Update a review (admin only)
       security:
-        - adminApiKey: []
+        - sessionCookie: []
+          csrfHeader: []
       requestBody:
         required: true
         content:
@@ -992,7 +1008,8 @@ paths:
       tags: [Reviews]
       summary: Delete a review (admin only)
       security:
-        - adminApiKey: []
+        - sessionCookie: []
+          csrfHeader: []
       responses:
         "204":
           description: Review deleted successfully
@@ -1032,16 +1049,16 @@ paths:
 
 components:
   securitySchemes:
-    adminApiKey:
-      type: apiKey
-      in: header
-      name: x-api-key
-      description: Shared admin API key used by existing write routes (unchanged in Phase 2).
     sessionCookie:
       type: apiKey
       in: cookie
       name: osk_session
       description: HttpOnly admin session cookie issued by POST /auth/login.
+    csrfHeader:
+      type: apiKey
+      in: header
+      name: X-CSRF-Token
+      description: Session-bound CSRF token from login or GET /auth/csrf. Required on state-changing admin requests.
 
   schemas:
     LoginInput:

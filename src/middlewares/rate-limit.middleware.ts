@@ -18,8 +18,12 @@ export function publicKeyGenerator(req: Request) {
   return getRequestIp(req);
 }
 
+/** Prefer the authenticated admin user id; fall back to IP before session is attached. */
 export function adminKeyGenerator(req: Request) {
-  return String(req.header("x-api-key") ?? getRequestIp(req));
+  if (req.authUser?.id) {
+    return `admin:${req.authUser.id}`;
+  }
+  return getRequestIp(req);
 }
 
 async function getRedisClient() {
@@ -138,7 +142,9 @@ export const authAttemptRateLimit = createRateLimiter({
 /** Failed password logins only; keyed by IP + email so it does not share budget with API-key checks. */
 export function loginFailureKeyGenerator(req: Request) {
   const email =
-    typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
+    typeof req.body?.email === "string"
+      ? req.body.email.trim().toLowerCase()
+      : "";
   return `${getRequestIp(req)}:${email}`;
 }
 
