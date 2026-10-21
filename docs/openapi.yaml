@@ -30,6 +30,18 @@ info:
     expose non-public data require the session cookie but not a CSRF token.
     Login, logout, and admin writes also require a trusted `Origin` (or Referer
     origin) that matches `CORS_ORIGINS`.
+
+    ## Review moderation
+
+    Public `GET /reviews` and `GET /reviews/{id}` return approved testimonials only.
+    Pending and rejected reviews are omitted from those responses, and a non-approved
+    detail lookup returns 404. `POST /reviews` always creates a `PENDING` review.
+    Clients cannot set `status`, `reviewedAt`, or `reviewedById`.
+    Admins list the queue at `GET /admin/reviews` (defaults to `PENDING`), read any
+    review at `GET /admin/reviews/{id}`, and approve or reject with
+    `PATCH /admin/reviews/{id}/status`. Content edits through `PUT /reviews/{id}`
+    do not change moderation status. The migration backfills existing reviews to
+    `APPROVED`, then sets the default for new rows to `PENDING`.
 servers:
   - url: /api
 
@@ -916,7 +928,8 @@ paths:
   /reviews:
     get:
       tags: [Reviews]
-      summary: List all reviews
+      summary: List approved reviews
+      description: Returns approved testimonials only. Pending and rejected reviews are omitted, and moderation fields are not included.
       responses:
         "200":
           description: Reviews retrieved successfully
@@ -933,7 +946,11 @@ paths:
         "500": { $ref: "#/components/responses/InternalError" }
     post:
       tags: [Reviews]
-      summary: Create a review
+      summary: Submit a review for moderation
+      description: |
+        Public multipart submission. The review is stored as `PENDING` and is not
+        returned by public reads until an admin approves it. A client-supplied
+        `status`, `reviewedAt`, or `reviewedById` is rejected with 400.
       requestBody:
         required: true
         content:
@@ -941,7 +958,7 @@ paths:
             schema: { $ref: "#/components/schemas/ReviewInput" }
       responses:
         "201":
-          description: Review created successfully
+          description: Review submitted for moderation
           content:
             application/json:
               schema:
@@ -949,7 +966,7 @@ paths:
                   - $ref: "#/components/schemas/ApiSuccess"
                   - type: object
                     properties:
-                      data: { $ref: "#/components/schemas/Review" }
+                      data: { $ref: "#/components/schemas/ReviewSubmission" }
         "400": { $ref: "#/components/responses/BadRequest" }
         "413": { $ref: "#/components/responses/PayloadTooLarge" }
         "500": { $ref: "#/components/responses/InternalError" }
@@ -962,7 +979,8 @@ paths:
         schema: { type: string, format: uuid }
     get:
       tags: [Reviews]
-      summary: Get a review by id
+      summary: Get an approved review by id
+      description: Returns 404 when the review is missing, pending, or rejected.
       responses:
         "200":
           description: Review retrieved successfully
@@ -978,7 +996,11 @@ paths:
         "500": { $ref: "#/components/responses/InternalError" }
     put:
       tags: [Reviews]
-      summary: Update a review (admin only)
+      summary: Update review content (admin only)
+      description: |
+        Edits name, role, message, or the profile image. Does not change moderation
+        status. Sending `status`, `reviewedAt`, or `reviewedById` returns 400 and
+        leaves the review unchanged.
       security:
         - sessionCookie: []
           csrfHeader: []
@@ -997,7 +1019,7 @@ paths:
                   - $ref: "#/components/schemas/ApiSuccess"
                   - type: object
                     properties:
-                      data: { $ref: "#/components/schemas/Review" }
+                      data: { $ref: "#/components/schemas/AdminReview" }
         "400": { $ref: "#/components/responses/BadRequest" }
         "413": { $ref: "#/components/responses/PayloadTooLarge" }
         "401": { $ref: "#/components/responses/Unauthorized" }
@@ -1019,6 +1041,107 @@ paths:
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
+  /admin/reviews:
+    get:
+      tags: [Reviews]
+      summary: List reviews for moderation (admin only)
+      description: |
+        Defaults to `PENDING` when `status` is omitted. Requires an admin session.
+        Does not require a CSRF token.
+      security:
+        - sessionCookie: []
+      parameters:
+        - in: query
+          name: status
+          required: false
+          schema:
+            type: string
+            enum: [PENDING, APPROVED, REJECTED]
+          description: Moderation status to list. Defaults to PENDING.
+      responses:
+        "200":
+          description: Reviews retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/AdminReview" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
+  /admin/reviews/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [Reviews]
+      summary: Get any review for moderation (admin only)
+      description: Returns pending, approved, and rejected reviews. Requires an admin session.
+      security:
+        - sessionCookie: []
+      responses:
+        "200":
+          description: Review retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/AdminReview" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
+  /admin/reviews/{id}/status:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string, format: uuid }
+    patch:
+      tags: [Reviews]
+      summary: Approve or reject a review (admin only)
+      description: |
+        Accepts only `APPROVED` or `REJECTED`. Allowed transitions are
+        `PENDING` to `APPROVED` or `REJECTED`, `APPROVED` to `REJECTED`, and
+        `REJECTED` to `APPROVED`. Repeating the current status returns 409.
+        Requires a trusted Origin, an admin session, and `X-CSRF-Token`.
+      security:
+        - sessionCookie: []
+          csrfHeader: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReviewModerationInput" }
+      responses:
+        "200":
+          description: Review moderation status updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/AdminReview" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
         "500": { $ref: "#/components/responses/InternalError" }
 
   /stats:
@@ -1043,7 +1166,9 @@ paths:
                           projects: { type: number }
                           events: { type: number }
                           partners: { type: number }
-                          reviews: { type: number }
+                          reviews:
+                            type: number
+                            description: Count of approved reviews only.
                           pullRequests: { type: number }
         "500": { $ref: "#/components/responses/InternalError" }
 
@@ -1135,18 +1260,62 @@ components:
       type: object
       required: [name, role, message, file]
       properties:
-        name: { type: string }
-        role: { type: string }
-        message: { type: string }
+        name: { type: string, maxLength: 200 }
+        role: { type: string, maxLength: 200 }
+        message: { type: string, maxLength: 2000 }
         file: { $ref: "#/components/schemas/ImageUpload" }
+
+    ReviewSubmission:
+      allOf:
+        - $ref: "#/components/schemas/Review"
+        - type: object
+          required: [status]
+          properties:
+            status:
+              type: string
+              enum: [PENDING]
+              description: New public submissions are always pending.
 
     ReviewUpdateInput:
       type: object
       properties:
-        name: { type: string }
-        role: { type: string }
-        message: { type: string }
+        name: { type: string, maxLength: 200 }
+        role: { type: string, maxLength: 200 }
+        message: { type: string, maxLength: 2000 }
         file: { $ref: "#/components/schemas/ImageUpload" }
+
+    ReviewModerator:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+
+    AdminReview:
+      allOf:
+        - $ref: "#/components/schemas/Review"
+        - type: object
+          required: [status]
+          properties:
+            status:
+              type: string
+              enum: [PENDING, APPROVED, REJECTED]
+            reviewedAt:
+              type: string
+              format: date-time
+              nullable: true
+            reviewedBy:
+              allOf:
+                - $ref: "#/components/schemas/ReviewModerator"
+              nullable: true
+
+    ReviewModerationInput:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [APPROVED, REJECTED]
 
     Member:
       type: object
@@ -1486,7 +1655,12 @@ components:
         application/json:
           schema: { $ref: "#/components/schemas/ApiError" }
     Forbidden:
-      description: Admin access required
+      description: Origin or CSRF check failed
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
+    Conflict:
+      description: The requested moderation transition is not allowed
       content:
         application/json:
           schema: { $ref: "#/components/schemas/ApiError" }

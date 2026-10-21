@@ -36,15 +36,22 @@ enum ApplicationStatus {
   Rejected
 }
 
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User {
-  id        String         @id @default(uuid())
-  name      String
-  email     String         @unique
-  password  String
-  role      UserRole       @default(USER)
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
-  sessions  AdminSession[]
+  id              String         @id @default(uuid())
+  name            String
+  email           String         @unique
+  password        String
+  role            UserRole       @default(USER)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  sessions        AdminSession[]
+  reviewedReviews Review[]
 }
 
 /// Server-side administrator session. The browser holds only an opaque cookie;
@@ -134,14 +141,22 @@ model PartnerApplication {
 }
 
 model Review {
-  id              String   @id @default(uuid())
+  id              String       @id @default(uuid())
   name            String
   profileUrl      String
   profilePublicId String
   role            String
   message         String
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  /// Existing rows are backfilled to APPROVED. New submissions default to PENDING.
+  status          ReviewStatus @default(PENDING)
+  reviewedAt      DateTime?
+  reviewedById    String?
+  reviewedBy      User?        @relation(fields: [reviewedById], references: [id], onDelete: SetNull)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([status])
+  @@index([reviewedById])
 }
 
 model Project {

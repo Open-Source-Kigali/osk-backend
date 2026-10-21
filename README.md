@@ -112,6 +112,8 @@ docs/
 
 Admin-only endpoints require a cookie session from `POST /api/auth/login`. State-changing admin requests also need the `X-CSRF-Token` header and a trusted `Origin`.
 
+Public review reads return approved testimonials only. New submissions stay pending until an admin approves or rejects them at `/api/admin/reviews`.
+
 [![Launch Swagger UI](https://img.shields.io/badge/Swagger%20UI-Launch%20API%20Docs-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)](http://localhost:3000/api/docs)
 
 The interactive Swagger UI should be available at `http://localhost:3000/api/docs` once the server is running. The underlying spec lives at [`docs/openapi.yaml`](./docs/openapi.yaml).

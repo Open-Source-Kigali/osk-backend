@@ -65,6 +65,16 @@ The provisioning script stores a bcrypt hash only and never prints the password 
 
 Production requirements: HTTPS, `CORS_ORIGINS` limited to real frontend origins, Secure session cookies (forced when `NODE_ENV=production`), and no wildcard CORS with credentials.
 
+### Review moderation
+
+Public `GET /api/reviews` and `GET /api/reviews/:id` return approved testimonials only. A pending or rejected review looks like a missing record on the public detail route. `POST /api/reviews` stores the submission as `PENDING`. Clients cannot send `status`, `reviewedAt`, or `reviewedById`.
+
+Migration `20261020131000_add_review_moderation` backfills every existing review to `APPROVED`, then sets the column default to `PENDING` for later inserts. `reviewedAt` and `reviewedById` stay null until an admin decision.
+
+Admins list the queue with `GET /api/admin/reviews` (defaults to `PENDING`), read any review with `GET /api/admin/reviews/:id`, and approve or reject with `PATCH /api/admin/reviews/:id/status` and `{ "status": "APPROVED" | "REJECTED" }`. The reads need a session. The status change also needs a trusted `Origin` and `X-CSRF-Token`. Allowed transitions are pending to approved or rejected, approved to rejected, and rejected back to approved. Repeating the current status returns 409.
+
+`PUT /api/reviews/:id` still edits text and the profile image. It does not publish or hide a review. `GET /api/stats` counts approved reviews only.
+
 ## Branching
 
 We use a three-branch flow: `dev` → `staging` → `main`.

@@ -131,5 +131,8 @@ describe("getStats database stats", () => {
     expect(stats.partners).toBe(2);
     expect(stats.reviews).toBe(6);
     expect(stats.pullRequests).toBe(24);
+    expect(prismaMock.review.count).toHaveBeenCalledWith({
+      where: { status: "APPROVED" },
+    });
   });
 });
