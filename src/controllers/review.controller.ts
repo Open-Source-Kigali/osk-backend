@@ -112,6 +112,28 @@ async function findReviewById(
 }
 
 async function addReview(req: Request, res: Response, next: NextFunction) {
+  return createPendingReview(req, res, next, (review) => ({
+    ...toPublicReview(review),
+    status: review.status,
+  }));
+}
+
+async function addAdminReview(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  return createPendingReview(req, res, next, (review) =>
+    toAdminReview({ ...review, reviewedBy: null }),
+  );
+}
+
+async function createPendingReview(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+  present: (review: Review & { reviewedBy: null }) => unknown,
+) {
   if (!req.file) {
     return response.failure(res, "Profile image file is required", 400);
   }
@@ -137,7 +159,7 @@ async function addReview(req: Request, res: Response, next: NextFunction) {
 
     response.success(
       res,
-      { ...toPublicReview(newReview), status: newReview.status },
+      present({ ...newReview, reviewedBy: null }),
       201,
       "Review submitted for moderation",
     );
@@ -315,6 +337,7 @@ export default {
   findAllReviews,
   findReviewById,
   addReview,
+  addAdminReview,
   updateReview,
   deleteReview,
   listReviewsForModeration,

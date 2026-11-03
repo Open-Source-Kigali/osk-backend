@@ -198,6 +198,73 @@ describe("POST /api/reviews", () => {
   });
 });
 
+describe("POST /api/admin/reviews", () => {
+  it("returns 401 without a session", async () => {
+    const res = await request(app)
+      .post("/api/admin/reviews")
+      .set("Origin", ORIGIN)
+      .field("name", "Aline")
+      .field("role", "Contributor")
+      .field("message", "OSK helped me ship.")
+      .attach("file", PNG, { filename: "aline.png", contentType: "image/png" });
+
+    expect(res.status).toBe(401);
+    expect(reviewService.addReview).not.toHaveBeenCalled();
+  });
+
+  it("creates a pending admin review and keeps it unpublished", async () => {
+    mockValidAdminSession();
+    vi.mocked(uploadBuffer).mockResolvedValue({
+      secure_url: "https://example.com/aline.png",
+      public_id: "reviews/aline",
+    });
+    vi.mocked(reviewService.addReview).mockResolvedValue(pendingReview);
+
+    const res = await request(app)
+      .post("/api/admin/reviews")
+      .set("Origin", ORIGIN)
+      .set("Cookie", SESSION_COOKIE)
+      .set("X-CSRF-Token", CSRF_TOKEN)
+      .field("name", "Aline")
+      .field("role", "Contributor")
+      .field("message", "OSK helped me ship.")
+      .attach("file", PNG, { filename: "aline.png", contentType: "image/png" });
+
+    expect(res.status).toBe(201);
+    expect(res.body.message).toBe("Review submitted for moderation");
+    expect(res.body.data.status).toBe(ReviewStatus.PENDING);
+    expect(res.body.data.reviewedBy).toBeNull();
+    expect(reviewService.addReview).toHaveBeenCalledWith({
+      name: "Aline",
+      role: "Contributor",
+      message: "OSK helped me ship.",
+      profileUrl: "https://example.com/aline.png",
+      profilePublicId: "reviews/aline",
+    });
+  });
+
+  it("rejects a client-supplied moderation status before creating an admin review", async () => {
+    mockValidAdminSession();
+
+    const res = await request(app)
+      .post("/api/admin/reviews")
+      .set("Origin", ORIGIN)
+      .set("Cookie", SESSION_COOKIE)
+      .set("X-CSRF-Token", CSRF_TOKEN)
+      .field("name", "Aline")
+      .field("role", "Contributor")
+      .field("message", "OSK helped me ship.")
+      .field("status", ReviewStatus.APPROVED)
+      .attach("file", PNG, { filename: "aline.png", contentType: "image/png" });
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe(
+      "Moderation status cannot be set by the client",
+    );
+    expect(reviewService.addReview).not.toHaveBeenCalled();
+  });
+});
+
 describe("admin review moderation", () => {
   it("returns 401 for the moderation queue without a session", async () => {
     const res = await request(app).get("/api/admin/reviews");

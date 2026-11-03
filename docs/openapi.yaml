@@ -37,8 +37,9 @@ info:
     Pending and rejected reviews are omitted from those responses, and a non-approved
     detail lookup returns 404. `POST /reviews` always creates a `PENDING` review.
     Clients cannot set `status`, `reviewedAt`, or `reviewedById`.
-    Admins list the queue at `GET /admin/reviews` (defaults to `PENDING`), read any
-    review at `GET /admin/reviews/{id}`, and approve or reject with
+    Admins create a pending review at `POST /admin/reviews`. It stays private until
+    approval. Admins list the queue at `GET /admin/reviews` (defaults to `PENDING`),
+    read any review at `GET /admin/reviews/{id}`, and approve or reject with
     `PATCH /admin/reviews/{id}/status`. Content edits through `PUT /reviews/{id}`
     do not change moderation status. The migration backfills existing reviews to
     `APPROVED`, then sets the default for new rows to `PENDING`.
@@ -1044,6 +1045,37 @@ paths:
         "500": { $ref: "#/components/responses/InternalError" }
 
   /admin/reviews:
+    post:
+      tags: [Reviews]
+      summary: Submit an admin review for moderation
+      description: |
+        Multipart submission from an authenticated admin. The review is stored as
+        `PENDING` and is not public until it is approved. A client-supplied
+        `status`, `reviewedAt`, or `reviewedById` is rejected with 400.
+      security:
+        - sessionCookie: []
+          csrfHeader: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema: { $ref: "#/components/schemas/ReviewInput" }
+      responses:
+        "201":
+          description: Review submitted for moderation
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/AdminReview" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
+        "500": { $ref: "#/components/responses/InternalError" }
     get:
       tags: [Reviews]
       summary: List reviews for moderation (admin only)
