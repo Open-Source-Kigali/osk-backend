@@ -118,11 +118,7 @@ async function addReview(req: Request, res: Response, next: NextFunction) {
   }));
 }
 
-async function addAdminReview(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) {
+async function addAdminReview(req: Request, res: Response, next: NextFunction) {
   return createPendingReview(req, res, next, (review) =>
     toAdminReview({ ...review, reviewedBy: null }),
   );
