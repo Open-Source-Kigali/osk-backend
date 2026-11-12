@@ -20,10 +20,11 @@ async function login(req: Request, res: Response, next: NextFunction) {
     const body = parseRequestBody(loginSchema, req.body, res);
     if (!body) return;
 
+    await runLimiter(loginFailureRateLimit, req, res);
+    if (res.headersSent) return;
+
     const result = await authService.login(body.email, body.password);
     if (!result.ok) {
-      await runLimiter(loginFailureRateLimit, req, res);
-      if (res.headersSent) return;
       return response.failure(res, authService.INVALID_CREDENTIALS, 401);
     }
 

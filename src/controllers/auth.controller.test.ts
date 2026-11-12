@@ -29,6 +29,14 @@ function cookieHeader(token = "session-token") {
   return `osk_session=${token}`;
 }
 
+function postLogin(email: string, password: string, ip: string) {
+  return request(app)
+    .post("/api/auth/login")
+    .set("Origin", ORIGIN)
+    .set("X-Forwarded-For", ip)
+    .send({ email, password });
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
 });
@@ -87,20 +95,88 @@ describe("POST /api/auth/login", () => {
       reason: "invalid_credentials",
     });
 
-    let lastStatus = 0;
+    const statuses: number[] = [];
     for (let i = 0; i < 6; i += 1) {
-      const res = await request(app)
-        .post("/api/auth/login")
-        .set("Origin", ORIGIN)
-        .set("X-Forwarded-For", "203.0.113.50")
-        .send({
-          email: "ratelimit@example.com",
-          password: "wrong-password",
+      const res = await postLogin(
+        "ratelimit@example.com",
+        "wrong-password",
+        "203.0.113.50",
+      );
+      statuses.push(res.status);
+      if (i === 5) {
+        expect(res.body).toEqual({
+          success: false,
+          message: "Too many requests. Please try again later.",
+          data: null,
         });
-      lastStatus = res.status;
+      }
     }
 
-    expect(lastStatus).toBe(429);
+    expect(statuses.slice(0, 5)).toEqual([401, 401, 401, 401, 401]);
+    expect(statuses[5]).toBe(429);
+    expect(authService.login).toHaveBeenCalledTimes(5);
+
+    const again = await postLogin(
+      "ratelimit@example.com",
+      "wrong-password",
+      "203.0.113.50",
+    );
+    expect(again.status).toBe(429);
+    expect(authService.login).toHaveBeenCalledTimes(5);
+  });
+
+  it("does not count a successful login toward the failure limit", async () => {
+    vi.mocked(authService.login).mockResolvedValue({
+      ok: false,
+      reason: "invalid_credentials",
+    });
+
+    for (let i = 0; i < 4; i += 1) {
+      const res = await postLogin(
+        "success-budget@example.com",
+        "wrong-password",
+        "203.0.113.51",
+      );
+      expect(res.status).toBe(401);
+    }
+
+    vi.mocked(authService.login).mockResolvedValueOnce({
+      ok: true,
+      sessionToken: "raw-session-token",
+      payload: {
+        user: adminUser,
+        expiresAt: "2026-10-16T20:00:00.000Z",
+        csrfToken: "csrf-token-value",
+      },
+    });
+
+    const success = await postLogin(
+      "success-budget@example.com",
+      "long-enough-password",
+      "203.0.113.51",
+    );
+    expect(success.status).toBe(200);
+
+    const stillAllowed = await postLogin(
+      "success-budget@example.com",
+      "wrong-password",
+      "203.0.113.51",
+    );
+    expect(stillAllowed.status).toBe(401);
+    expect(authService.login).toHaveBeenCalledTimes(6);
+
+    const locked = await postLogin(
+      "success-budget@example.com",
+      "wrong-password",
+      "203.0.113.51",
+    );
+    expect(locked.status).toBe(429);
+    expect(locked.body).toEqual({
+      success: false,
+      message: "Too many requests. Please try again later.",
+      data: null,
+    });
+    expect(authService.login).toHaveBeenCalledTimes(6);
   });
 
   it("rejects missing fields", async () => {
