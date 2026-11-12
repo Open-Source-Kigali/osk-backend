@@ -1,4 +1,5 @@
 import { prisma } from "../config/prisma";
+import { ReviewStatus } from "../generated/prisma/client";
 import { gh } from "./github.service";
 
 const OSK_REPOS = [
@@ -42,7 +43,7 @@ async function getStats() {
       prisma.project.count(),
       prisma.event.count(),
       prisma.partner.count(),
-      prisma.review.count(),
+      prisma.review.count({ where: { status: ReviewStatus.APPROVED } }),
       prisma.project.aggregate({ _sum: { ghPullRequests: true } }),
     ]);
 

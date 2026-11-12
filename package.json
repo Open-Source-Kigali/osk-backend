@@ -20,6 +20,7 @@
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
+    "provision:admin": "ts-node --compiler-options '{\"module\":\"commonjs\"}' scripts/provision-admin.ts",
     "prepare": "husky"
   },
   "repository": {
@@ -43,7 +44,9 @@
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
+    "bcryptjs": "^3.0.3",
     "cloudinary": "^2.10.0",
+    "cookie": "^0.7.2",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
@@ -57,6 +60,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@types/cookie": "^0.6.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/multer": "^2.1.0",

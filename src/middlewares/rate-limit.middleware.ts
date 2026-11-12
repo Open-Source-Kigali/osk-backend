@@ -18,8 +18,12 @@ export function publicKeyGenerator(req: Request) {
   return getRequestIp(req);
 }
 
+/** Prefer the authenticated admin user id; fall back to IP before session is attached. */
 export function adminKeyGenerator(req: Request) {
-  return String(req.header("x-api-key") ?? getRequestIp(req));
+  if (req.authUser?.id) {
+    return `admin:${req.authUser.id}`;
+  }
+  return getRequestIp(req);
 }
 
 async function getRedisClient() {
@@ -57,6 +61,8 @@ function createRateLimiter(options: {
   limit: number;
   keyGenerator: (req: Request) => string;
   prefix: string;
+  skipSuccessfulRequests?: boolean;
+  requestWasSuccessful?: (req: Request, res: Response) => boolean;
 }) {
   const store = createStore(options.prefix);
   const limiterOptions = {
@@ -69,6 +75,10 @@ function createRateLimiter(options: {
     handler: (_req: Request, res: Response) => {
       response.failure(res, "Too many requests. Please try again later.", 429);
     },
+    ...(options.skipSuccessfulRequests ? { skipSuccessfulRequests: true } : {}),
+    ...(options.requestWasSuccessful
+      ? { requestWasSuccessful: options.requestWasSuccessful }
+      : {}),
     ...(store ? { store } : {}),
   };
 
@@ -133,6 +143,29 @@ export const authAttemptRateLimit = createRateLimiter({
   limit: 5,
   prefix: "auth",
   keyGenerator: publicKeyGenerator,
+});
+
+/** Failed password logins only; keyed by IP + email so it does not share budget with API-key checks. */
+export function loginFailureKeyGenerator(req: Request) {
+  const email =
+    typeof req.body?.email === "string"
+      ? req.body.email.trim().toLowerCase()
+      : "";
+  return `${getRequestIp(req)}:${email}`;
+}
+
+/**
+ * Counts a hit before password verification. Successful logins and 5xx responses
+ * are released on finish so only credential failures stay in the budget.
+ * Once totalHits exceeds the limit, the middleware responds 429 without calling next.
+ */
+export const loginFailureRateLimit = createRateLimiter({
+  limit: 5,
+  prefix: "login-fail",
+  keyGenerator: loginFailureKeyGenerator,
+  skipSuccessfulRequests: true,
+  requestWasSuccessful: (_req, res) =>
+    res.statusCode < 400 || res.statusCode >= 500,
 });
 
 export { createRateLimiter };

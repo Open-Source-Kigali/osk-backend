@@ -1,8 +1,15 @@
 import { NextFunction, Request, Response } from "express";
+import multer from "multer";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import response from "../utils/response";
 import { errorHandler } from "./error.middleware";
 import { Prisma } from "../generated/prisma/client";
+import {
+  IMAGE_TOO_LARGE_MESSAGE,
+  INVALID_UPLOAD_MESSAGE,
+  UNSUPPORTED_IMAGE_TYPE_MESSAGE,
+  UploadValidationError,
+} from "./upload.middleware";
 
 describe("middleware tests", () => {
   const req = {} as Request;
@@ -54,5 +61,42 @@ describe("middleware tests", () => {
     errorHandler(errorObject, req, res, next);
 
     expect(failureSpy).toHaveBeenCalledWith(res, "Internal Server Error", 500);
+  });
+
+  it("returns 400 for an unsupported upload type without the error internals", () => {
+    const failureSpy = vi.spyOn(response, "failure");
+    const errorObject = new UploadValidationError(
+      UNSUPPORTED_IMAGE_TYPE_MESSAGE,
+      400,
+    );
+
+    errorHandler(errorObject, req, res, next);
+
+    expect(failureSpy).toHaveBeenCalledWith(
+      res,
+      UNSUPPORTED_IMAGE_TYPE_MESSAGE,
+      400,
+    );
+    expect(failureSpy.mock.calls[0]?.[1]).not.toContain(
+      "UploadValidationError",
+    );
+  });
+
+  it("returns 413 for a file that exceeds the upload limit", () => {
+    const failureSpy = vi.spyOn(response, "failure");
+    const errorObject = new multer.MulterError("LIMIT_FILE_SIZE", "file");
+
+    errorHandler(errorObject, req, res, next);
+
+    expect(failureSpy).toHaveBeenCalledWith(res, IMAGE_TOO_LARGE_MESSAGE, 413);
+  });
+
+  it("returns 400 for other malformed uploads", () => {
+    const failureSpy = vi.spyOn(response, "failure");
+    const errorObject = new multer.MulterError("LIMIT_UNEXPECTED_FILE", "logo");
+
+    errorHandler(errorObject, req, res, next);
+
+    expect(failureSpy).toHaveBeenCalledWith(res, INVALID_UPLOAD_MESSAGE, 400);
   });
 });

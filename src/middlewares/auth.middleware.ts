@@ -3,6 +3,10 @@ import { env } from "../config/env";
 import response from "../utils/response";
 import { authAttemptRateLimit, runLimiter } from "./rate-limit.middleware";
 
+/**
+ * Legacy shared API-key gate. Admin HTTP routes no longer use this (Phase 3).
+ * Kept only for isolated tests and emergency tooling; do not reattach to routes.
+ */
 async function requireAdmin(req: Request, res: Response, next: NextFunction) {
   const apiKey = req.header("x-api-key");
 
