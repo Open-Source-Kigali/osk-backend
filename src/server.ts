@@ -1,9 +1,9 @@
 import app from "./app";
 import { env } from "./config/env";
 
-if (!env.adminApiKey) {
+if (env.nodeEnv === "production" && env.corsOrigins.length === 0) {
   console.warn(
-    "WARNING: ADMIN_API_KEY is not set. All admin endpoints will return 500.",
+    "WARNING: CORS_ORIGINS is empty. Credentialed admin session requests will be rejected.",
   );
 }
 

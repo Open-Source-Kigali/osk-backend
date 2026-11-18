@@ -8,11 +8,47 @@ info:
     All responses follow a consistent envelope:
       Success: `{ "success": true, "message": string, "data": T }`
       Failure: `{ "success": false, "message": string, "data": null }`
+
+    Image uploads use the multipart field `file`.
+    Allowed types are JPEG (`image/jpeg` or `image/jpg`), PNG, WebP, and GIF.
+    The file header must match that format. A matching Content-Type with other bytes returns 400.
+    SVG is not accepted: uploads are stored and served as submitted, and SVG can contain scripts.
+    The maximum size is 5 MB (5242880 bytes).
+    An unsupported or mismatched file returns 400. A larger file returns 413.
+    Both use the failure envelope and do not include internal error details.
+
+    ## Admin session authentication (Phase 2)
+
+    Cookie-backed administrator login is available under `/auth`.
+    All admin mutations and admin-only reads require an authenticated ADMIN session
+    cookie (`osk_session`). The shared `x-api-key` header is no longer accepted
+    for those routes. Session cookies are HttpOnly; the session token is never
+    returned in JSON. Cross-origin browsers must send credentials.
+    CSRF: after login, send the `csrfToken` from the login (or `GET /auth/csrf`)
+    response in the `X-CSRF-Token` header on every state-changing cookie-authenticated
+    request (admin CRUD/refresh and `POST /auth/logout`). Admin GET endpoints that
+    expose non-public data require the session cookie but not a CSRF token.
+    Login, logout, and admin writes also require a trusted `Origin` (or Referer
+    origin) that matches `CORS_ORIGINS`.
+
+    ## Review moderation
+
+    Public `GET /reviews` and `GET /reviews/{id}` return approved testimonials only.
+    Pending and rejected reviews are omitted from those responses, and a non-approved
+    detail lookup returns 404. `POST /reviews` always creates a `PENDING` review.
+    Clients cannot set `status`, `reviewedAt`, or `reviewedById`.
+    Admins create a pending review at `POST /admin/reviews`. It stays private until
+    approval. Admins list the queue at `GET /admin/reviews` (defaults to `PENDING`),
+    read any review at `GET /admin/reviews/{id}`, and approve or reject with
+    `PATCH /admin/reviews/{id}/status`. Content edits through `PUT /reviews/{id}`
+    do not change moderation status. The migration backfills existing reviews to
+    `APPROVED`, then sets the default for new rows to `PENDING`.
 servers:
   - url: /api
 
 tags:
   - name: Health
+  - name: Auth
   - name: Members
   - name: Events
   - name: Partners
@@ -59,6 +95,138 @@ paths:
                   db:
                     type: string
                     example: unreachable
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Administrator login
+      description: |
+        Validates administrator credentials, creates a server-side session, and
+        sets the HttpOnly `osk_session` cookie. The session token is never
+        returned in the JSON body. Requires a trusted Origin. Failed attempts
+        are rate limited.
+      parameters:
+        - in: header
+          name: Origin
+          required: true
+          schema: { type: string }
+          description: Must match an entry in CORS_ORIGINS
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LoginInput" }
+      responses:
+        "200":
+          description: Logged in successfully
+          headers:
+            Set-Cookie:
+              description: HttpOnly session cookie named `osk_session`
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/AuthSessionPayload" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Current administrator session
+      description: Returns the authenticated admin identity from the session cookie.
+      parameters:
+        - in: cookie
+          name: osk_session
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Session retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/AuthMePayload" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
+  /auth/csrf:
+    get:
+      tags: [Auth]
+      summary: Issue a session-bound CSRF token
+      description: |
+        Returns a CSRF token bound to the current admin session. Send it as the
+        `X-CSRF-Token` header on cookie-authenticated state-changing requests.
+        This token is not the session cookie value.
+      parameters:
+        - in: cookie
+          name: osk_session
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: CSRF token issued successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        required: [csrfToken]
+                        properties:
+                          csrfToken: { type: string }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Administrator logout
+      description: |
+        Revokes the current server-side session and clears the session cookie.
+        Requires a trusted Origin and a valid `X-CSRF-Token` header.
+      parameters:
+        - in: header
+          name: Origin
+          required: true
+          schema: { type: string }
+        - in: header
+          name: X-CSRF-Token
+          required: true
+          schema: { type: string }
+        - in: cookie
+          name: osk_session
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Logged out successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data: { type: object, nullable: true, example: null }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
   /members:
     get:
       tags: [Members]
@@ -125,7 +293,8 @@ paths:
       tags: [Members]
       summary: Update a member (admin only)
       security:
-        - adminApiKey: []
+        - sessionCookie: []
+          csrfHeader: []
       requestBody:
         required: true
         content:
@@ -150,7 +319,8 @@ paths:
       tags: [Members]
       summary: Delete a member (admin only)
       security:
-        - adminApiKey: []
+        - sessionCookie: []
+          csrfHeader: []
       responses:
         "204":
           description: Member deleted successfully
@@ -184,7 +354,8 @@ paths:
       tags: [Events]
       summary: Create an event (admin only)
       security:
-        - adminApiKey: []
+        - sessionCookie: []
+          csrfHeader: []
       requestBody:
         required: true
         content:
@@ -202,6 +373,7 @@ paths:
                     properties:
                       data: { $ref: "#/components/schemas/Event" }
         "400": { $ref: "#/components/responses/BadRequest" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "500": { $ref: "#/components/responses/InternalError" }
@@ -232,7 +404,8 @@ paths:
       tags: [Events]
       summary: Update an event (admin only)
       security:
-        - adminApiKey: []
+        - sessionCookie: []
+          csrfHeader: []
       requestBody:
         required: true
         content:
@@ -249,6 +422,8 @@ paths:
                   - type: object
                     properties:
                       data: { $ref: "#/components/schemas/Event" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
@@ -257,7 +432,8 @@ paths:
       tags: [Events]
       summary: Delete an event (admin only)
       security:
-        - adminApiKey: []
+        - sessionCookie: []
+          csrfHeader: []
       responses:
         "204":
           description: Event deleted successfully
@@ -307,6 +483,7 @@ paths:
                     properties:
                       data: { $ref: "#/components/schemas/Partner" }
         "400": { $ref: "#/components/responses/BadRequest" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "500": { $ref: "#/components/responses/InternalError" }
@@ -337,7 +514,8 @@ paths:
       tags: [Partners]
       summary: Update a partner (admin only)
       security:
-        - adminApiKey: []
+        - sessionCookie: []
+          csrfHeader: []
       requestBody:
         required: true
         content:
@@ -354,6 +532,8 @@ paths:
                   - type: object
                     properties:
                       data: { $ref: "#/components/schemas/Partner" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
@@ -362,7 +542,8 @@ paths:
       tags: [Partners]
       summary: Delete a partner (admin only)
       security:
-        - adminApiKey: []
+        - sessionCookie: []
+          csrfHeader: []
       responses:
         "204":
           description: Partner deleted successfully
@@ -395,12 +576,13 @@ paths:
                     properties:
                       data: { $ref: "#/components/schemas/PartnerApplication" }
         "400": { $ref: "#/components/responses/BadRequest" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
         "500": { $ref: "#/components/responses/InternalError" }
     get:
       tags: [Partner Applications]
       summary: List all partner applications (admin only)
       security:
-        - adminApiKey: []
+        - sessionCookie: []
       responses:
         "200":
           description: Partner applications retrieved successfully
@@ -429,7 +611,7 @@ paths:
       tags: [Partner Applications]
       summary: Get a partner application by id (admin only)
       security:
-        - adminApiKey: []
+        - sessionCookie: []
       responses:
         "200":
           description: Partner application retrieved successfully
@@ -449,7 +631,8 @@ paths:
       tags: [Partner Applications]
       summary: Delete a partner application (admin only)
       security:
-        - adminApiKey: []
+        - sessionCookie: []
+          csrfHeader: []
       responses:
         "204":
           description: Partner application deleted successfully
@@ -471,7 +654,8 @@ paths:
       tags: [Partner Applications]
       summary: Update a partner application status (admin only)
       security:
-        - adminApiKey: []
+        - sessionCookie: []
+          csrfHeader: []
       requestBody:
         required: true
         content:
@@ -542,7 +726,8 @@ paths:
       tags: [Projects]
       summary: Create a project (admin only)
       security:
-        - adminApiKey: []
+        - sessionCookie: []
+          csrfHeader: []
       requestBody:
         required: true
         content:
@@ -560,6 +745,7 @@ paths:
                     properties:
                       data: { $ref: "#/components/schemas/Project" }
         "400": { $ref: "#/components/responses/BadRequest" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "500": { $ref: "#/components/responses/InternalError" }
@@ -569,7 +755,8 @@ paths:
       tags: [Projects]
       summary: Refresh GitHub-cached filds for all projects (admin only)
       security:
-        - adminApiKey: []
+        - sessionCookie: []
+          csrfHeader: []
       responses:
         "200":
           description: Refresh completed
@@ -637,7 +824,8 @@ paths:
       tags: [Projects]
       summary: Update a project (admin only)
       security:
-        - adminApiKey: []
+        - sessionCookie: []
+          csrfHeader: []
       requestBody:
         required: true
         content:
@@ -654,6 +842,8 @@ paths:
                   - type: object
                     properties:
                       data: { $ref: "#/components/schemas/Project" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
@@ -662,7 +852,8 @@ paths:
       tags: [Projects]
       summary: Delete a project (admin only)
       security:
-        - adminApiKey: []
+        - sessionCookie: []
+          csrfHeader: []
       responses:
         "204":
           description: Project deleted successfully
@@ -706,7 +897,8 @@ paths:
       tags: [Contributors]
       summary: Parse CONTRIBUTORS.md, fetch all GitHub profiles, overwrite contributors.json
       security:
-        - adminApiKey: []
+        - sessionCookie: []
+          csrfHeader: []
       responses:
         "200":
           description: Contributors refreshed successfully
@@ -737,7 +929,8 @@ paths:
   /reviews:
     get:
       tags: [Reviews]
-      summary: List all reviews
+      summary: List approved reviews
+      description: Returns approved testimonials only. Pending and rejected reviews are omitted, and moderation fields are not included.
       responses:
         "200":
           description: Reviews retrieved successfully
@@ -754,7 +947,11 @@ paths:
         "500": { $ref: "#/components/responses/InternalError" }
     post:
       tags: [Reviews]
-      summary: Create a review
+      summary: Submit a review for moderation
+      description: |
+        Public multipart submission. The review is stored as `PENDING` and is not
+        returned by public reads until an admin approves it. A client-supplied
+        `status`, `reviewedAt`, or `reviewedById` is rejected with 400.
       requestBody:
         required: true
         content:
@@ -762,7 +959,7 @@ paths:
             schema: { $ref: "#/components/schemas/ReviewInput" }
       responses:
         "201":
-          description: Review created successfully
+          description: Review submitted for moderation
           content:
             application/json:
               schema:
@@ -770,8 +967,9 @@ paths:
                   - $ref: "#/components/schemas/ApiSuccess"
                   - type: object
                     properties:
-                      data: { $ref: "#/components/schemas/Review" }
+                      data: { $ref: "#/components/schemas/ReviewSubmission" }
         "400": { $ref: "#/components/responses/BadRequest" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
         "500": { $ref: "#/components/responses/InternalError" }
 
   /reviews/{id}:
@@ -782,7 +980,8 @@ paths:
         schema: { type: string, format: uuid }
     get:
       tags: [Reviews]
-      summary: Get a review by id
+      summary: Get an approved review by id
+      description: Returns 404 when the review is missing, pending, or rejected.
       responses:
         "200":
           description: Review retrieved successfully
@@ -798,9 +997,14 @@ paths:
         "500": { $ref: "#/components/responses/InternalError" }
     put:
       tags: [Reviews]
-      summary: Update a review (admin only)
+      summary: Update review content (admin only)
+      description: |
+        Edits name, role, message, or the profile image. Does not change moderation
+        status. Sending `status`, `reviewedAt`, or `reviewedById` returns 400 and
+        leaves the review unchanged.
       security:
-        - adminApiKey: []
+        - sessionCookie: []
+          csrfHeader: []
       requestBody:
         required: true
         content:
@@ -816,7 +1020,9 @@ paths:
                   - $ref: "#/components/schemas/ApiSuccess"
                   - type: object
                     properties:
-                      data: { $ref: "#/components/schemas/Review" }
+                      data: { $ref: "#/components/schemas/AdminReview" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
@@ -825,7 +1031,8 @@ paths:
       tags: [Reviews]
       summary: Delete a review (admin only)
       security:
-        - adminApiKey: []
+        - sessionCookie: []
+          csrfHeader: []
       responses:
         "204":
           description: Review deleted successfully
@@ -835,6 +1042,138 @@ paths:
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
+  /admin/reviews:
+    post:
+      tags: [Reviews]
+      summary: Submit an admin review for moderation
+      description: |
+        Multipart submission from an authenticated admin. The review is stored as
+        `PENDING` and is not public until it is approved. A client-supplied
+        `status`, `reviewedAt`, or `reviewedById` is rejected with 400.
+      security:
+        - sessionCookie: []
+          csrfHeader: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema: { $ref: "#/components/schemas/ReviewInput" }
+      responses:
+        "201":
+          description: Review submitted for moderation
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/AdminReview" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
+        "500": { $ref: "#/components/responses/InternalError" }
+    get:
+      tags: [Reviews]
+      summary: List reviews for moderation (admin only)
+      description: |
+        Defaults to `PENDING` when `status` is omitted. Requires an admin session.
+        Does not require a CSRF token.
+      security:
+        - sessionCookie: []
+      parameters:
+        - in: query
+          name: status
+          required: false
+          schema:
+            type: string
+            enum: [PENDING, APPROVED, REJECTED]
+          description: Moderation status to list. Defaults to PENDING.
+      responses:
+        "200":
+          description: Reviews retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/AdminReview" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
+  /admin/reviews/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [Reviews]
+      summary: Get any review for moderation (admin only)
+      description: Returns pending, approved, and rejected reviews. Requires an admin session.
+      security:
+        - sessionCookie: []
+      responses:
+        "200":
+          description: Review retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/AdminReview" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
+  /admin/reviews/{id}/status:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string, format: uuid }
+    patch:
+      tags: [Reviews]
+      summary: Approve or reject a review (admin only)
+      description: |
+        Accepts only `APPROVED` or `REJECTED`. Allowed transitions are
+        `PENDING` to `APPROVED` or `REJECTED`, `APPROVED` to `REJECTED`, and
+        `REJECTED` to `APPROVED`. Repeating the current status returns 409.
+        Requires a trusted Origin, an admin session, and `X-CSRF-Token`.
+      security:
+        - sessionCookie: []
+          csrfHeader: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReviewModerationInput" }
+      responses:
+        "200":
+          description: Review moderation status updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/AdminReview" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
         "500": { $ref: "#/components/responses/InternalError" }
 
   /stats:
@@ -859,18 +1198,59 @@ paths:
                           projects: { type: number }
                           events: { type: number }
                           partners: { type: number }
-                          reviews: { type: number }
+                          reviews:
+                            type: number
+                            description: Count of approved reviews only.
                           pullRequests: { type: number }
         "500": { $ref: "#/components/responses/InternalError" }
 
 components:
   securitySchemes:
-    adminApiKey:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: osk_session
+      description: HttpOnly admin session cookie issued by POST /auth/login.
+    csrfHeader:
       type: apiKey
       in: header
-      name: x-api-key
+      name: X-CSRF-Token
+      description: Session-bound CSRF token from login or GET /auth/csrf. Required on state-changing admin requests.
 
   schemas:
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, format: password }
+
+    AuthUserPublic:
+      type: object
+      required: [id, name, email, role]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        email: { type: string, format: email }
+        role: { type: string, enum: [ADMIN] }
+
+    AuthSessionPayload:
+      type: object
+      required: [user, expiresAt, csrfToken]
+      properties:
+        user: { $ref: "#/components/schemas/AuthUserPublic" }
+        expiresAt: { type: string, format: date-time }
+        csrfToken:
+          type: string
+          description: Session-bound CSRF token for X-CSRF-Token header; not the session cookie.
+
+    AuthMePayload:
+      type: object
+      required: [user, expiresAt]
+      properties:
+        user: { $ref: "#/components/schemas/AuthUserPublic" }
+        expiresAt: { type: string, format: date-time }
+
     ApiSuccess:
       type: object
       properties:
@@ -886,6 +1266,15 @@ components:
         message: { type: string }
         data: { type: object, nullable: true, example: null }
       required: [success, message, data]
+
+    ImageUpload:
+      type: string
+      format: binary
+      description: >
+        Multipart field `file`. Allowed types: JPEG (`image/jpeg` or `image/jpg`),
+        PNG, WebP, and GIF. The file header must match one of those formats.
+        SVG is not accepted. Maximum size is 5 MB (5242880 bytes).
+        Unsupported or mismatched files return 400. Files over the limit return 413.
 
     Review:
       type: object
@@ -903,22 +1292,62 @@ components:
       type: object
       required: [name, role, message, file]
       properties:
-        name: { type: string }
-        role: { type: string }
-        message: { type: string }
-        file:
-          type: string
-          format: binary
+        name: { type: string, maxLength: 200 }
+        role: { type: string, maxLength: 200 }
+        message: { type: string, maxLength: 2000 }
+        file: { $ref: "#/components/schemas/ImageUpload" }
+
+    ReviewSubmission:
+      allOf:
+        - $ref: "#/components/schemas/Review"
+        - type: object
+          required: [status]
+          properties:
+            status:
+              type: string
+              enum: [PENDING]
+              description: New public submissions are always pending.
 
     ReviewUpdateInput:
       type: object
       properties:
+        name: { type: string, maxLength: 200 }
+        role: { type: string, maxLength: 200 }
+        message: { type: string, maxLength: 2000 }
+        file: { $ref: "#/components/schemas/ImageUpload" }
+
+    ReviewModerator:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: string, format: uuid }
         name: { type: string }
-        role: { type: string }
-        message: { type: string }
-        file:
+
+    AdminReview:
+      allOf:
+        - $ref: "#/components/schemas/Review"
+        - type: object
+          required: [status]
+          properties:
+            status:
+              type: string
+              enum: [PENDING, APPROVED, REJECTED]
+            reviewedAt:
+              type: string
+              format: date-time
+              nullable: true
+            reviewedBy:
+              allOf:
+                - $ref: "#/components/schemas/ReviewModerator"
+              nullable: true
+
+    ReviewModerationInput:
+      type: object
+      required: [status]
+      properties:
+        status:
           type: string
-          format: binary
+          enum: [APPROVED, REJECTED]
 
     Member:
       type: object
@@ -991,7 +1420,7 @@ components:
       properties:
         title: { type: string }
         tagline: { type: string }
-        file: { type: string, format: binary, description: "Event image" }
+        file: { $ref: "#/components/schemas/ImageUpload" }
         description: { type: string }
         category: { type: string }
         mode: { type: string, example: "in-person" }
@@ -1013,12 +1442,7 @@ components:
       properties:
         title: { type: string }
         tagline: { type: string }
-        file:
-          {
-            type: string,
-            format: binary,
-            description: "Replacement image (optional)",
-          }
+        file: { $ref: "#/components/schemas/ImageUpload" }
         description: { type: string }
         category: { type: string }
         mode: { type: string }
@@ -1053,7 +1477,7 @@ components:
       properties:
         name: { type: string }
         websiteUrl: { type: string }
-        file: { type: string, format: binary, description: "Partner logo" }
+        file: { $ref: "#/components/schemas/ImageUpload" }
         description: { type: string }
         email: { type: string, format: email }
         partnershipReason: { type: string }
@@ -1063,12 +1487,7 @@ components:
       properties:
         name: { type: string }
         websiteUrl: { type: string }
-        file:
-          {
-            type: string,
-            format: binary,
-            description: "Replacement logo (optional)",
-          }
+        file: { $ref: "#/components/schemas/ImageUpload" }
         description: { type: string }
         email: { type: string, format: email }
         partnershipReason: { type: string }
@@ -1137,7 +1556,7 @@ components:
         ]
       properties:
         organisationName: { type: string }
-        file: { type: string, format: binary, description: "Organisation logo" }
+        file: { $ref: "#/components/schemas/ImageUpload" }
         organisationType:
           type: string
           enum:
@@ -1216,7 +1635,7 @@ components:
         slug: { type: string }
         repoOwner: { type: string }
         repoName: { type: string }
-        file: { type: string, format: binary, description: "Project image" }
+        file: { $ref: "#/components/schemas/ImageUpload" }
         tagline: { type: string }
         category: { type: string }
         status: { type: string, enum: [active, archived, paused] }
@@ -1230,12 +1649,7 @@ components:
         slug: { type: string }
         repoOwner: { type: string }
         repoName: { type: string }
-        file:
-          {
-            type: string,
-            format: binary,
-            description: "Replacement image (optional)",
-          }
+        file: { $ref: "#/components/schemas/ImageUpload" }
         tagline: { type: string }
         category: { type: string }
         status: { type: string, enum: [active, archived, paused] }
@@ -1273,12 +1687,27 @@ components:
         application/json:
           schema: { $ref: "#/components/schemas/ApiError" }
     Forbidden:
-      description: Admin access required
+      description: Origin or CSRF check failed
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
+    Conflict:
+      description: The requested moderation transition is not allowed
       content:
         application/json:
           schema: { $ref: "#/components/schemas/ApiError" }
     NotFound:
       description: Resource not found
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
+    PayloadTooLarge:
+      description: Uploaded image exceeds the 5 MB limit
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
+    TooManyRequests:
+      description: Rate limit exceeded
       content:
         application/json:
           schema: { $ref: "#/components/schemas/ApiError" }

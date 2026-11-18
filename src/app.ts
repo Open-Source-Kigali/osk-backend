@@ -19,7 +19,22 @@ const app = express();
 app.use(express.json());
 app.use(
   cors({
-    origin: env.corsOrigins,
+    origin: (requestOrigin, callback) => {
+      // Credentialed CORS must never use a wildcard allow-list entry.
+      if (env.corsOrigins.includes("*")) {
+        callback(new Error("CORS_ORIGINS must not include * with credentials"));
+        return;
+      }
+      if (!requestOrigin) {
+        callback(null, true);
+        return;
+      }
+      if (env.corsOrigins.includes(requestOrigin)) {
+        callback(null, true);
+        return;
+      }
+      callback(null, false);
+    },
     credentials: true,
   }),
 );

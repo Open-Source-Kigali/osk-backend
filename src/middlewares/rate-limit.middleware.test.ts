@@ -10,6 +10,7 @@ vi.mock("../config/env", () => ({
   },
 }));
 
+import { UserRole } from "../generated/prisma/client";
 import authMiddleware from "./auth.middleware";
 import { adminKeyGenerator, createRateLimiter } from "./rate-limit.middleware";
 
@@ -39,7 +40,7 @@ describe("rate limiting middleware", () => {
     expect(third.headers["x-ratelimit-limit"]).toBe("2");
   });
 
-  it("throttles repeated invalid admin attempts", async () => {
+  it("throttles repeated invalid legacy API-key attempts", async () => {
     const app = express();
 
     app.get("/admin", authMiddleware.requireAdmin, (_req, res) => {
@@ -56,7 +57,7 @@ describe("rate limiting middleware", () => {
     expect(responses[5].headers["x-ratelimit-limit"]).toBe("5");
   });
 
-  it("keys the admin limiter by x-api-key", async () => {
+  it("keys the admin limiter by authenticated admin user id", async () => {
     const app = express();
     const limiter = createRateLimiter({
       limit: 1,
@@ -64,13 +65,31 @@ describe("rate limiting middleware", () => {
       keyGenerator: adminKeyGenerator,
     });
 
-    app.get("/admin", limiter, (_req, res) => {
-      res.json({ ok: true });
-    });
+    app.get(
+      "/admin",
+      (req, _res, next) => {
+        const userId = req.header("x-test-user");
+        if (userId) {
+          req.authUser = {
+            id: userId,
+            name: "Admin",
+            email: `${userId}@example.com`,
+            role: UserRole.ADMIN,
+          };
+        }
+        next();
+      },
+      limiter,
+      (_req, res) => {
+        res.json({ ok: true });
+      },
+    );
 
-    const first = await request(app).get("/admin").set("x-api-key", "key-a");
-    const second = await request(app).get("/admin").set("x-api-key", "key-b");
-    const third = await request(app).get("/admin").set("x-api-key", "key-a");
+    const first = await request(app).get("/admin").set("x-test-user", "user-a");
+    const second = await request(app)
+      .get("/admin")
+      .set("x-test-user", "user-b");
+    const third = await request(app).get("/admin").set("x-test-user", "user-a");
 
     expect(first.status).toBe(200);
     expect(second.status).toBe(200);

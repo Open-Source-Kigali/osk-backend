@@ -1,11 +1,8 @@
 import { Router } from "express";
 import reviewController from "../controllers/review.controller";
-import authMiddleware from "../middlewares/auth.middleware";
+import { requireAdminWrite } from "../middlewares/admin-auth.middleware";
 import { upload } from "../middlewares/upload.middleware";
-import {
-  adminRateLimit,
-  publicRateLimit,
-} from "../middlewares/rate-limit.middleware";
+import { publicRateLimit } from "../middlewares/rate-limit.middleware";
 
 const route = Router();
 
@@ -18,8 +15,12 @@ route.post(
   reviewController.addReview,
 );
 
-route.use(authMiddleware.requireAdmin, adminRateLimit);
-route.put("/:id", upload.single("file"), reviewController.updateReview);
-route.delete("/:id", reviewController.deleteReview);
+route.put(
+  "/:id",
+  ...requireAdminWrite,
+  upload.single("file"),
+  reviewController.updateReview,
+);
+route.delete("/:id", ...requireAdminWrite, reviewController.deleteReview);
 
 export default route;
